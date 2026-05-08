@@ -21,8 +21,45 @@ var TPRM_INIT_DATA = {
         decay_per_quarter: 0.0,
         min_effective_weight: 0.1
     },
+    dora: _doraInitEmpty(),
     metadata: { organization: "", created: "" }
 };
+
+// ── DORA RoI data structure (EBA Reg. (EU) 2024/2956) ─────────────
+// Empty-state factory used by TPRM_INIT_DATA and the load migration.
+// Keep keys aligned with backend: entities (B_01.02), functions
+// (B_06.01), branches (B_01.03), consolidation (out-of-scope entities
+// in B_01.02), arrangements (B_02.0*), signers (B_03.0*), subcontractors
+// (B_05.01), arrangement_subcontractors (B_05.02 junction).
+function _doraInitEmpty() {
+    return {
+        entities: [],
+        functions: [],
+        branches: [],
+        consolidation: [],
+        arrangements: [],
+        signers: [],
+        subcontractors: [],
+        arrangement_subcontractors: [],
+        metadata: { reporting_period: "", currency: "EUR", fx_rates: {} }
+    };
+}
+
+// Idempotent migration: ensure every DORA subkey exists on D after a
+// file load (older files may predate the DORA addition). Safe to call
+// repeatedly — never overwrites existing data.
+function _doraMigrate(d) {
+    if (!d) return;
+    if (!d.dora || typeof d.dora !== "object") d.dora = _doraInitEmpty();
+    var empty = _doraInitEmpty();
+    Object.keys(empty).forEach(function(k) {
+        if (d.dora[k] === undefined || d.dora[k] === null) d.dora[k] = empty[k];
+    });
+    if (!d.dora.metadata || typeof d.dora.metadata !== "object") d.dora.metadata = empty.metadata;
+    Object.keys(empty.metadata).forEach(function(k) {
+        if (d.dora.metadata[k] === undefined) d.dora.metadata[k] = empty.metadata[k];
+    });
+}
 window.CT_CONFIG = {
     autosaveKey: "tprm_autosave",
     initDataVar: "TPRM_INIT_DATA",
@@ -5859,6 +5896,7 @@ function _saveDoraSettings() {
 function _initDataAndRender(cb) {
     _panel = "dashboard";
     _selectedVendor = null;
+    _doraMigrate(D);
     renderAll();
     if (cb) cb();
 }
