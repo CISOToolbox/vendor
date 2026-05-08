@@ -40,7 +40,7 @@ function _doraInitEmpty() {
         arrangements: [],
         signers: [],
         subcontractors: [],
-        arrangement_subcontractors: [],
+        subcontractor_links: [],
         metadata: { reporting_period: "", currency: "EUR", fx_rates: {} }
     };
 }
@@ -119,6 +119,14 @@ function renderPanel() {
         case "history":
             c.innerHTML = '<h2>' + t("tprm.history.title") + '</h2><p class="panel-desc">' + t("tprm.history.intro") + '</p><div id="history-content"></div>';
             renderHistory();
+            break;
+        case "dora":
+            if (typeof renderDoraPanel === "function") {
+                c.innerHTML = '<div id="dora-root"></div>';
+                renderDoraPanel(document.getElementById("dora-root"));
+            } else {
+                c.innerHTML = '<h2>' + t("nav.dora") + '</h2><p>' + t("dora.unavailable") + '</p>';
+            }
             break;
         default: c.innerHTML = renderDashboard();
     }
