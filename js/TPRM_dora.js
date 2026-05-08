@@ -411,7 +411,7 @@ function _renderEntityOverview() {
                     +   '<code style="font-size:0.74em;color:var(--text-muted)">' + _esc(f.id) + '</code>'
                     + '</div>';
             var meta = [];
-            if (f.business_line) meta.push('<span>' + _esc(_doraT("dora.fn.business_line", "Ligne métier")) + ': ' + _esc(f.business_line) + '</span>');
+            if (f.business_line) meta.push('<span>' + _esc(_doraT("dora.fn.business_line", "Ligne métier")) + ': ' + _esc(_doraCodeLabel("licenced_activity", f.business_line)) + '</span>');
             if (f.recovery_time_objective_h != null) meta.push('<span>RTO ' + _esc(f.recovery_time_objective_h) + 'h</span>');
             if (f.recovery_point_objective_h != null) meta.push('<span>RPO ' + _esc(f.recovery_point_objective_h) + 'h</span>');
             meta.push('<span style="color:var(--text-muted)">' + _esc(_doraT("dora.overview.fn_used_by", "Utilisée par")) + ' ' + usage + ' ' + _esc(usage > 1 ? _doraT("dora.overview.arrangements_pl", "accords") : _doraT("dora.overview.arrangements_sg", "accord")) + '</span>');
@@ -727,13 +727,13 @@ function _renderFunctions() {
         h += '<tr>';
         h += '<td>' + _esc(r.id) + '</td>';
         h += '<td><input value="' + _esc(r.code || "") + '" maxlength="50" data-input="doraPatchFn" data-args=\'["' + _esc(r.id) + '","code"]\' data-pass-value style="width:120px;font-family:monospace"></td>';
-        h += '<td><input value="' + _esc(r.business_line || "") + '" data-input="doraPatchFn" data-args=\'["' + _esc(r.id) + '","business_line"]\' data-pass-value></td>';
+        h += '<td><select data-change="doraPatchFn" data-args=\'["' + _esc(r.id) + '","business_line"]\' data-pass-value>' + _codelistOptions("licenced_activity", r.business_line) + '</select></td>';
         h += '<td><input value="' + _esc(r.name || "") + '" data-input="doraPatchFn" data-args=\'["' + _esc(r.id) + '","name"]\' data-pass-value></td>';
         h += '<td><input type="checkbox"' + (r.is_critical_or_important ? " checked" : "") + ' data-change="doraPatchFnBool" data-args=\'["' + _esc(r.id) + '","is_critical_or_important"]\'></td>';
         h += '<td><input value="' + _esc(r.criticality_rationale || "") + '" data-input="doraPatchFn" data-args=\'["' + _esc(r.id) + '","criticality_rationale"]\' data-pass-value></td>';
         h += '<td><input type="number" value="' + _esc(r.recovery_time_objective_h || "") + '" data-input="doraPatchFnNum" data-args=\'["' + _esc(r.id) + '","recovery_time_objective_h"]\' data-pass-value style="width:80px"></td>';
         h += '<td><input type="number" value="' + _esc(r.recovery_point_objective_h || "") + '" data-input="doraPatchFnNum" data-args=\'["' + _esc(r.id) + '","recovery_point_objective_h"]\' data-pass-value style="width:80px"></td>';
-        h += '<td><input value="' + _esc(r.impact_tolerance_description || "") + '" data-input="doraPatchFn" data-args=\'["' + _esc(r.id) + '","impact_tolerance_description"]\' data-pass-value></td>';
+        h += '<td><select data-change="doraPatchFn" data-args=\'["' + _esc(r.id) + '","impact_tolerance_description"]\' data-pass-value>' + _codelistOptions("impact_level", r.impact_tolerance_description) + '</select></td>';
         h += '<td><button class="btn-danger" data-click="doraDelFn" data-args=\'["' + _esc(r.id) + '"]\'>×</button></td>';
         h += '</tr>';
     });
@@ -1409,7 +1409,12 @@ window.doraAddSub = function() {
     _doraTree.subcontractors = _doraTree.subcontractors || [];
     _doraTree.subcontractors.push(row);
     _persistCreate("dora_subcontractor", row);
-    _render(document.getElementById("dora-root"));
+    var host = document.getElementById("dora-root");
+    if (host) {
+        _render(host);
+    } else if (typeof window.renderPanel === "function") {
+        try { window.renderPanel(); } catch (e) {}
+    }
     // Open the identity modal so the user can fill name/LEI immediately.
     setTimeout(function() { window.doraOpenSubIdentityModal && window.doraOpenSubIdentityModal(id); }, 50);
 };
@@ -1804,10 +1809,10 @@ window.doraOpenFunctionModal = function(functionId, opts) {
         + _fld(_doraT("dora.fn.description", "Description"), '<textarea id="fn-desc" rows="2" style="width:100%">' + _esc(f.description || "") + '</textarea>', 2)
         + '<label style="grid-column:span 2;display:inline-flex;align-items:center;gap:6px"><input type="checkbox" id="fn-crit"' + (f.is_critical_or_important ? " checked" : "") + '> ' + _doraT("dora.fn.critical", "Critical or important function (B_06.01.0050)") + '</label>'
         + _fld(_doraT("dora.fn.crit_rationale", "Reasons for criticality or importance (B_06.01.0060)"), '<textarea id="fn-crit-rat" rows="2" style="width:100%">' + _esc(f.criticality_rationale || "") + '</textarea>', 2)
-        + _fld(_doraT("dora.fn.business_line", "Licenced activity / Business line (B_06.01.0020)"), '<input id="fn-bl" value="' + _esc(f.business_line || "") + '" style="width:100%">')
+        + _fld(_doraT("dora.fn.business_line", "Licenced activity / Business line (B_06.01.0020)"), _doraRefSelect("fn-bl", f.business_line, _doraCodeItems("licenced_activity")))
         + _fld(_doraT("dora.fn.rto", "RTO hours (B_06.01.0080)"), '<input id="fn-rto" type="number" step="0.5" value="' + _esc(f.recovery_time_objective_h != null ? f.recovery_time_objective_h : "") + '" style="width:100%">')
         + _fld(_doraT("dora.fn.rpo", "RPO hours (B_06.01.0090)"), '<input id="fn-rpo" type="number" step="0.5" value="' + _esc(f.recovery_point_objective_h != null ? f.recovery_point_objective_h : "") + '" style="width:100%">')
-        + _fld(_doraT("dora.fn.impact_tolerance", "Impact of discontinuing the function (B_06.01.0100)"), '<textarea id="fn-impact" rows="2" style="width:100%">' + _esc(f.impact_tolerance_description || "") + '</textarea>', 2)
+        + _fld(_doraT("dora.fn.impact_tolerance", "Impact of discontinuing the function (B_06.01.0100)"), _doraRefSelect("fn-impact", f.impact_tolerance_description, _doraCodeItems("impact_level")), 2)
         + _fld(_doraT("dora.fn.last_assessment", "Date of last assessment (B_06.01.0070)"), '<input id="fn-last-assess" type="date" value="' + _esc(f.last_assessment_date || "") + '" style="width:100%">')
         + '</div>';
 
@@ -1840,10 +1845,10 @@ window.doraOpenFunctionModal = function(functionId, opts) {
             description: _v("fn-desc"),
             is_critical_or_important: _b("fn-crit"),
             criticality_rationale: _v("fn-crit-rat"),
-            business_line: _v("fn-bl"),
+            business_line: _doraRefValue("fn-bl"),
             recovery_time_objective_h: _n(_v("fn-rto")),
             recovery_point_objective_h: _n(_v("fn-rpo")),
-            impact_tolerance_description: _v("fn-impact"),
+            impact_tolerance_description: _doraRefValue("fn-impact"),
             last_assessment_date: _v("fn-last-assess") || null
         };
         if (isNew) {

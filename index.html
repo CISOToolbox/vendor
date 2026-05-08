@@ -21,6 +21,8 @@
             <div class="toolbar-dropdown-sep"></div>
             <div class="toolbar-dropdown-item" data-click="_menuAction" data-args='["openFile"]' data-i18n="menu_open">Ouvrir</div>
             <div class="toolbar-dropdown-item" data-click="_menuAction" data-args='["saveJSON"]' data-i18n="menu_save_as">Enregistrer sous</div>
+            <div class="toolbar-dropdown-sep"></div>
+            <div class="toolbar-dropdown-item" data-click="_menuAction" data-args='["doraOpenExportModal"]' data-i18n="menu_dora_export">Export RoI DORA</div>
         </div>
     </div>
     <span class="status" id="status-msg"></span>
@@ -67,6 +69,7 @@
 <div class="help-tabs">
     <div class="help-tab active" id="help-tab-methodo" data-click="switchHelpTab" data-args='["methodo"]' data-i18n="tprm.help.tab_methodo">Methodologie TPRM</div>
     <div class="help-tab" id="help-tab-usage" data-click="switchHelpTab" data-args='["usage"]' data-i18n="tprm.help.tab_usage">Utilisation de l'application</div>
+    <div class="help-tab" id="help-tab-dora" data-click="switchHelpTab" data-args='["dora"]' data-i18n="tprm.help.tab_dora">Registre DORA</div>
 </div>
 
 <!-- Onglet Methodologie -->
@@ -74,6 +77,7 @@
 
 <!-- Onglet Utilisation -->
 <div class="help-content" id="help-content-usage" style="display:none" data-i18n-html="tprm.help.usage"></div>
+<div class="help-content" id="help-content-dora" style="display:none" data-i18n-html="tprm.help.dora"></div>
 
 </div>
 </div>
@@ -109,6 +113,7 @@
 <script src="js/TPRM_i18n_en.js"></script>
 <script src="js/TPRM_questions.js"></script>
 <script src="js/dora_codelists.js"></script>
+<script src="js/dora_codelists_i18n.js"></script>
 <script src="js/ct_refselect.js"></script>
 <script src="js/ct_modal.js"></script>
 <script src="js/ct_userpicker.js"></script>

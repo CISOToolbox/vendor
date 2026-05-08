@@ -209,6 +209,19 @@ function _eba(table, value) {
     return "";
 }
 
+// Look up an EBA code from a runtime codelist (window._doraCodelists).
+// Used for large lists (e.g. licenced_activity, 131 entries) where
+// inlining a static map would duplicate the source data.
+function _ebaFromCodelist(key, value) {
+    if (value === null || value === undefined || value === "") return "";
+    var items = (window._doraCodelists && window._doraCodelists[key]) || [];
+    var s = String(value);
+    for (var i = 0; i < items.length; i++) {
+        if (String(items[i].code) === s) return items[i].eba_code || "";
+    }
+    return "";
+}
+
 function _eba_yesno(v) {
     if (v === null || v === undefined || v === "") return "";
     return v ? "eba_BT:x28" : "eba_BT:x29";
@@ -871,7 +884,7 @@ function _build(tree, codelists, targetCurrency) {
         var f = functions_[i];
         b0601.push([
             (f.code || "") || f.id,
-            f.business_line || "",
+            _ebaFromCodelist("licenced_activity", f.business_line),
             f.name || "",
             holderLei,
             _eba_yesno_or_na(f.is_critical_or_important),
@@ -879,7 +892,7 @@ function _build(tree, codelists, targetCurrency) {
             f.last_assessment_date || "",
             (f.recovery_time_objective_h !== null && f.recovery_time_objective_h !== undefined && f.recovery_time_objective_h !== "") ? f.recovery_time_objective_h : "",
             (f.recovery_point_objective_h !== null && f.recovery_point_objective_h !== undefined && f.recovery_point_objective_h !== "") ? f.recovery_point_objective_h : "",
-            f.impact_tolerance_description || ""
+            _eba(_EBA_IMPACT_LEVEL, f.impact_tolerance_description)
         ]);
     }
     _writeSheet(wb, "B_06.01", _COLS_B0601, b0601);

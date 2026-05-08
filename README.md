@@ -24,6 +24,16 @@
 - Overdue due-date badge, per-question live status, autosave in `localStorage`
 - Vendor re-exports the filled response (encrypted JSON or Excel) and emails it back; you re-import it into the matching assessment
 
+### DORA Register of Information (RoI)
+
+- **DORA Register module** built in, aligned with EU Reg. 2024/2956 and the EBA RoI ITS (DPM v4.0)
+- Supported tables: **B_01.01 to B_07.01** (reporting entities, branches, hierarchy, contractual arrangements, signatories, subcontractors, supported functions, substitutability)
+- **Official EBA codelists** (licenced activity, ICT service type, arrangement type, termination reason, currency, country…) with localised FR / EN labels; the ITS code (e.g. `eba_TA:x182`) is preserved in storage and emitted as-is on export
+- **GLEIF LEI lookup** from every LEI field (entities, signatories, subcontractors)
+- **RoI export** (File → DORA RoI export): generates an EBA RoI ITS XLSX workbook (one sheet per B_xx table) with reporting period and target currency selection — amounts in foreign currencies are kept and complemented by a normalised column
+- **Per-vendor DORA tab**: aggregated card of declared arrangements, signatories, subcontractors and supported functions
+- **Subcontractor management** (4th parties) directly from the vendor list (Subcontractors tab) or from each arrangement (arrangement ↔ subcontractor link with rank and provided service)
+
 ### Data and history
 - Document registry with expiry alerts, URL verification, confidence scoring
 - **Undo / redo** (Ctrl+Z / Ctrl+Y) and **snapshots** panel with optional AES-256 encryption

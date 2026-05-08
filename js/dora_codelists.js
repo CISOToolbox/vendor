@@ -3,166 +3,6 @@
 // Update via PR when EBA publishes a new DPM.
 window._doraCodelists = {
   "_comment": "EBA DORA RoI codelists (DPM v4.0, March 2025). Each entry has a stable internal `code` (used by the UI/DB), a bilingual `label`, and an `eba_code` (the official Data Point Model value used in the regulatory submission). Source: EBA 'List of possible values for all data fields with drop downs' (3 March 2025). Country and currency codes use ISO 3166-1 / ISO 4217 wrapped as eba_GA: / eba_CU:.",
-  "person_type": [
-    {
-      "code": "legal",
-      "label": "Legal person",
-      "eba_code": "eba_CT:x212"
-    },
-    {
-      "code": "natural",
-      "label": "Natural person",
-      "eba_code": "eba_CT:x213"
-    }
-  ],
-  "entity_type": [
-    {
-      "code": "credit_institution",
-      "label": "Credit institution",
-      "eba_code": "eba_CT:x12"
-    },
-    {
-      "code": "payment_institution",
-      "label": "Payment institution",
-      "eba_code": "eba_CT:x300"
-    },
-    {
-      "code": "electronic_money_institution",
-      "label": "Electronic money institution",
-      "eba_code": "eba_CT:x302"
-    },
-    {
-      "code": "investment_firm",
-      "label": "Investment firm",
-      "eba_code": "eba_CT:x599"
-    },
-    {
-      "code": "ucits_management_company",
-      "label": "UCITS management company",
-      "eba_code": "eba_CT:x639"
-    },
-    {
-      "code": "alternative_investment_fund_manager",
-      "label": "Alternative investment fund manager (AIFM)",
-      "eba_code": "eba_CT:x307"
-    },
-    {
-      "code": "central_securities_depository",
-      "label": "Central securities depository (CSD)",
-      "eba_code": "eba_CT:x304"
-    },
-    {
-      "code": "central_counterparty",
-      "label": "Central counterparty (CCP)",
-      "eba_code": "eba_CT:x643"
-    },
-    {
-      "code": "trade_repository",
-      "label": "Trade repository",
-      "eba_code": "eba_CT:x306"
-    },
-    {
-      "code": "credit_rating_agency",
-      "label": "Credit rating agency",
-      "eba_code": "eba_CT:x312"
-    },
-    {
-      "code": "trading_venue",
-      "label": "Trading venue",
-      "eba_code": "eba_CT:x305"
-    },
-    {
-      "code": "data_reporting_service_provider",
-      "label": "Data reporting service provider",
-      "eba_code": "eba_CT:x308"
-    },
-    {
-      "code": "insurance_undertaking",
-      "label": "Insurance undertaking",
-      "eba_code": "eba_CT:x309"
-    },
-    {
-      "code": "reinsurance_undertaking",
-      "label": "Reinsurance undertaking",
-      "eba_code": "eba_CT:x309"
-    },
-    {
-      "code": "insurance_intermediary",
-      "label": "Insurance intermediary",
-      "eba_code": "eba_CT:x320"
-    },
-    {
-      "code": "ior_pension_institution",
-      "label": "Institution for occupational retirement provision (IORP)",
-      "eba_code": "eba_CT:x311"
-    },
-    {
-      "code": "crypto_asset_service_provider",
-      "label": "Crypto-asset service provider",
-      "eba_code": "eba_CT:x303"
-    },
-    {
-      "code": "issuer_asset_referenced_token",
-      "label": "Issuer of asset-referenced tokens",
-      "eba_code": "eba_CT:x310"
-    },
-    {
-      "code": "crowdfunding_service_provider",
-      "label": "Crowdfunding service provider",
-      "eba_code": "eba_CT:x314"
-    },
-    {
-      "code": "securitisation_repository",
-      "label": "Securitisation repository",
-      "eba_code": "eba_CT:x315"
-    },
-    {
-      "code": "ict_third_party_service_provider",
-      "label": "ICT third-party service provider (TPP)",
-      "eba_code": "eba_CT:x318"
-    },
-    {
-      "code": "subcontractor_ict_tpp",
-      "label": "Subcontractor of an ICT third-party service provider",
-      "eba_code": "eba_CT:x318"
-    },
-    {
-      "code": "other",
-      "label": "Other",
-      "eba_code": "eba_CT:x316"
-    }
-  ],
-  "hierarchy": [
-    {
-      "code": "parent",
-      "label": "Ultimate parent",
-      "eba_code": "eba_RP:x53"
-    },
-    {
-      "code": "subsidiary",
-      "label": "Subsidiary",
-      "eba_code": "eba_RP:x56"
-    },
-    {
-      "code": "sole_entity",
-      "label": "Sole entity (no group)",
-      "eba_code": "eba_RP:x21"
-    },
-    {
-      "code": "branch",
-      "label": "Branch"
-    }
-  ],
-  "entity_nature": [
-    {
-      "code": "intragroup",
-      "label": "Intragroup ICT provider"
-    },
-    {
-      "code": "non_intragroup",
-      "label": "Non-intragroup ICT provider"
-    }
-  ],
   "additional_id_type": [
     {
       "code": "EUID",
@@ -194,42 +34,6 @@ window._doraCodelists = {
       "label": "Other"
     }
   ],
-  "relation_to_rfe": [
-    {
-      "code": "parent",
-      "label": "Parent"
-    },
-    {
-      "code": "subsidiary",
-      "label": "Subsidiary"
-    },
-    {
-      "code": "branch",
-      "label": "Branch"
-    },
-    {
-      "code": "joint_venture",
-      "label": "Joint venture"
-    },
-    {
-      "code": "associate",
-      "label": "Associate"
-    }
-  ],
-  "inclusion_method": [
-    {
-      "code": "full",
-      "label": "Full consolidation"
-    },
-    {
-      "code": "proportional",
-      "label": "Proportional consolidation"
-    },
-    {
-      "code": "equity_method",
-      "label": "Equity method"
-    }
-  ],
   "arrangement_type": [
     {
       "code": "standalone",
@@ -245,283 +49,6 @@ window._doraCodelists = {
       "code": "subsequent",
       "label": "Subsequent or associated arrangement",
       "eba_code": "eba_CO:x3"
-    }
-  ],
-  "substitutability": [
-    {
-      "code": "not_substitutable",
-      "label": "Not substitutable",
-      "eba_code": "eba_ZZ:x959"
-    },
-    {
-      "code": "highly_complex",
-      "label": "Highly complex substitutability",
-      "eba_code": "eba_ZZ:x960"
-    },
-    {
-      "code": "medium_complexity",
-      "label": "Medium complexity in terms of substitutability",
-      "eba_code": "eba_ZZ:x961"
-    },
-    {
-      "code": "easy",
-      "label": "Easily substitutable",
-      "eba_code": "eba_ZZ:x962"
-    }
-  ],
-  "substitutability_reason": [
-    {
-      "code": "no_alternatives",
-      "label": "Lack of real alternatives in the market",
-      "eba_code": "eba_ZZ:x963"
-    },
-    {
-      "code": "migration_difficulties",
-      "label": "Difficulties in migrating data and workloads",
-      "eba_code": "eba_ZZ:x964"
-    },
-    {
-      "code": "both",
-      "label": "Both abovementioned reasons",
-      "eba_code": "eba_ZZ:x965"
-    }
-  ],
-  "reintegration_level": [
-    {
-      "code": "easy",
-      "label": "Easy",
-      "eba_code": "eba_ZZ:x798"
-    },
-    {
-      "code": "difficult",
-      "label": "Difficult",
-      "eba_code": "eba_ZZ:x966"
-    },
-    {
-      "code": "highly_complex",
-      "label": "Highly complex",
-      "eba_code": "eba_ZZ:x967"
-    }
-  ],
-  "ict_service_type": [
-    {
-      "code": "S_01",
-      "label": "ICT project management",
-      "eba_code": "eba_TA:S01"
-    },
-    {
-      "code": "S_02",
-      "label": "ICT development",
-      "eba_code": "eba_TA:S02"
-    },
-    {
-      "code": "S_03",
-      "label": "ICT helpdesk and first-level support",
-      "eba_code": "eba_TA:S03"
-    },
-    {
-      "code": "S_04",
-      "label": "ICT security services",
-      "eba_code": "eba_TA:S04"
-    },
-    {
-      "code": "S_05",
-      "label": "ICT support for business processes",
-      "eba_code": "eba_TA:S05"
-    },
-    {
-      "code": "S_06",
-      "label": "ICT operations management",
-      "eba_code": "eba_TA:S14"
-    },
-    {
-      "code": "S_07",
-      "label": "ICT facility management",
-      "eba_code": "eba_TA:S07"
-    },
-    {
-      "code": "S_08",
-      "label": "ICT consulting",
-      "eba_code": "eba_TA:S15"
-    },
-    {
-      "code": "S_09",
-      "label": "ICT continuity management",
-      "eba_code": "eba_TA:S07"
-    },
-    {
-      "code": "S_10",
-      "label": "ICT training"
-    },
-    {
-      "code": "S_11",
-      "label": "ICT data analysis",
-      "eba_code": "eba_TA:S06"
-    },
-    {
-      "code": "S_12",
-      "label": "ICT risk management",
-      "eba_code": "eba_TA:S16"
-    },
-    {
-      "code": "S_13",
-      "label": "Computation",
-      "eba_code": "eba_TA:S08"
-    },
-    {
-      "code": "S_14",
-      "label": "Storage",
-      "eba_code": "eba_TA:S09"
-    },
-    {
-      "code": "S_15",
-      "label": "Network infrastructure",
-      "eba_code": "eba_TA:S11"
-    },
-    {
-      "code": "S_16",
-      "label": "Telecommunications carrier",
-      "eba_code": "eba_TA:S10"
-    },
-    {
-      "code": "S_17",
-      "label": "Hosting services",
-      "eba_code": "eba_TA:S07"
-    },
-    {
-      "code": "S_18",
-      "label": "Computing infrastructure (IaaS)",
-      "eba_code": "eba_TA:S17"
-    },
-    {
-      "code": "S_19",
-      "label": "Software platforms (PaaS)",
-      "eba_code": "eba_TA:S18"
-    },
-    {
-      "code": "S_20",
-      "label": "Software (SaaS)",
-      "eba_code": "eba_TA:S19"
-    },
-    {
-      "code": "S_21",
-      "label": "Other ICT services"
-    }
-  ],
-  "data_sensitivity": [
-    {
-      "code": "public",
-      "label": "Public",
-      "eba_code": "eba_ZZ:x791"
-    },
-    {
-      "code": "internal",
-      "label": "Internal",
-      "eba_code": "eba_ZZ:x791"
-    },
-    {
-      "code": "confidential",
-      "label": "Confidential",
-      "eba_code": "eba_ZZ:x792"
-    },
-    {
-      "code": "strictly_confidential",
-      "label": "Strictly confidential",
-      "eba_code": "eba_ZZ:x793"
-    }
-  ],
-  "reliance_level": [
-    {
-      "code": "not_significant",
-      "label": "Not significant",
-      "eba_code": "eba_ZZ:x794"
-    },
-    {
-      "code": "low",
-      "label": "Low",
-      "eba_code": "eba_ZZ:x795"
-    },
-    {
-      "code": "material",
-      "label": "Material",
-      "eba_code": "eba_ZZ:x796"
-    },
-    {
-      "code": "full",
-      "label": "Full",
-      "eba_code": "eba_ZZ:x797"
-    }
-  ],
-  "impact_level": [
-    {
-      "code": "low",
-      "label": "Low",
-      "eba_code": "eba_ZZ:x791"
-    },
-    {
-      "code": "medium",
-      "label": "Medium",
-      "eba_code": "eba_ZZ:x792"
-    },
-    {
-      "code": "high",
-      "label": "High",
-      "eba_code": "eba_ZZ:x793"
-    },
-    {
-      "code": "not_assessed",
-      "label": "Assessment not performed",
-      "eba_code": "eba_ZZ:x799"
-    }
-  ],
-  "termination_reason": [
-    {
-      "code": "expired_not_renewed",
-      "label": "Contract expired without renewal",
-      "eba_code": "eba_CO:x4"
-    },
-    {
-      "code": "breach_of_law",
-      "label": "Breach of law / contract by TPSP",
-      "eba_code": "eba_CO:x5"
-    },
-    {
-      "code": "impediments",
-      "label": "Impediments to performance",
-      "eba_code": "eba_CO:x6"
-    },
-    {
-      "code": "data_security_weakness",
-      "label": "Data security weakness",
-      "eba_code": "eba_CO:x7"
-    },
-    {
-      "code": "competent_authority",
-      "label": "Order from competent authority",
-      "eba_code": "eba_CO:x8"
-    },
-    {
-      "code": "other",
-      "label": "Other",
-      "eba_code": "eba_CO:x9"
-    }
-  ],
-  "signer_role": [
-    {
-      "code": "tpp",
-      "label": "ICT third-party provider (TPP)"
-    },
-    {
-      "code": "rfe",
-      "label": "Reporting financial entity (RFE)"
-    },
-    {
-      "code": "intermediary",
-      "label": "Intermediary signer"
-    },
-    {
-      "code": "subcontractor",
-      "label": "Subcontractor"
     }
   ],
   "country_iso3166_1": [
@@ -2398,6 +1925,974 @@ window._doraCodelists = {
       "label": "Zimbabwe Gold"
     }
   ],
+  "data_sensitivity": [
+    {
+      "code": "public",
+      "label": "Public",
+      "eba_code": "eba_ZZ:x791"
+    },
+    {
+      "code": "internal",
+      "label": "Internal",
+      "eba_code": "eba_ZZ:x791"
+    },
+    {
+      "code": "confidential",
+      "label": "Confidential",
+      "eba_code": "eba_ZZ:x792"
+    },
+    {
+      "code": "strictly_confidential",
+      "label": "Strictly confidential",
+      "eba_code": "eba_ZZ:x793"
+    }
+  ],
+  "entity_nature": [
+    {
+      "code": "intragroup",
+      "label": "Intragroup ICT provider"
+    },
+    {
+      "code": "non_intragroup",
+      "label": "Non-intragroup ICT provider"
+    }
+  ],
+  "entity_type": [
+    {
+      "code": "credit_institution",
+      "label": "Credit institution",
+      "eba_code": "eba_CT:x12"
+    },
+    {
+      "code": "payment_institution",
+      "label": "Payment institution",
+      "eba_code": "eba_CT:x300"
+    },
+    {
+      "code": "electronic_money_institution",
+      "label": "Electronic money institution",
+      "eba_code": "eba_CT:x302"
+    },
+    {
+      "code": "investment_firm",
+      "label": "Investment firm",
+      "eba_code": "eba_CT:x599"
+    },
+    {
+      "code": "ucits_management_company",
+      "label": "UCITS management company",
+      "eba_code": "eba_CT:x639"
+    },
+    {
+      "code": "alternative_investment_fund_manager",
+      "label": "Alternative investment fund manager (AIFM)",
+      "eba_code": "eba_CT:x307"
+    },
+    {
+      "code": "central_securities_depository",
+      "label": "Central securities depository (CSD)",
+      "eba_code": "eba_CT:x304"
+    },
+    {
+      "code": "central_counterparty",
+      "label": "Central counterparty (CCP)",
+      "eba_code": "eba_CT:x643"
+    },
+    {
+      "code": "trade_repository",
+      "label": "Trade repository",
+      "eba_code": "eba_CT:x306"
+    },
+    {
+      "code": "credit_rating_agency",
+      "label": "Credit rating agency",
+      "eba_code": "eba_CT:x312"
+    },
+    {
+      "code": "trading_venue",
+      "label": "Trading venue",
+      "eba_code": "eba_CT:x305"
+    },
+    {
+      "code": "data_reporting_service_provider",
+      "label": "Data reporting service provider",
+      "eba_code": "eba_CT:x308"
+    },
+    {
+      "code": "insurance_undertaking",
+      "label": "Insurance undertaking",
+      "eba_code": "eba_CT:x309"
+    },
+    {
+      "code": "reinsurance_undertaking",
+      "label": "Reinsurance undertaking",
+      "eba_code": "eba_CT:x309"
+    },
+    {
+      "code": "insurance_intermediary",
+      "label": "Insurance intermediary",
+      "eba_code": "eba_CT:x320"
+    },
+    {
+      "code": "ior_pension_institution",
+      "label": "Institution for occupational retirement provision (IORP)",
+      "eba_code": "eba_CT:x311"
+    },
+    {
+      "code": "crypto_asset_service_provider",
+      "label": "Crypto-asset service provider",
+      "eba_code": "eba_CT:x303"
+    },
+    {
+      "code": "issuer_asset_referenced_token",
+      "label": "Issuer of asset-referenced tokens",
+      "eba_code": "eba_CT:x310"
+    },
+    {
+      "code": "crowdfunding_service_provider",
+      "label": "Crowdfunding service provider",
+      "eba_code": "eba_CT:x314"
+    },
+    {
+      "code": "securitisation_repository",
+      "label": "Securitisation repository",
+      "eba_code": "eba_CT:x315"
+    },
+    {
+      "code": "ict_third_party_service_provider",
+      "label": "ICT third-party service provider (TPP)",
+      "eba_code": "eba_CT:x318"
+    },
+    {
+      "code": "subcontractor_ict_tpp",
+      "label": "Subcontractor of an ICT third-party service provider",
+      "eba_code": "eba_CT:x318"
+    },
+    {
+      "code": "other",
+      "label": "Other",
+      "eba_code": "eba_CT:x316"
+    }
+  ],
+  "hierarchy": [
+    {
+      "code": "parent",
+      "label": "Ultimate parent",
+      "eba_code": "eba_RP:x53"
+    },
+    {
+      "code": "subsidiary",
+      "label": "Subsidiary",
+      "eba_code": "eba_RP:x56"
+    },
+    {
+      "code": "sole_entity",
+      "label": "Sole entity (no group)",
+      "eba_code": "eba_RP:x21"
+    },
+    {
+      "code": "branch",
+      "label": "Branch"
+    }
+  ],
+  "ict_service_type": [
+    {
+      "code": "S_01",
+      "label": "ICT project management",
+      "eba_code": "eba_TA:S01"
+    },
+    {
+      "code": "S_02",
+      "label": "ICT development",
+      "eba_code": "eba_TA:S02"
+    },
+    {
+      "code": "S_03",
+      "label": "ICT helpdesk and first-level support",
+      "eba_code": "eba_TA:S03"
+    },
+    {
+      "code": "S_04",
+      "label": "ICT security services",
+      "eba_code": "eba_TA:S04"
+    },
+    {
+      "code": "S_05",
+      "label": "ICT support for business processes",
+      "eba_code": "eba_TA:S05"
+    },
+    {
+      "code": "S_06",
+      "label": "ICT operations management",
+      "eba_code": "eba_TA:S14"
+    },
+    {
+      "code": "S_07",
+      "label": "ICT facility management",
+      "eba_code": "eba_TA:S07"
+    },
+    {
+      "code": "S_08",
+      "label": "ICT consulting",
+      "eba_code": "eba_TA:S15"
+    },
+    {
+      "code": "S_09",
+      "label": "ICT continuity management",
+      "eba_code": "eba_TA:S07"
+    },
+    {
+      "code": "S_10",
+      "label": "ICT training"
+    },
+    {
+      "code": "S_11",
+      "label": "ICT data analysis",
+      "eba_code": "eba_TA:S06"
+    },
+    {
+      "code": "S_12",
+      "label": "ICT risk management",
+      "eba_code": "eba_TA:S16"
+    },
+    {
+      "code": "S_13",
+      "label": "Computation",
+      "eba_code": "eba_TA:S08"
+    },
+    {
+      "code": "S_14",
+      "label": "Storage",
+      "eba_code": "eba_TA:S09"
+    },
+    {
+      "code": "S_15",
+      "label": "Network infrastructure",
+      "eba_code": "eba_TA:S11"
+    },
+    {
+      "code": "S_16",
+      "label": "Telecommunications carrier",
+      "eba_code": "eba_TA:S10"
+    },
+    {
+      "code": "S_17",
+      "label": "Hosting services",
+      "eba_code": "eba_TA:S07"
+    },
+    {
+      "code": "S_18",
+      "label": "Computing infrastructure (IaaS)",
+      "eba_code": "eba_TA:S17"
+    },
+    {
+      "code": "S_19",
+      "label": "Software platforms (PaaS)",
+      "eba_code": "eba_TA:S18"
+    },
+    {
+      "code": "S_20",
+      "label": "Software (SaaS)",
+      "eba_code": "eba_TA:S19"
+    },
+    {
+      "code": "S_21",
+      "label": "Other ICT services"
+    }
+  ],
+  "impact_level": [
+    {
+      "code": "low",
+      "label": "Low",
+      "eba_code": "eba_ZZ:x791"
+    },
+    {
+      "code": "medium",
+      "label": "Medium",
+      "eba_code": "eba_ZZ:x792"
+    },
+    {
+      "code": "high",
+      "label": "High",
+      "eba_code": "eba_ZZ:x793"
+    },
+    {
+      "code": "not_assessed",
+      "label": "Assessment not performed",
+      "eba_code": "eba_ZZ:x799"
+    }
+  ],
+  "inclusion_method": [
+    {
+      "code": "full",
+      "label": "Full consolidation"
+    },
+    {
+      "code": "proportional",
+      "label": "Proportional consolidation"
+    },
+    {
+      "code": "equity_method",
+      "label": "Equity method"
+    }
+  ],
+  "licenced_activity": [
+    {
+      "code": "x182",
+      "label": "Portfolio management on crypto-assets",
+      "eba_code": "eba_TA:x182"
+    },
+    {
+      "code": "x183",
+      "label": "management of portfolios of investments (AIFMD)",
+      "eba_code": "eba_TA:x183"
+    },
+    {
+      "code": "x184",
+      "label": "management of portfolios of investments (UCITSD)",
+      "eba_code": "eba_TA:x184"
+    },
+    {
+      "code": "x185",
+      "label": "Non-Life Insurance: Classes 1 and 2: ‘Accident and Health Insurance’",
+      "eba_code": "eba_TA:x185"
+    },
+    {
+      "code": "x186",
+      "label": "Non-Life Insurance: Classes 1 (fourth indent), 3, 7 and 10: ‘Motor Insurance’",
+      "eba_code": "eba_TA:x186"
+    },
+    {
+      "code": "x187",
+      "label": "Non-Life Insurance: Classes 1 (fourth indent), 4, 6, 7 and 12: ‘Marine and Transport Insurance’",
+      "eba_code": "eba_TA:x187"
+    },
+    {
+      "code": "x188",
+      "label": "Non-Life Insurance: Classes 1 (fourth indent), 5, 7 and 11: ‘Aviation Insurance’",
+      "eba_code": "eba_TA:x188"
+    },
+    {
+      "code": "x189",
+      "label": "Non-Life Insurance: Classes 8 and 9: ‘Insurance against Fire and other Damage to Property’",
+      "eba_code": "eba_TA:x189"
+    },
+    {
+      "code": "x190",
+      "label": "Non-Life Insurance: Classes 10, 11, 12 and 13: ‘Liability Insurance’",
+      "eba_code": "eba_TA:x190"
+    },
+    {
+      "code": "x191",
+      "label": "Non-Life Insurance: Classes 14 and 15: ‘Credit and Suretyship Insurance’",
+      "eba_code": "eba_TA:x191"
+    },
+    {
+      "code": "x192",
+      "label": "Non-Life Insurance: All classes, at the choice of the Member States, which shall notify the other Member States and the Commission of their choice",
+      "eba_code": "eba_TA:x192"
+    },
+    {
+      "code": "x193",
+      "label": "Life Insurance: The life insurance referred to in points (a)(i), (ii) and (iii) of Article 2(3) excluding those referred to in II and III",
+      "eba_code": "eba_TA:x193"
+    },
+    {
+      "code": "x194",
+      "label": "Life Insurance: Marriage assurance, birth assurance",
+      "eba_code": "eba_TA:x194"
+    },
+    {
+      "code": "x195",
+      "label": "Life Insurance: The insurance referred to in points (a)(i) and (ii) of Article 2(3), which are linked to investment funds",
+      "eba_code": "eba_TA:x195"
+    },
+    {
+      "code": "x196",
+      "label": "Life Insurance: Permanent health insurance, referred to in point (a)(iv) of Article 2(3)",
+      "eba_code": "eba_TA:x196"
+    },
+    {
+      "code": "x197",
+      "label": "Life Insurance: Tontines, referred to in point (b)(i) of Article 2(3)",
+      "eba_code": "eba_TA:x197"
+    },
+    {
+      "code": "x198",
+      "label": "Life Insurance: Capital redemption operations, referred to in point (b)(ii) of Article 2(3)",
+      "eba_code": "eba_TA:x198"
+    },
+    {
+      "code": "x199",
+      "label": "Life Insurance: Management of group pension funds, referred to in point (b)(iii) and (iv) of Article 2(3)",
+      "eba_code": "eba_TA:x199"
+    },
+    {
+      "code": "x200",
+      "label": "Life Insurance: The operations referred to in point (b)(v) of Article 2(3)",
+      "eba_code": "eba_TA:x200"
+    },
+    {
+      "code": "x201",
+      "label": "Life Insurance: The operations referred to in Article 2(3)(c)",
+      "eba_code": "eba_TA:x201"
+    },
+    {
+      "code": "x202",
+      "label": "insurance distribution",
+      "eba_code": "eba_TA:x202"
+    },
+    {
+      "code": "x203",
+      "label": "reinsurance distribution",
+      "eba_code": "eba_TA:x203"
+    },
+    {
+      "code": "x204",
+      "label": "Investment services related to the underlying of the derivatives",
+      "eba_code": "eba_TA:x204"
+    },
+    {
+      "code": "x205",
+      "label": "Retirement-benefit related operations and activities arising therefrom",
+      "eba_code": "eba_TA:x205"
+    },
+    {
+      "code": "x206",
+      "label": "issuance of credit ratings",
+      "eba_code": "eba_TA:x206"
+    },
+    {
+      "code": "x207",
+      "label": "administering the arrangements for determining a benchmark",
+      "eba_code": "eba_TA:x207"
+    },
+    {
+      "code": "x208",
+      "label": "collecting, analysing or processing input data for the purpose of determining a benchmark",
+      "eba_code": "eba_TA:x208"
+    },
+    {
+      "code": "x209",
+      "label": "determining a benchmark through the application of a formula or other method of calculation or by an assessment of input data provided for that purpose",
+      "eba_code": "eba_TA:x209"
+    },
+    {
+      "code": "x210",
+      "label": "publication of benchmark",
+      "eba_code": "eba_TA:x210"
+    },
+    {
+      "code": "x211",
+      "label": "Provision of crowdfunding services",
+      "eba_code": "eba_TA:x211"
+    },
+    {
+      "code": "x212",
+      "label": "ancillary non-securitisation services",
+      "eba_code": "eba_TA:x212"
+    },
+    {
+      "code": "x213",
+      "label": "ancillary securitisation services",
+      "eba_code": "eba_TA:x213"
+    },
+    {
+      "code": "x181",
+      "label": "reception and transmission of orders for crypto-assets on behalf of clients",
+      "eba_code": "eba_TA:x181"
+    },
+    {
+      "code": "x180",
+      "label": "Issuing electronic money",
+      "eba_code": "eba_TA:x180"
+    },
+    {
+      "code": "x179",
+      "label": "Credit reference services",
+      "eba_code": "eba_TA:x179"
+    },
+    {
+      "code": "x178",
+      "label": "Safe custody services",
+      "eba_code": "eba_TA:x178"
+    },
+    {
+      "code": "x177",
+      "label": "non-core services (safekeeping and administration in relation to units of collective investment undertakings)",
+      "eba_code": "eba_TA:x177"
+    },
+    {
+      "code": "x176",
+      "label": "safe-keeping and administration in relation to shares or units of collective investment undertakings",
+      "eba_code": "eba_TA:x176"
+    },
+    {
+      "code": "x175",
+      "label": "Safekeeping and administration of financial instruments for the account of clients",
+      "eba_code": "eba_TA:x175"
+    },
+    {
+      "code": "x174",
+      "label": "Safekeeping and administration of securities",
+      "eba_code": "eba_TA:x174"
+    },
+    {
+      "code": "x173",
+      "label": "Dealing on own account",
+      "eba_code": "eba_TA:x173"
+    },
+    {
+      "code": "x172",
+      "label": "Portfolio management and advice",
+      "eba_code": "eba_TA:x172"
+    },
+    {
+      "code": "x171",
+      "label": "Money broking",
+      "eba_code": "eba_TA:x171"
+    },
+    {
+      "code": "x170",
+      "label": "Advisory services",
+      "eba_code": "eba_TA:x170"
+    },
+    {
+      "code": "x169",
+      "label": "Participation in securities issues and the provision of services relating to such issues",
+      "eba_code": "eba_TA:x169"
+    },
+    {
+      "code": "x168",
+      "label": "Trading for own account or for account of customers",
+      "eba_code": "eba_TA:x168"
+    },
+    {
+      "code": "x167",
+      "label": "Guarantees and commitments related to securities lending and borrowing, within the meaning of point 6 of Annex I to Directive 2013/36/EU",
+      "eba_code": "eba_TA:x167"
+    },
+    {
+      "code": "x166",
+      "label": "Guarantees and commitments",
+      "eba_code": "eba_TA:x166"
+    },
+    {
+      "code": "x165",
+      "label": "Issuing and administering other means of payment",
+      "eba_code": "eba_TA:x165"
+    },
+    {
+      "code": "x164",
+      "label": "Financial leasing",
+      "eba_code": "eba_TA:x164"
+    },
+    {
+      "code": "x163",
+      "label": "Lending activities",
+      "eba_code": "eba_TA:x163"
+    },
+    {
+      "code": "x162",
+      "label": "Taking deposits and other repayable funds",
+      "eba_code": "eba_TA:x162"
+    },
+    {
+      "code": "x147",
+      "label": "Services related to underwriting",
+      "eba_code": "eba_TA:x147"
+    },
+    {
+      "code": "x146",
+      "label": "Investment research and financial analysis",
+      "eba_code": "eba_TA:x146"
+    },
+    {
+      "code": "x144",
+      "label": "Advice to undertakings on capital structure, industrial strategy and related matters and advice and services relating to mergers and the purchase of undertakings",
+      "eba_code": "eba_TA:x144"
+    },
+    {
+      "code": "x143",
+      "label": "Granting credits or loans to investors",
+      "eba_code": "eba_TA:x143"
+    },
+    {
+      "code": "x141",
+      "label": "Operation of an OTF",
+      "eba_code": "eba_TA:x141"
+    },
+    {
+      "code": "x140",
+      "label": "Operation of an MTF",
+      "eba_code": "eba_TA:x140"
+    },
+    {
+      "code": "x139",
+      "label": "Placing of financial instruments without a firm commitment basis",
+      "eba_code": "eba_TA:x139"
+    },
+    {
+      "code": "x138",
+      "label": "Underwriting of financial instruments and/or placing of financial instruments on a firm commitment basis",
+      "eba_code": "eba_TA:x138"
+    },
+    {
+      "code": "x137",
+      "label": "Investment advice",
+      "eba_code": "eba_TA:x137"
+    },
+    {
+      "code": "x136",
+      "label": "Portfolio management",
+      "eba_code": "eba_TA:x136"
+    },
+    {
+      "code": "x134",
+      "label": "Execution of orders on behalf of clients",
+      "eba_code": "eba_TA:x134"
+    },
+    {
+      "code": "x133",
+      "label": "Reception and transmission of orders",
+      "eba_code": "eba_TA:x133"
+    },
+    {
+      "code": "x104",
+      "label": "Foreign exchange services",
+      "eba_code": "eba_TA:x104"
+    },
+    {
+      "code": "qx278",
+      "label": "Life-reinsurance activities",
+      "eba_code": "eba_TA:qx278"
+    },
+    {
+      "code": "qx277",
+      "label": "Non-life reinsurance activities",
+      "eba_code": "eba_TA:qx277"
+    },
+    {
+      "code": "x276",
+      "label": "supporting function",
+      "eba_code": "eba_TA:x276"
+    },
+    {
+      "code": "x275",
+      "label": "Ancillary services",
+      "eba_code": "eba_TA:x275"
+    },
+    {
+      "code": "x274",
+      "label": "investment advice concerning one or more of the instruments listed in Annex I, Section C to Directive 2004/39/EC",
+      "eba_code": "eba_TA:x274"
+    },
+    {
+      "code": "x273",
+      "label": "services necessary to meet the fiduciary duties of the AIFM",
+      "eba_code": "eba_TA:x273"
+    },
+    {
+      "code": "x272",
+      "label": "Marketing",
+      "eba_code": "eba_TA:x272"
+    },
+    {
+      "code": "x271",
+      "label": "record keeping",
+      "eba_code": "eba_TA:x271"
+    },
+    {
+      "code": "x269",
+      "label": "contract settlements (including certificate dispatch)",
+      "eba_code": "eba_TA:x269"
+    },
+    {
+      "code": "x270",
+      "label": "distribution of income",
+      "eba_code": "eba_TA:x270"
+    },
+    {
+      "code": "x268",
+      "label": "unit issues and redemptions",
+      "eba_code": "eba_TA:x268"
+    },
+    {
+      "code": "x267",
+      "label": "maintenance of unit-holder register",
+      "eba_code": "eba_TA:x267"
+    },
+    {
+      "code": "x266",
+      "label": "unit/shares issues and redemptions",
+      "eba_code": "eba_TA:x266"
+    },
+    {
+      "code": "x265",
+      "label": "maintenance of unit-/shareholder register",
+      "eba_code": "eba_TA:x265"
+    },
+    {
+      "code": "x264",
+      "label": "regulatory compliance monitoring",
+      "eba_code": "eba_TA:x264"
+    },
+    {
+      "code": "x263",
+      "label": "valuation and pricing, including tax returns",
+      "eba_code": "eba_TA:x263"
+    },
+    {
+      "code": "x262",
+      "label": "customer inquiries",
+      "eba_code": "eba_TA:x262"
+    },
+    {
+      "code": "x261",
+      "label": "legal and fund management accounting services",
+      "eba_code": "eba_TA:x261"
+    },
+    {
+      "code": "x260",
+      "label": "risk management",
+      "eba_code": "eba_TA:x260"
+    },
+    {
+      "code": "x259",
+      "label": "interposition between counterparties",
+      "eba_code": "eba_TA:x259"
+    },
+    {
+      "code": "x258",
+      "label": "Any other NCA-permitted Banking-type ancillary services not specified in Annex of Regulation (EU) No 909/2014 (CSDR) - Section C",
+      "eba_code": "eba_TA:x258"
+    },
+    {
+      "code": "x257",
+      "label": "Any other NCA-permitted non-banking-type ancillary services not specified in Annex of Regulation (EU) No 909/2014 (CSDR) - Section B",
+      "eba_code": "eba_TA:x257"
+    },
+    {
+      "code": "x256",
+      "label": "Treasury activities involving foreign exchange and transferable securities related to managing participants’ long balances",
+      "eba_code": "eba_TA:x256"
+    },
+    {
+      "code": "x255",
+      "label": "\" Payment services involving processing of cash and foreign exchange transactions, within the meaning of point 4 of Annex I to Directive 2013/36/EU\"",
+      "eba_code": "eba_TA:x255"
+    },
+    {
+      "code": "x254",
+      "label": "\"Providing cash credit for reimbursement no later than the following business day, cash lending to pre-finance corporate actions and lending securities to holders of securities accounts, within the meaning of point 2 of Annex I to Directive 2013/36/EU\"",
+      "eba_code": "eba_TA:x254"
+    },
+    {
+      "code": "x253",
+      "label": "\"Providing cash accounts to, and accepting deposits from, participants in a securities settlement system and holders of securities accounts, within the meaning of point 1 of Annex I to Directive 2013/36/EU\"",
+      "eba_code": "eba_TA:x253"
+    },
+    {
+      "code": "x252",
+      "label": "Providing IT services",
+      "eba_code": "eba_TA:x252"
+    },
+    {
+      "code": "x251",
+      "label": "\"Providing information, data and statistics to market/census bureaus or other governmental or inter-governmental entities\"",
+      "eba_code": "eba_TA:x251"
+    },
+    {
+      "code": "x250",
+      "label": "Providing regulatory reporting",
+      "eba_code": "eba_TA:x250"
+    },
+    {
+      "code": "x249",
+      "label": "Instruction routing and processing, fee collection and processing and related reporting",
+      "eba_code": "eba_TA:x249"
+    },
+    {
+      "code": "x248",
+      "label": "New issue services, including allocation and management of ISIN codes and similar codes",
+      "eba_code": "eba_TA:x248"
+    },
+    {
+      "code": "x247",
+      "label": "Supporting the processing of corporate actions, including tax, general meetings and information services",
+      "eba_code": "eba_TA:x247"
+    },
+    {
+      "code": "x246",
+      "label": "Services related to shareholders’ registers",
+      "eba_code": "eba_TA:x246"
+    },
+    {
+      "code": "x245",
+      "label": "Settlement matching, instruction routing, trade confirmation, trade verification",
+      "eba_code": "eba_TA:x245"
+    },
+    {
+      "code": "x244",
+      "label": "Establishing CSD links, providing, maintaining or operating securities accounts in relation to the settlement service, collateral management, other ancillary services",
+      "eba_code": "eba_TA:x244"
+    },
+    {
+      "code": "x243",
+      "label": "general collateral management services",
+      "eba_code": "eba_TA:x243"
+    },
+    {
+      "code": "x242",
+      "label": "collateral management services",
+      "eba_code": "eba_TA:x242"
+    },
+    {
+      "code": "x241",
+      "label": "Organising a securities lending mechanism, as agent among participants of a securities settlement system",
+      "eba_code": "eba_TA:x241"
+    },
+    {
+      "code": "x240",
+      "label": "settlement service",
+      "eba_code": "eba_TA:x240"
+    },
+    {
+      "code": "x239",
+      "label": "central maintenance service",
+      "eba_code": "eba_TA:x239"
+    },
+    {
+      "code": "x238",
+      "label": "notary service",
+      "eba_code": "eba_TA:x238"
+    },
+    {
+      "code": "x237",
+      "label": "issuance of asset-referenced tokens",
+      "eba_code": "eba_TA:x237"
+    },
+    {
+      "code": "x236",
+      "label": "providing transfer services for crypto-assets on behalf of clients",
+      "eba_code": "eba_TA:x236"
+    },
+    {
+      "code": "x235",
+      "label": "providing advice on crypto-assets",
+      "eba_code": "eba_TA:x235"
+    },
+    {
+      "code": "x234",
+      "label": "placing of crypto-assets",
+      "eba_code": "eba_TA:x234"
+    },
+    {
+      "code": "x233",
+      "label": "execution of orders for crypto-assets on behalf of clients",
+      "eba_code": "eba_TA:x233"
+    },
+    {
+      "code": "x232",
+      "label": "exchange of crypto-assets for other crypto-assets",
+      "eba_code": "eba_TA:x232"
+    },
+    {
+      "code": "x231",
+      "label": "exchange of crypto-assets for funds",
+      "eba_code": "eba_TA:x231"
+    },
+    {
+      "code": "x230",
+      "label": "Operation of a Regulated Market",
+      "eba_code": "eba_TA:x230"
+    },
+    {
+      "code": "x229",
+      "label": "operation of a trading platform for crypto-assets",
+      "eba_code": "eba_TA:x229"
+    },
+    {
+      "code": "x228",
+      "label": "Providing custody and administration of crypto-assets on behalf of clients",
+      "eba_code": "eba_TA:x228"
+    },
+    {
+      "code": "x227",
+      "label": "Account information services",
+      "eba_code": "eba_TA:x227"
+    },
+    {
+      "code": "x226",
+      "label": "Payment initiation services",
+      "eba_code": "eba_TA:x226"
+    },
+    {
+      "code": "x225",
+      "label": "Money remittance",
+      "eba_code": "eba_TA:x225"
+    },
+    {
+      "code": "x224",
+      "label": "Issuing of payment instruments and/or acquiring of payment transactions",
+      "eba_code": "eba_TA:x224"
+    },
+    {
+      "code": "x223",
+      "label": "Execution of payment transactions where the funds are covered by a credit line for a payment service user",
+      "eba_code": "eba_TA:x223"
+    },
+    {
+      "code": "x222",
+      "label": "Execution of payment transactions, including transfers of funds on a payment account with the user’s payment service provider or with another payment service provider",
+      "eba_code": "eba_TA:x222"
+    },
+    {
+      "code": "x221",
+      "label": "Services enabling cash withdrawals from a payment account as well as all the operations required for operating a payment account",
+      "eba_code": "eba_TA:x221"
+    },
+    {
+      "code": "x220",
+      "label": "Services enabling cash to be placed on a payment account as well as all the operations required for operating a payment account",
+      "eba_code": "eba_TA:x220"
+    },
+    {
+      "code": "x219",
+      "label": "activity as approved reporting mechanism",
+      "eba_code": "eba_TA:x219"
+    },
+    {
+      "code": "x218",
+      "label": "activity as consolidated tape provider",
+      "eba_code": "eba_TA:x218"
+    },
+    {
+      "code": "x217",
+      "label": "activity as approved publication arrangement",
+      "eba_code": "eba_TA:x217"
+    },
+    {
+      "code": "x216",
+      "label": "collection and maintenance of the records of securitisations",
+      "eba_code": "eba_TA:x216"
+    },
+    {
+      "code": "x215",
+      "label": "collection and maintenance of the records of SFTs",
+      "eba_code": "eba_TA:x215"
+    },
+    {
+      "code": "x214",
+      "label": "collection and maintenance of the records of derivatives (non-SFTs)",
+      "eba_code": "eba_TA:x214"
+    },
+    {
+      "code": "x28",
+      "label": "Payment services",
+      "eba_code": "eba_TA:x28"
+    }
+  ],
   "nace_rev2": [
     {
       "code": "62",
@@ -2750,6 +3245,168 @@ window._doraCodelists = {
     {
       "code": "99",
       "label": "99 — Activities of extraterritorial organisations and bodies"
+    }
+  ],
+  "person_type": [
+    {
+      "code": "legal",
+      "label": "Legal person",
+      "eba_code": "eba_CT:x212"
+    },
+    {
+      "code": "natural",
+      "label": "Natural person",
+      "eba_code": "eba_CT:x213"
+    }
+  ],
+  "reintegration_level": [
+    {
+      "code": "easy",
+      "label": "Easy",
+      "eba_code": "eba_ZZ:x798"
+    },
+    {
+      "code": "difficult",
+      "label": "Difficult",
+      "eba_code": "eba_ZZ:x966"
+    },
+    {
+      "code": "highly_complex",
+      "label": "Highly complex",
+      "eba_code": "eba_ZZ:x967"
+    }
+  ],
+  "relation_to_rfe": [
+    {
+      "code": "parent",
+      "label": "Parent"
+    },
+    {
+      "code": "subsidiary",
+      "label": "Subsidiary"
+    },
+    {
+      "code": "branch",
+      "label": "Branch"
+    },
+    {
+      "code": "joint_venture",
+      "label": "Joint venture"
+    },
+    {
+      "code": "associate",
+      "label": "Associate"
+    }
+  ],
+  "reliance_level": [
+    {
+      "code": "not_significant",
+      "label": "Not significant",
+      "eba_code": "eba_ZZ:x794"
+    },
+    {
+      "code": "low",
+      "label": "Low",
+      "eba_code": "eba_ZZ:x795"
+    },
+    {
+      "code": "material",
+      "label": "Material",
+      "eba_code": "eba_ZZ:x796"
+    },
+    {
+      "code": "full",
+      "label": "Full",
+      "eba_code": "eba_ZZ:x797"
+    }
+  ],
+  "signer_role": [
+    {
+      "code": "tpp",
+      "label": "ICT third-party provider (TPP)"
+    },
+    {
+      "code": "rfe",
+      "label": "Reporting financial entity (RFE)"
+    },
+    {
+      "code": "intermediary",
+      "label": "Intermediary signer"
+    },
+    {
+      "code": "subcontractor",
+      "label": "Subcontractor"
+    }
+  ],
+  "substitutability": [
+    {
+      "code": "not_substitutable",
+      "label": "Not substitutable",
+      "eba_code": "eba_ZZ:x959"
+    },
+    {
+      "code": "highly_complex",
+      "label": "Highly complex substitutability",
+      "eba_code": "eba_ZZ:x960"
+    },
+    {
+      "code": "medium_complexity",
+      "label": "Medium complexity in terms of substitutability",
+      "eba_code": "eba_ZZ:x961"
+    },
+    {
+      "code": "easy",
+      "label": "Easily substitutable",
+      "eba_code": "eba_ZZ:x962"
+    }
+  ],
+  "substitutability_reason": [
+    {
+      "code": "no_alternatives",
+      "label": "Lack of real alternatives in the market",
+      "eba_code": "eba_ZZ:x963"
+    },
+    {
+      "code": "migration_difficulties",
+      "label": "Difficulties in migrating data and workloads",
+      "eba_code": "eba_ZZ:x964"
+    },
+    {
+      "code": "both",
+      "label": "Both abovementioned reasons",
+      "eba_code": "eba_ZZ:x965"
+    }
+  ],
+  "termination_reason": [
+    {
+      "code": "expired_not_renewed",
+      "label": "Contract expired without renewal",
+      "eba_code": "eba_CO:x4"
+    },
+    {
+      "code": "breach_of_law",
+      "label": "Breach of law / contract by TPSP",
+      "eba_code": "eba_CO:x5"
+    },
+    {
+      "code": "impediments",
+      "label": "Impediments to performance",
+      "eba_code": "eba_CO:x6"
+    },
+    {
+      "code": "data_security_weakness",
+      "label": "Data security weakness",
+      "eba_code": "eba_CO:x7"
+    },
+    {
+      "code": "competent_authority",
+      "label": "Order from competent authority",
+      "eba_code": "eba_CO:x8"
+    },
+    {
+      "code": "other",
+      "label": "Other",
+      "eba_code": "eba_CO:x9"
     }
   ]
 };
