@@ -316,3 +316,66 @@ select.tpl-criticality.crit-info, select.tpl-criticality.crit-major, select.tpl-
 .help-tab:hover { color: var(--text); }
 .help-tab.active { color: var(--blue); border-bottom-color: var(--light-blue); }
 
+/* DORA RoI — clickable cards (replaces inline onmouseover/onmouseout for CSP compliance) */
+.dora-card-hover:hover { background: var(--bg-elev, #f7f7f9) !important; border-color: var(--text-muted) !important; }
+
+/* DORA RoI overview — entity-level input cards (B_01 / B_03 / B_05) */
+.dora-overview-header {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px; margin-bottom: 12px;
+}
+
+/* Section help — small "?" button next to each section title, toggles
+   the matching .dora-hint paragraph (hidden by default). */
+.dora-help-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 20px; height: 20px; padding: 0; border-radius: 50%;
+    border: 1px solid var(--border); background: var(--bg-elev, #f7f7f9);
+    color: var(--text-muted); font-size: 0.8em; font-weight: 600;
+    cursor: pointer; line-height: 1;
+}
+.dora-help-btn:hover {
+    background: var(--light-blue, #e6f0ff); color: var(--blue);
+    border-color: var(--blue);
+}
+.dora-export-bar {
+    display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap;
+    padding: 8px 12px; background: var(--bg-elev, #f7f7f9);
+    border: 1px solid var(--border); border-radius: 6px;
+}
+.dora-export-field { display: flex; flex-direction: column; gap: 2px; font-size: 0.85em; }
+.dora-export-field span { color: var(--text-muted); }
+.dora-export-field select, .dora-export-field input { min-height: 30px; }
+
+.dora-overview-section {
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px 14px 14px; margin: 0 0 14px;
+}
+.dora-overview-section > legend { padding: 0 8px; font-weight: 600; color: var(--text); }
+
+.dora-empty-block {
+    padding: 12px; border: 1px dashed var(--border); border-radius: 6px;
+    color: var(--text-muted); text-align: center; font-size: 0.9em; margin-bottom: 10px;
+}
+
+.dora-overview-card {
+    border: 1px solid var(--border); border-radius: 6px;
+    background: var(--bg, #fff); padding: 10px 12px; margin-bottom: 8px;
+}
+.dora-overview-card-h { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.dora-overview-card-title { flex: 1; font-weight: 600; }
+.dora-overview-card-h .btn-danger { padding: 2px 8px; }
+
+.dora-overview-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 8px 14px;
+}
+.dora-overview-grid .form-row { margin-bottom: 0; }
+.dora-overview-grid .form-row label {
+    display: block; font-size: 0.82em; color: var(--text-muted); margin-bottom: 2px;
+}
+.dora-overview-grid .form-row input,
+.dora-overview-grid .form-row select { width: 100%; box-sizing: border-box; }
+
+.dora-overview-id { font-size: 0.78em; color: var(--text-muted); font-weight: 400; }
+.dora-overview-parent { color: var(--text-muted); font-weight: 400; font-size: 0.85em; }
