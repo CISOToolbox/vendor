@@ -125,6 +125,10 @@ var _EBA_REINTEGRATION_LEVEL = {
     "not_applicable": "eba_ZZ:x0"
 };
 
+// Data sensitivity — LISTB02020170 (B_02.02.0170). EBA exposes only
+// Low / Medium / High; the legacy 4-level scale (public/internal/
+// confidential/strictly_confidential) is collapsed by design — same
+// mapping as the backend dora_export.py.
 var _EBA_DATA_SENSITIVITY = {
     "public": "eba_ZZ:x791",
     "internal": "eba_ZZ:x791",
@@ -168,6 +172,12 @@ var _EBA_TYPE_OF_CODE = {
     "passport": "eba_qCO:qx2005"
 };
 
+// ICT service taxonomy — LISTB02020110 / B_07.01.0040. Maps the
+// internal 21-item S_01..S_21 catalog to the EBA 19-item taxonomy.
+// Several internal codes legitimately collapse to the same EBA code
+// (S_07 / S_09 / S_17 → S07) — this is the EBA DPM v4.0 mapping,
+// identical to backend dora_export.py. S_10 (training) and S_21
+// (other) have no EBA equivalent and are dropped.
 var _EBA_ICT_SERVICE = {
     "S_01": "eba_TA:S01",
     "S_02": "eba_TA:S02",
@@ -476,16 +486,16 @@ function _doraExportEBA(tree, codelists, targetCurrency) {
     _say("DORA export: building workbook…");
 
     return loader().then(function() {
-        try {
-            _build(tree, codelists, targetCurrency);
-            _say("DORA export: done");
-        } catch (e) {
-            _say("DORA export error: " + (e && e.message ? e.message : e));
-            if (window.console && console.error) console.error(e);
-        }
+        return _build(tree, codelists, targetCurrency);
     }, function(err) {
         _say("DORA export: ExcelJS load failed");
         if (window.console && console.error) console.error(err);
+        throw err;
+    }).then(function() {
+        _say("DORA export: done");
+    }, function(e) {
+        _say("DORA export error: " + (e && e.message ? e.message : e));
+        if (window.console && console.error) console.error(e);
     });
 }
 

@@ -75,8 +75,8 @@ function _loadTree(host) {
     // Opensource: D.dora is the in-memory tree (single-doc browser app).
     // The codelists were loaded synchronously by index.html as window._doraCodelists.
     if (typeof D === "undefined" || !D || !D.dora) {
-        host.innerHTML = '<h2>' + _doraT("nav.dora", "DORA Register") + '</h2>'
-            + '<p>' + _doraT("dora.no_project", "Open or create a project first.") + '</p>';
+        host.innerHTML = '<h2>' + _esc(_doraT("nav.dora", "DORA Register")) + '</h2>'
+            + '<p>' + _esc(_doraT("dora.no_project", "Open or create a project first.")) + '</p>';
         return;
     }
     _doraTree = D.dora;
@@ -454,7 +454,7 @@ function _render(host) {
     var helpTitle = _esc(_doraT("dora.help.toggle", "Afficher / masquer l'aide"));
     var h = '<div class="dora-overview-header">';
     h += '<h2 style="margin:0;display:flex;align-items:center;gap:8px">'
-       + _doraT("nav.dora", "DORA Register of Information")
+       + _esc(_doraT("nav.dora", "DORA Register of Information"))
        + '<button type="button" class="dora-help-btn" data-click="doraToggleHint" data-args=\'["intro"]\' title="' + helpTitle + '" aria-label="' + helpTitle + '">?</button>'
        + '</h2>';
     h += '</div>';
@@ -1350,7 +1350,7 @@ function _renderSubcontractors() {
     var links = _doraTree.subcontractor_links || [];
     var arrs = _doraTree.arrangements || [];
     var arrById = {}; arrs.forEach(function(a) { arrById[a.id] = a; });
-    var vById = {}; (_doraTree._vendors || []).forEach(function(v) { vById[v.id] = v; });
+    var vById = {}; ((window.D && D.vendors) || []).forEach(function(v) { vById[v.id] = v; });
 
     // Group links by sub.
     var linksBySub = {};
@@ -1431,20 +1431,21 @@ window.doraNewSubFromLink = function(arrangementId) {
     _persistCreate("dora_subcontractor", row);
     setTimeout(function() {
         if (!window.doraOpenSubIdentityModal) return;
-        window.doraOpenSubIdentityModal(id);
-        // Hook the identity modal's promise so we can chain back. ct_modal
-        // is a single-overlay singleton so we can't await the previous
-        // open() — instead poll the overlay until it disappears, then
-        // re-open the link modal with the new sub pre-selected.
-        var poll = setInterval(function() {
-            var ov = document.querySelector(".ct-modal-overlay");
-            if (!ov || ov.hidden || ov.style.display === "none") {
-                clearInterval(poll);
-                // Sub may have been deleted from inside the identity modal.
-                var stillExists = (_doraTree.subcontractors || []).some(function(s) { return s.id === id; });
-                window.doraOpenSubcontractorModal(arrangementId, null, stillExists ? id : "");
-            }
-        }, 150);
+        // Chain on the identity modal's Promise (returned by ct_modal.open).
+        // When the user closes/saves/deletes, re-open the link modal with the
+        // new sub pre-selected (unless the user deleted it from inside).
+        var p = window.doraOpenSubIdentityModal(id);
+        var reopenLink = function() {
+            var stillExists = (_doraTree.subcontractors || []).some(function(s) { return s.id === id; });
+            window.doraOpenSubcontractorModal(arrangementId, null, stillExists ? id : "");
+        };
+        if (p && typeof p.then === "function") {
+            p.then(reopenLink, reopenLink);
+        } else {
+            // Defensive fallback if doraOpenSubIdentityModal returns undefined
+            // (e.g. ct_modal not loaded). Skip the chain rather than poll.
+            reopenLink();
+        }
     }, 60);
 };
 
@@ -1511,11 +1512,11 @@ window.doraLinkSub = function(arrangementId, subId, perLinkFields) {
     }, perLinkFields);
     _doraTree.subcontractor_links = _doraTree.subcontractor_links || [];
     _doraTree.subcontractor_links.push(row);
-    var a = (_doraTree.arrangements || []).find(function(x) { return x.id === arrangementId; });
-    if (a) {
-        a.subcontractor_links = a.subcontractor_links || [];
-        a.subcontractor_links.push(row);
-    }
+    // Note: per-arrangement shadow array `a.subcontractor_links` is no longer
+    // maintained — the canonical list lives on _doraTree, the export reads
+    // it exclusively, and DoraData.subcontractorsForVendor / arrangementsForSubcontractor
+    // already query the canonical list. Avoiding the shadow prevents silent
+    // divergence under shared object references.
     _persistCreate("dora_sub_link", row);
 };
 
@@ -2298,7 +2299,7 @@ window.doraOpenSubIdentityModal = function(subId) {
     // Build read-only "Linked arrangements" listing.
     var links = window.DoraData.arrangementsForSubcontractor(s.id);
     var arrById = {}; (_doraTree.arrangements || []).forEach(function(a) { arrById[a.id] = a; });
-    var vById = {}; (_doraTree._vendors || []).forEach(function(v) { vById[v.id] = v; });
+    var vById = {}; ((window.D && D.vendors) || []).forEach(function(v) { vById[v.id] = v; });
     var linksHtml = '';
     if (links.length === 0) {
         linksHtml = '<div style="color:var(--text-muted);font-size:0.9em">' + _doraT("dora.subs.no_links_hint", "Not linked to any arrangement yet. Open an arrangement and use its Subcontractors block to link this entity.") + '</div>';
@@ -2361,7 +2362,7 @@ window.doraOpenSubIdentityModal = function(subId) {
         return "saved";
     }});
 
-    window.ct_modal.open({
+    return window.ct_modal.open({
         title: _doraT("dora.modal.sub_id_title", "Edit subcontractor identity"),
         body: bodyHtml,
         size: "lg",

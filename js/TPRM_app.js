@@ -5905,6 +5905,11 @@ function _initDataAndRender(cb) {
     _panel = "dashboard";
     _selectedVendor = null;
     _doraMigrate(D);
+    // Drop the cached DORA tree so the next render binds to the new D.dora
+    // (file load / new analysis replaces D, not its keys in place).
+    if (window.DoraData && typeof window.DoraData.invalidate === "function") {
+        window.DoraData.invalidate();
+    }
     renderAll();
     if (cb) cb();
 }
