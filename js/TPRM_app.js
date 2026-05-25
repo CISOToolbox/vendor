@@ -1349,7 +1349,7 @@ function _renderVendorRisks(v) {
         h += '<div style="display:flex;gap:4px;margin-top:3px">';
         h += '<button class="btn-add btn-add-sm" data-click="addMeasureForRisk" data-args=\'' + _da(_selectedVendor, riskIdx) + '\'>' + t("measure.add") + '</button>';
         if (typeof _aiIsEnabled === "function" && _aiIsEnabled()) {
-            h += '<button class="btn-add btn-add-sm" style="background:var(--light-blue)" data-click="suggestMeasuresForRisk" data-args=\'' + _da(_selectedVendor, riskIdx) + '\'>AI</button>';
+            h += '<button class="btn-ai btn-ai-sm" data-click="suggestMeasuresForRisk" data-args=\'' + _da(_selectedVendor, riskIdx) + '\'>AI</button>';
         }
         h += '</div></td>';
 
@@ -1605,7 +1605,7 @@ function openAiRiskAssistant(vendorIdx) {
     h += '<div class="settings-label">' + t("ai.option_risks") + '</div>';
     h += '<p class="fs-xs text-muted" style="margin-bottom:8px">' + t("ai.option_risks_hint") + '</p>';
     h += '<textarea class="settings-input" id="ai-risk-prompt" rows="2" placeholder="' + esc(t("ai.custom_prompt_placeholder")) + '" style="width:100%;margin-bottom:8px"></textarea>';
-    h += '<button class="btn-add" style="background:var(--light-blue);width:100%" data-click="aiRunRiskSuggestion" data-args=\'' + _da(vendorIdx) + '\'>&#129302; ' + t("ai.generate_risks") + '</button>';
+    h += '<button class="btn-ai" style="width:100%" data-click="aiRunRiskSuggestion" data-args=\'' + _da(vendorIdx) + '\'>&#129302; ' + t("ai.generate_risks") + '</button>';
     h += '</div>';
 
     // Option 2: Add measures for a risk
@@ -1621,7 +1621,7 @@ function openAiRiskAssistant(vendorIdx) {
         });
         h += '</select>';
         h += '<textarea class="settings-input" id="ai-measure-prompt" rows="2" placeholder="' + esc(t("ai.custom_prompt_placeholder")) + '" style="width:100%;margin-bottom:8px"></textarea>';
-        h += '<button class="btn-add" style="background:var(--light-blue);width:100%" data-click="aiRunMeasureSuggestion" data-args=\'' + _da(vendorIdx) + '\'>&#129302; ' + t("ai.generate_measures") + '</button>';
+        h += '<button class="btn-ai" style="width:100%" data-click="aiRunMeasureSuggestion" data-args=\'' + _da(vendorIdx) + '\'>&#129302; ' + t("ai.generate_measures") + '</button>';
         h += '</div>';
     } else {
         h += '<div class="settings-section">';
@@ -2002,7 +2002,7 @@ function _renderVendorDocs(v) {
     var h = '<div style="display:flex;align-items:center;gap:10px"><strong>' + t("doc.title") + ' (' + docs.length + ')</strong>';
     h += '<button class="btn-add" style="font-size:0.78em;padding:3px 10px" data-click="addDocument">' + t("doc.add") + '</button>';
     if (typeof _aiIsEnabled === "function" && _aiIsEnabled()) {
-        h += '<button class="btn-add" style="font-size:0.78em;padding:3px 10px;background:var(--light-blue)" data-click="aiCollectDocs">' + t("ai.collect_docs") + '</button>';
+        h += '<button class="btn-ai" style="font-size:0.78em;padding:3px 10px" data-click="aiCollectDocs">' + t("ai.collect_docs") + '</button>';
     }
     h += '</div>';
     if (!docs.length) {
@@ -2325,7 +2325,7 @@ function openAssessment(assessId) {
             h += '<div style="display:flex;align-items:center;gap:8px;margin:14px 0 6px;padding-top:10px;border-top:1px solid var(--border)">';
             h += '<span style="font-size:0.75em;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted)">' + esc(currentDomain.replace(/_/g, " ")) + '</span>';
             if (typeof _aiIsEnabled === "function" && _aiIsEnabled()) {
-                h += '<button class="btn-add fs-xs" style="background:var(--light-blue);padding:2px 8px;margin-left:auto" data-click="aiSuggestDomain" data-args=\'' + _da(a.id, currentDomain) + '\'>AI</button>';
+                h += '<button class="btn-ai btn-ai-sm" style="margin-left:auto" data-click="aiSuggestDomain" data-args=\'' + _da(a.id, currentDomain) + '\'>AI</button>';
             }
             h += '</div>';
         }
