@@ -52,18 +52,6 @@ body { min-height: 100vh; }
 .portal-actions { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
 
 /* ── Help overlay ─────────────────────────────────────── */
-.help-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 500; }
-.help-overlay.open { display: flex; justify-content: center; align-items: flex-start; padding-top: 60px; }
-.help-panel { background: white; border-radius: 12px; max-width: 900px; width: 90%; max-height: 80vh; overflow-y: auto; padding: 30px 40px; position: relative; box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
-.help-panel h1 { color: var(--text); margin: 0 0 12px; font-size: 1.5em; border-bottom: 2px solid var(--light-blue); padding-bottom: 8px; }
-.help-panel h2 { color: var(--light-blue); margin: 20px 0 8px; font-size: 1.1em; }
-.help-panel h3 { color: var(--text); margin: 14px 0 6px; font-size: 1em; }
-.help-panel p { margin: 6px 0; font-size: 0.9em; line-height: 1.6; color: var(--text); }
-.help-panel ul, .help-panel ol { margin: 6px 0 12px 18px; font-size: 0.9em; line-height: 1.6; color: var(--text); }
-.help-panel li { margin-bottom: 4px; }
-.help-panel code { background: var(--bg); padding: 1px 6px; border-radius: 3px; font-size: 0.88em; font-family: ui-monospace, monospace; }
-.help-close { position: absolute; top: 12px; right: 16px; background: none; border: none; font-size: 1.6em; cursor: pointer; color: var(--gray-dark); line-height: 1; padding: 4px 8px; }
-.help-close:hover { color: var(--red); }
 
 /* ── Toolbar tweaks ───────────────────────────────────── */
 .toolbar .btn-menu { background: transparent; color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; padding: 5px 12px; cursor: pointer; font-size: 0.85em; margin-right: 6px; transition: all 0.15s; }
@@ -74,5 +62,4 @@ body { min-height: 100vh; }
     .portal-main { padding: 12px; }
     .portal-welcome { padding: 20px 16px; }
     .portal-import { grid-template-columns: 1fr; }
-    .help-panel { padding: 20px; max-height: 88vh; }
 }

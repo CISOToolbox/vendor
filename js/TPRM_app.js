@@ -21,8 +21,45 @@ var TPRM_INIT_DATA = {
         decay_per_quarter: 0.0,
         min_effective_weight: 0.1
     },
+    dora: _doraInitEmpty(),
     metadata: { organization: "", created: "" }
 };
+
+// ── DORA RoI data structure (EBA Reg. (EU) 2024/2956) ─────────────
+// Empty-state factory used by TPRM_INIT_DATA and the load migration.
+// Keep keys aligned with backend: entities (B_01.02), functions
+// (B_06.01), branches (B_01.03), consolidation (out-of-scope entities
+// in B_01.02), arrangements (B_02.0*), signers (B_03.0*), subcontractors
+// (B_05.01), arrangement_subcontractors (B_05.02 junction).
+function _doraInitEmpty() {
+    return {
+        entities: [],
+        functions: [],
+        branches: [],
+        consolidation: [],
+        arrangements: [],
+        signers: [],
+        subcontractors: [],
+        subcontractor_links: [],
+        metadata: { reporting_period: "", currency: "EUR", fx_rates: {} }
+    };
+}
+
+// Idempotent migration: ensure every DORA subkey exists on D after a
+// file load (older files may predate the DORA addition). Safe to call
+// repeatedly — never overwrites existing data.
+function _doraMigrate(d) {
+    if (!d) return;
+    if (!d.dora || typeof d.dora !== "object") d.dora = _doraInitEmpty();
+    var empty = _doraInitEmpty();
+    Object.keys(empty).forEach(function(k) {
+        if (d.dora[k] === undefined || d.dora[k] === null) d.dora[k] = empty[k];
+    });
+    if (!d.dora.metadata || typeof d.dora.metadata !== "object") d.dora.metadata = empty.metadata;
+    Object.keys(empty.metadata).forEach(function(k) {
+        if (d.dora.metadata[k] === undefined) d.dora.metadata[k] = empty.metadata[k];
+    });
+}
 window.CT_CONFIG = {
     autosaveKey: "tprm_autosave",
     initDataVar: "TPRM_INIT_DATA",
@@ -82,6 +119,14 @@ function renderPanel() {
         case "history":
             c.innerHTML = '<h2>' + t("tprm.history.title") + '</h2><p class="panel-desc">' + t("tprm.history.intro") + '</p><div id="history-content"></div>';
             renderHistory();
+            break;
+        case "dora":
+            if (typeof renderDoraPanel === "function") {
+                c.innerHTML = '<div id="dora-root"></div>';
+                renderDoraPanel(document.getElementById("dora-root"));
+            } else {
+                c.innerHTML = '<h2>' + t("nav.dora") + '</h2><p>' + t("dora.unavailable") + '</p>';
+            }
             break;
         default: c.innerHTML = renderDashboard();
     }
@@ -515,15 +560,132 @@ function _initTimelineDrag() {
 
 var _vendorFilter = "";
 var _vendorStatusFilter = "";
+var _vendorListTab = "vendors";
+var _subFilter = "";
 
 function filterVendors(val) { _vendorFilter = (val || "").toLowerCase(); renderPanel(); }
 window.filterVendors = filterVendors;
 function filterVendorStatus(val) { _vendorStatusFilter = val || ""; renderPanel(); }
 window.filterVendorStatus = filterVendorStatus;
+window.filterSubs = function(val) { _subFilter = (val || "").toLowerCase(); renderPanel(); };
+
+window.selectVendorListTab = function(tab) {
+    _vendorListTab = tab;
+    if (tab === "subcontractors" && window.DoraData && !window.DoraData.getTree()) {
+        window.DoraData.ensureLoaded(function() { renderPanel(); });
+    }
+    renderPanel();
+};
+
+// Card-based listing of project-wide subcontractors (DORA global identities).
+function renderSubcontractorList() {
+    if (!window.DoraData || !window.DoraData.getTree()) {
+        return '<div class="empty-state">' + esc(t("dora.unavailable") || "DORA data not available") + '</div>';
+    }
+    var tree = window.DoraData.getTree();
+    var subs = (tree.subcontractors || []).slice();
+    var links = tree.subcontractor_links || [];
+    var arrs = tree.arrangements || [];
+    var arrById = {}; arrs.forEach(function(a) { arrById[a.id] = a; });
+    var vById = {}; (D.vendors || []).forEach(function(v) { vById[v.id] = v; });
+    var linksBySub = {};
+    links.forEach(function(l) {
+        if (!linksBySub[l.subcontractor_id]) linksBySub[l.subcontractor_id] = [];
+        linksBySub[l.subcontractor_id].push(l);
+    });
+
+    var h = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">';
+    h += '<h2 style="margin:0">' + t("vendor.subs_title") + '</h2>';
+    h += '<div style="display:flex;gap:8px">';
+    h += '<button class="btn-add" data-click="doraAddSub">' + t("dora.add_subcontractor") + '</button>';
+    h += '</div></div>';
+
+    h += '<p class="panel-desc" style="margin:0 0 12px 0">' + esc(t("dora.subs.intro")) + '</p>';
+
+    h += '<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">';
+    h += '<input type="text" placeholder="🔍 ' + esc(t("vendor.search")) + '" value="' + esc(_subFilter) + '" style="flex:1;min-width:180px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85em" data-input="filterSubs" data-pass-value>';
+    h += '</div>';
+
+    if (!subs.length) return h + '<div class="empty-state">' + esc(t("dora.subs.empty")) + '</div>';
+
+    var q = _subFilter;
+    var count = 0;
+    subs.forEach(function(s) {
+        if (q) {
+            var hay = ((s.name || "") + " " + (s.lei || "") + " " + (s.country_iso2 || "") + " " + (s.sector || "") + " " + (s.id || "")).toLowerCase();
+            if (hay.indexOf(q) < 0) return;
+        }
+        count++;
+        var subLinks = linksBySub[s.id] || [];
+        var critN = subLinks.filter(function(l) { return l.is_critical_function_support; }).length;
+        var vSet = {};
+        subLinks.forEach(function(l) {
+            var a = arrById[l.arrangement_id];
+            if (a && a.vendor_id) vSet[a.vendor_id] = true;
+        });
+        var vendorNames = Object.keys(vSet).map(function(vid) {
+            var v = vById[vid]; return v ? v.name : vid;
+        });
+
+        h += '<div class="vendor-card" data-click="doraOpenSubIdentityModal" data-args=\'["' + esc(s.id) + '"]\'>';
+        h += '<div class="vendor-card-left">';
+        h += '<span class="vendor-name">' + esc(s.name || s.id) + '</span>';
+        if (s.lei) h += '<code style="font-size:0.78em;color:var(--text-muted)">' + esc(s.lei) + '</code>';
+        if (s.country_iso2) h += '<span style="font-size:0.78em;color:var(--text-muted)">' + esc(s.country_iso2) + '</span>';
+        if (s.sector) h += '<span class="tier-badge" style="background:var(--bg-elev,#eef);color:var(--text-muted)">' + esc(s.sector) + '</span>';
+        if (critN > 0) h += '<span class="dora-badge" style="background:var(--orange)">★ ' + critN + ' CIF</span>';
+        h += '</div>';
+        h += '<div class="vendor-card-right">';
+        if (subLinks.length === 0) {
+            h += '<span style="color:var(--text-muted);font-style:italic">' + esc(t("dora.subs.no_links_short")) + '</span>';
+        } else {
+            h += '<span style="color:var(--blue);font-weight:600">' + subLinks.length + ' ' + esc(t("dora.subs.linked_arrangements_short")) + '</span>';
+            if (vendorNames.length > 0) {
+                h += '<span class="vendor-card-sep">·</span>';
+                h += '<span style="color:var(--text-muted)">' + esc(vendorNames.slice(0, 3).join(", ")) + (vendorNames.length > 3 ? " +" + (vendorNames.length - 3) : "") + '</span>';
+            }
+        }
+        h += '</div>';
+        h += '</div>';
+    });
+    if (count === 0 && q) {
+        h += '<div class="empty-state">' + esc(t("vendor.no_results")) + '</div>';
+    }
+    return h;
+}
 
 function renderVendorList() {
-    var h = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">';
-    h += '<h2>' + t("vendor.title") + '</h2>';
+    if (window.DoraData && !window.DoraData.getTree()) {
+        window.DoraData.ensureLoaded(function(tree) {
+            if (tree) renderPanel();
+        });
+    }
+    // Tab bar: Vendors | Subcontractors
+    var tabsH = '<div style="display:inline-flex;background:var(--bg-elev,#f3f3f5);border:1px solid var(--border);border-radius:8px;padding:3px;margin-bottom:16px;gap:2px">';
+    var _mkTab = function(id, label, count) {
+        var active = _vendorListTab === id;
+        var bg = active ? "var(--card-bg,#fff)" : "transparent";
+        var color = active ? "var(--text)" : "var(--text-muted)";
+        var shadow = active ? "0 1px 3px rgba(0,0,0,0.08)" : "none";
+        var weight = active ? "700" : "500";
+        var countHtml = (count != null) ? ' <span style="opacity:0.7;font-weight:500">(' + count + ')</span>' : '';
+        return '<button data-click="selectVendorListTab" data-args=\'["' + id + '"]\' '
+             + 'style="padding:8px 18px;font-size:0.9em;font-weight:' + weight + ';color:' + color + ';background:' + bg + ';border:none;border-radius:6px;cursor:pointer;box-shadow:' + shadow + ';transition:all 0.15s">'
+             + esc(label) + countHtml + '</button>';
+    };
+    var _vendorCount = (D.vendors || []).length;
+    var _subCount = (window.DoraData && window.DoraData.getTree()) ? ((window.DoraData.getTree().subcontractors || []).length) : 0;
+    tabsH += _mkTab("vendors", t("vendor.tab_vendors"), _vendorCount);
+    tabsH += _mkTab("subcontractors", t("vendor.tab_subcontractors"), _subCount);
+    tabsH += '</div>';
+
+    if (_vendorListTab === "subcontractors") {
+        return tabsH + renderSubcontractorList();
+    }
+
+    var h = tabsH;
+    h += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">';
+    h += '<h2 style="margin:0">' + t("vendor.title") + '</h2>';
     h += '<div style="display:flex;gap:8px">';
     h += '<button class="btn-add" data-click="addVendor">' + t("vendor.add") + '</button>';
     h += '</div></div>';
@@ -664,7 +826,7 @@ function renderVendorDetail() {
 
     // Tabs
     h += '<div class="vendor-tabs">';
-    ["info", "risks", "assessments", "documents"].forEach(function(tab) {
+    ["info", "risks", "assessments", "documents", "dora"].forEach(function(tab) {
         h += '<button class="vendor-tab' + (_vendorTab === tab ? ' active' : '') + '" data-click="setVendorTab" data-args=\'' + _da(tab) + '\'>' + t("vendor.tab_" + tab) + '</button>';
     });
     h += '</div>';
@@ -675,9 +837,164 @@ function renderVendorDetail() {
         // measures integrated into risks tab
         case "assessments": h += _renderVendorAssessments(v); break;
         case "documents": h += _renderVendorDocs(v); break;
+        case "dora": h += _renderVendorDoraTab(v); break;
     }
     return h;
 }
+
+// ── DORA RoI tab inside the vendor edit modal ───────────────────────
+// Shows the 9 RoI fields (LEI, legal name latin, country ISO-2,
+// person type, entity nature, additional id triplet, ultimate parent)
+// + a per-vendor card (arrangements, signers, sub-contractors).
+
+function _renderVendorDoraTab(v) {
+    if (window.DoraData && !window.DoraData.getTree()) {
+        window.DoraData.ensureLoaded(function() { renderPanel(); });
+    }
+    var cl = (window.DoraData && window.DoraData.codelists && window.DoraData.codelists()) || (window._doraCodelists || {});
+    var personType = cl.person_type || [];
+    var idTypes = cl.additional_id_type || [];
+    var countries = cl.country_iso3166_1 || [];
+
+    function _opts(key, items, current) {
+        var html = '<option value="">— —</option>';
+        items.forEach(function(it) {
+            var code = it.code !== undefined ? it.code : it;
+            var fallback = it.label !== undefined ? it.label : code;
+            var label = t("dora.cl." + key + "." + code) || fallback;
+            if (label === "dora.cl." + key + "." + code) label = fallback;
+            var sel = (current === code) ? " selected" : "";
+            html += '<option value="' + esc(code) + '"' + sel + '>' + esc(label) + '</option>';
+        });
+        return html;
+    }
+
+    var roi = (window.DoraData && window.DoraData.roiStatus(v)) || { complete: true, missing: [] };
+    var statusBadge = roi.complete
+        ? '<span class="dora-badge" style="background:var(--green)">' + esc(t("dora.bridge.roi_complete")) + '</span>'
+        : '<span class="dora-badge" style="background:var(--orange)">⚠ ' + esc(t("dora.bridge.roi_incomplete")) + ' (' + roi.missing.length + ')</span>';
+
+    var h = '<div class="tprm-form" style="max-width:900px">';
+    h += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">';
+    h += '<h3 style="margin:0">' + esc(t("dora.vtab.title")) + '</h3>' + statusBadge;
+    h += '</div>';
+    h += '<p style="color:var(--text-muted);font-size:0.85em;margin:0 0 8px">' + esc(t("dora.vtab.intro")) + '</p>';
+
+    h += '<div class="form-section">' + esc(t("dora.vtab.section_identity")) + '</div>';
+    h += '<div class="form-grid">';
+
+    var hasAddId = !!(v.additional_id_type || v.additional_id_value);
+    var addIdShown = hasAddId || _vroiAddIdOpen === v.id;
+    var gleifBtn = (window.DoraData && DoraData.gleifTriggerHtml) ? DoraData.gleifTriggerHtml("vroi-lei") : "";
+    h += '<div class="form-row" style="grid-column:span 2"><label>' + esc(t("dora.vtab.lei")) + '</label>';
+    h += '<div style="display:flex;align-items:center;gap:2px">';
+    h += '<input id="vroi-lei" value="' + esc(v.lei || "") + '" placeholder="20 chars, mod-97-10" data-input="patchVendorRoi" data-args=\'' + _da("lei") + '\' data-pass-value style="flex:1">' + gleifBtn;
+    h += '</div>';
+    h += '<label style="display:inline-flex;align-items:center;gap:5px;margin-top:3px;font-size:0.7em;line-height:1.2;white-space:nowrap;color:var(--text-muted);cursor:pointer">';
+    h += '<input type="checkbox" id="vroi-add-id-toggle" data-click="toggleVendorRoiAddId"' + (addIdShown ? ' checked' : '') + ' style="margin:0;transform:scale(0.85)">';
+    h += esc(t("dora.vtab.add_additional_id"));
+    h += '</label>';
+    h += '</div>';
+
+    if (addIdShown) {
+        h += '<div class="form-row" style="grid-column:span 2"><label>' + esc(t("dora.vtab.additional_id_type")) + '</label>';
+        h += '<select data-change="patchVendorRoi" data-args=\'' + _da("additional_id_type") + '\' data-pass-value>' + _opts("additional_id_type", idTypes, v.additional_id_type) + '</select></div>';
+        h += '<div class="form-row"><label>' + esc(t("dora.vtab.additional_id_value")) + '</label>';
+        h += '<input value="' + esc(v.additional_id_value || "") + '" data-input="patchVendorRoi" data-args=\'' + _da("additional_id_value") + '\' data-pass-value></div>';
+    }
+
+    h += '<div class="form-row" style="grid-column:span 2"><label>' + esc(t("dora.vtab.legal_name_latin")) + '</label>';
+    h += '<input value="' + esc(v.legal_name_latin || "") + '" data-input="patchVendorRoi" data-args=\'' + _da("legal_name_latin") + '\' data-pass-value></div>';
+
+    h += _vendorRoiCountryField(v.country_iso2, countries);
+
+    h += '<div class="form-row"><label>' + esc(t("dora.vtab.person_type")) + '</label>';
+    h += '<select data-change="patchVendorRoi" data-args=\'' + _da("person_type") + '\' data-pass-value>' + _opts("person_type", personType, v.person_type) + '</select></div>';
+
+    var parentOpts = '<option value="">— —</option>';
+    D.vendors.forEach(function(otherV) {
+        if (otherV.id === v.id) return;
+        var sel = (v.ultimate_parent_id === otherV.id) ? " selected" : "";
+        parentOpts += '<option value="' + esc(otherV.id) + '"' + sel + '>' + esc(otherV.name || otherV.id) + (otherV.lei ? " (" + esc(otherV.lei) + ")" : "") + '</option>';
+    });
+    h += '<div class="form-row" style="grid-column:span 2"><label>' + esc(t("dora.vtab.ultimate_parent_id")) + '</label>';
+    h += '<select data-change="patchVendorRoi" data-args=\'' + _da("ultimate_parent_id") + '\' data-pass-value>' + parentOpts + '</select></div>';
+    h += '</div>';   // end form-grid (identity)
+
+    h += '<div class="form-section">' + esc(t("dora.vtab.arrangements")) + '</div>';
+    if (window.DoraData && typeof window.DoraData.renderVendorCard === "function") {
+        h += window.DoraData.renderVendorCard(v, { embedded: true });
+    } else {
+        h += '<p style="color:var(--text-muted)">' + esc(t("dora.vtab.no_arrangements")) + '</p>';
+    }
+    h += '</div>';
+    return h;
+}
+
+var _vroiAddIdOpen = null;
+
+window.toggleVendorRoiAddId = function() {
+    var v = D.vendors[_selectedVendor];
+    if (!v) return;
+    var hasAddId = !!(v.additional_id_type || v.additional_id_value);
+    if (hasAddId) {
+        ["additional_id_type", "additional_id_value"].forEach(function(f) {
+            v[f] = "";
+            if (typeof _persist === "function") {
+                var p = {}; p[f] = "";
+                _persist("vendor_roi", v.id, p);
+            }
+        });
+        _vroiAddIdOpen = null;
+    } else {
+        _vroiAddIdOpen = (_vroiAddIdOpen === v.id) ? null : v.id;
+    }
+    renderPanel();
+};
+
+function _vendorRoiCountryField(value, list) {
+    if (!list || !list.length) {
+        if (window.DoraData && typeof DoraData.ensureCodelists === "function") {
+            DoraData.ensureCodelists(function() { renderPanel(); });
+        }
+        return '<div class="form-row"><label>' + esc(t("dora.vtab.country_iso2")) + '</label>'
+             + '<input value="' + esc(value || "") + '" placeholder="ISO-3166-1 alpha-2" maxlength="2" data-input="patchVendorRoi" data-args=\'' + _da("country_iso2") + '\' data-pass-value style="text-transform:uppercase"></div>';
+    }
+    var cur = (value || "").toUpperCase();
+    var h = '<div class="form-row"><label>' + esc(t("dora.vtab.country_iso2")) + '</label>';
+    h += '<select data-change="patchVendorRoi" data-args=\'' + _da("country_iso2") + '\' data-pass-value>';
+    h += '<option value="">' + esc(t("dora.vtab.country_placeholder")) + '</option>';
+    list.forEach(function(it) {
+        var code = it && it.code !== undefined ? it.code : it;
+        var label = it && it.label !== undefined ? it.label : it;
+        var sel = code === cur ? " selected" : "";
+        h += '<option value="' + esc(code) + '"' + sel + '>' + esc(code) + ' — ' + esc(label) + '</option>';
+    });
+    h += '</select></div>';
+    return h;
+}
+
+var _vroiRenderTimer = null;
+window.patchVendorRoi = function(field, value) {
+    var v = D.vendors[_selectedVendor];
+    if (!v) return;
+    v[field] = value;
+    var payload = {};
+    payload[field] = value;
+    if (typeof _persist === "function") {
+        _persist("vendor_roi", v.id, payload);
+    }
+    if (_vroiRenderTimer) clearTimeout(_vroiRenderTimer);
+    _vroiRenderTimer = setTimeout(function() { renderPanel(); }, 700);
+};
+
+window.goToDoraSection = function(section) {
+    _selectedVendor = null;
+    selectPanel("dora");
+    setTimeout(function() {
+        if (typeof window.doraSection === "function") window.doraSection(section);
+    }, 50);
+};
 
 function _renderVendorForm(v) {
     var c = v.classification || {};
@@ -5859,6 +6176,12 @@ function _saveDoraSettings() {
 function _initDataAndRender(cb) {
     _panel = "dashboard";
     _selectedVendor = null;
+    _doraMigrate(D);
+    // Drop the cached DORA tree so the next render binds to the new D.dora
+    // (file load / new analysis replaces D, not its keys in place).
+    if (window.DoraData && typeof window.DoraData.invalidate === "function") {
+        window.DoraData.invalidate();
+    }
     renderAll();
     if (cb) cb();
 }

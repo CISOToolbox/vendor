@@ -61,6 +61,16 @@ Cette application a été conçue autour de deux principes simples :
 - Sauvegarde automatique dans le `localStorage` du navigateur du fournisseur
 - Le fournisseur ré-exporte sa réponse (JSON chiffré ou Excel) et la renvoie par email ; vous la ré-importez dans l'évaluation correspondante
 
+### Registre DORA d'information (RoI)
+
+- **Module Registre DORA** intégré, conforme au règlement UE 2024/2956 et aux ITS RoI de l'EBA (DPM v4.0)
+- Tables prises en charge : **B_01.01 à B_07.01** (entités déclarantes, branches, hiérarchie, accords, signataires, sous-traitants, fonctions supportées, substituabilité)
+- **Listes de valeurs EBA officielles** (activité agréée, type de service TIC, type d'accord, motif de résiliation, devise, pays…) avec libellés localisés FR/EN ; le code ITS (ex. `eba_TA:x182`) est conservé en stockage et émis tel quel à l'export
+- **Recherche LEI via GLEIF** depuis chaque champ LEI (entités, signataires, sous-traitants)
+- **Export RoI** (Fichier → Export RoI DORA) : génère un classeur XLSX EBA RoI ITS (un onglet par table B_xx) avec saisie de la période de reporting et de la devise cible — les montants en devises étrangères sont conservés et complétés d'une colonne normalisée
+- **Onglet DORA par fournisseur** : carte agrégée des accords, signataires, sous-traitants déclarés et fonctions supportées
+- **Gestion des sous-traitants** (4th parties) directement depuis la liste des fournisseurs (onglet Sous-traitants) ou depuis chaque accord (lien accord ↔ sous-traitant avec rang et service fourni)
+
 ### Suivi documentaire et historique
 
 - **Registre documentaire** par fournisseur (certifications, DPA, rapports d'audit, politiques...) avec alertes d'expiration et vérification d'URL
