@@ -6618,6 +6618,20 @@ function _applyAiData(v, data) {
     if (data.known_incidents) v.notes = (v.notes ? v.notes + "\n\n" : "") + "Incidents connus: " + data.known_incidents;
     if (data.data_location) v.notes = (v.notes ? v.notes + "\n\n" : "") + "Localisation des donnees: " + data.data_location;
 
+    // Persist the AI-applied vendor fields through the granular adapter
+    // right away. Relying only on the blob _autoSave fallback loses the
+    // data when nothing else is touched afterwards (see CLAUDE.md
+    // persistence-adapter contract — every D mutation must call _persist).
+    // The child entities below persist themselves via _persistCreate, same
+    // as _verifyAndAddDoc does for documents.
+    if (typeof _persist === "function") {
+        _persist("vendor", v.id, {
+            legal_entity: v.legal_entity, country: v.country, sector: v.sector,
+            website: v.website, contract: v.contract, certifications: v.certifications,
+            dpa_signed: v.dpa_signed, sub_contractors: v.sub_contractors, notes: v.notes
+        });
+    }
+
     // Public documentation links → verify each URL then add to documents
     if (data.public_docs && data.public_docs.length) {
         data.public_docs.forEach(function(doc) {
@@ -6637,11 +6651,13 @@ function _applyAiData(v, data) {
             endpoint_protection: "Q07", continuity: "Q08", supply_chain: "Q09", audit: "Q10"
         };
         // Find or create an assessment
+        var _assessmentIsNew = false;
         var assessment = D.assessments.find(function(a) { return a.vendor_id === v.id && a.status !== "completed"; });
         if (!assessment) {
             var assessId = "EVAL-" + String(D.assessments.length + 1).padStart(3, "0");
             assessment = { id: assessId, vendor_id: v.id, type: "onboarding", date: new Date().toISOString().split("T")[0], status: "in_progress", responses: [], score: null, completion_rate: 0 };
             D.assessments.push(assessment);
+            _assessmentIsNew = true;
         }
         for (var domain in data.security_assessment) {
             var qId = domainToQuestion[domain];
@@ -6653,13 +6669,15 @@ function _applyAiData(v, data) {
                 assessment.responses.push({ question_id: qId, answer: answer, comment: "IA: auto-evaluation" });
             }
         }
+        if (_assessmentIsNew && typeof _persistCreate === "function") _persistCreate("assessment", assessment);
+        else if (typeof _persist === "function") _persist("assessment", assessment.id, { responses: assessment.responses });
     }
 
     // Create risks from AI suggestions
     if (data.risks && data.risks.length) {
         data.risks.forEach(function(r) {
             var riskCount = D.risks.filter(function(x) { return x.vendor_id === v.id; }).length;
-            D.risks.push({
+            var newRisk = {
                 id: v.id + "-R" + String(riskCount + 1).padStart(2, "0"),
                 vendor_id: v.id, title: r.title, description: r.description || "",
                 category: r.category || "CYBER",
@@ -6667,7 +6685,9 @@ function _applyAiData(v, data) {
                 treatment: { response: "mitigate", details: "", due_date: "" },
                 residual_impact: 0, residual_likelihood: 0,
                 status: "needs_treatment"
-            });
+            };
+            D.risks.push(newRisk);
+            if (typeof _persistCreate === "function") _persistCreate("risk", newRisk);
         });
     }
 }
