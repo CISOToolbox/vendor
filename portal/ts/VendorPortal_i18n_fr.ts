@@ -1,6 +1,7 @@
 _registerTranslations("fr", {
     "portal.title": "Portail fournisseur",
     "portal.help_button": "Aide",
+
     "portal.welcome_title": "Bienvenue sur le portail fournisseur",
     "portal.welcome_subtitle": "Remplissez dans votre navigateur le questionnaire de sécurité envoyé par votre client, sans compte et sans installation.",
     "portal.primary_title": "Vous avez reçu un lien ?",
@@ -12,10 +13,12 @@ _registerTranslations("fr", {
     "portal.loading_hint": "Saisissez le mot de passe communiqué par votre client.",
     "portal.invalid_link": "Lien invalide ou corrompu.",
     "portal.privacy_notice": "<strong>Confidentialité :</strong> toutes les données restent dans votre navigateur. Aucune information n'est envoyée sur Internet. Fermer cet onglet n'efface pas votre travail en cours (sauvegarde automatique locale).",
+
     "portal.password_prompt": "Mot de passe de déchiffrement",
     "portal.password_prompt_hint": "Votre saisie est masquée. Appuyez sur Entrée pour valider ou Échap pour annuler.",
     "portal.password_prompt_export": "Mot de passe de chiffrement (laissez vide pour un export non chiffré)",
     "portal.password_prompt_export_custom": "Nouveau mot de passe de chiffrement",
+
     "portal.export_modal_title": "Exporter le questionnaire",
     "portal.export_session_hint": "Votre réponse sera chiffrée avec le même mot de passe que celui qui vous a permis d'ouvrir le questionnaire. Votre client pourra ainsi l'ouvrir avec ce même mot de passe, sans échange supplémentaire.",
     "portal.export_encrypted_session": "Exporter chiffré (même mot de passe)",
@@ -29,6 +32,7 @@ _registerTranslations("fr", {
     "portal.invalid_excel": "Fichier Excel invalide ou non reconnu.",
     "portal.file_loaded": "Questionnaire chargé",
     "portal.unsupported_format": "Format non supporté. Utilisez un fichier .json, .ctenc ou .xlsx.",
+
     "portal.header_for": "Questionnaire pour",
     "portal.header_from": "Envoyé par",
     "portal.header_due": "Date limite",
@@ -38,16 +42,19 @@ _registerTranslations("fr", {
     "portal.export_excel": "Exporter en Excel",
     "portal.export_done": "Export terminé",
     "portal.confirm_new": "Abandonner le questionnaire en cours et repartir à zéro ?",
+
     "portal.assessment.status": "Statut",
     "portal.assessment.status_draft": "Brouillon",
     "portal.assessment.status_in_progress": "En cours",
     "portal.assessment.status_ready": "Prêt à envoyer",
+
     // Help overlay
     "portal.help_title": "Guide d'utilisation du portail",
     "portal.help_principle_h": "Principe",
     "portal.help_principle_p1": "Ce portail vous permet de remplir un questionnaire de sécurité envoyé par un de vos clients, directement dans votre navigateur.",
     "portal.help_principle_p2": "Vos données restent en local : rien n'est envoyé sur Internet. Ce portail est un fichier HTML statique qui tourne dans votre navigateur.",
     "portal.help_principle_p3": "Une fois le questionnaire rempli, vous l'exportez (en JSON chiffré ou en Excel) et vous le renvoyez par mail à votre client.",
+
     "portal.help_steps_h": "Comment procéder",
     "portal.help_step1_h": "1. Recevoir le questionnaire",
     "portal.help_step1_p": "Votre client vous envoie par mail un fichier .json, .ctenc (chiffré) ou .xlsx. Enregistrez-le sur votre ordinateur.",
@@ -63,15 +70,19 @@ _registerTranslations("fr", {
     "portal.help_step4_p": "Une fois toutes les questions traitées, cochez la case de validation en bas du formulaire. Cette case confirme que vous engagez votre responsabilité sur les réponses et les actions correctives.",
     "portal.help_step5_h": "5. Exporter et renvoyer",
     "portal.help_step5_p": "Cliquez sur \"Exporter en JSON\" ou \"Exporter en Excel\". Si vous souhaitez chiffrer votre réponse, saisissez un mot de passe au moment de l'export (le fichier sera en .ctenc) et communiquez-le à votre client par un canal séparé du mail. Joignez le fichier à votre réponse au client.",
+
     "portal.help_save_h": "Enregistrement local",
     "portal.help_save_p": "Votre saisie est automatiquement sauvegardée dans votre navigateur. Vous pouvez fermer l'onglet et reprendre plus tard depuis le même navigateur. Pour transférer vos données d'un ordinateur à un autre, exportez le fichier JSON puis rechargez-le sur l'autre machine.",
+
     "portal.help_security_h": "Sécurité et confidentialité",
     "portal.help_security_ul1": "Aucune donnée ne transite par Internet. Ce portail fonctionne entièrement dans votre navigateur.",
     "portal.help_security_ul2": "Les fichiers chiffrés utilisent AES-256-GCM avec PBKDF2 (250 000 itérations).",
     "portal.help_security_ul3": "Ne partagez jamais le mot de passe de chiffrement dans le même mail que le fichier chiffré.",
     "portal.help_security_ul4": "Si votre client vous demande des preuves (fichiers joints), limitez-vous aux documents strictement nécessaires.",
+
     "portal.help_contact_h": "Besoin d'aide ?",
     "portal.help_contact_p": "Contactez la personne qui vous a envoyé le questionnaire. Ce portail est un outil opensource de CISO Toolbox et n'est pas relié à un service support.",
+
     "common.close": "Fermer",
     "common.cancel": "Annuler",
     "common.save": "Enregistrer",

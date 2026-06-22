@@ -7,6 +7,7 @@ _registerTranslations("fr", {
     "nav.templates": "Modèles d'évaluation",
     "nav.dora": "Registre DORA",
     "nav.settings": "Paramètres",
+
     "dora.overview.intro": "Saisie centralisée des informations générales de votre entité financière : entités déclarantes, succursales, périmètre de consolidation et fonctions opérationnelles. Les accords contractuels et sous-traitants se gèrent dans les fiches PSTI et sous-traitants.",
     "dora.help.toggle": "Afficher / masquer l'aide",
     "dora.overview.title_b01": "Identité de l'entité financière déclarante",
@@ -76,12 +77,14 @@ _registerTranslations("fr", {
     "dora.export.modal_title": "Export RoI DORA",
     "dora.export.modal_intro": "Génère un classeur XLSX au format EBA RoI ITS (un onglet par table). La période de reporting est enregistrée sur chaque entité déclarante avant export.",
     "dora.export.load_error": "Impossible de charger les données DORA.",
+
     "dora.bridge.arr_short": "accord(s)",
     "dora.bridge.arr_tooltip": "Accords contractuels DORA pour ce fournisseur",
     "dora.bridge.roi_incomplete": "RoI incomplet",
     "dora.bridge.roi_complete": "RoI complet",
     "dora.bridge.roi_missing": "Champs RoI manquants",
     "dora.bridge.complete_roi": "Compléter RoI",
+
     "dora.vtab.title": "Registre DORA (Reg. UE 2024/2956)",
     "dora.vtab.intro": "Champs requis pour la déclaration EBA RoI lorsque ce fournisseur est PSTI signataire d'un accord critique.",
     "dora.vtab.lei": "LEI ISO 17442 (B_05.01.0010)",
@@ -103,6 +106,7 @@ _registerTranslations("fr", {
     "dora.vtab.add_additional_id": "Saisir un identifiant additionnel si LEI indisponible",
     "dora.vtab.add_additional_id_hint": "Optionnel. À renseigner uniquement si le LEI n'est pas disponible.",
     "dora.vtab.country_placeholder": "— Sélectionner un pays —",
+
     "dora.cl.person_type.legal": "Personne morale",
     "dora.cl.person_type.natural": "Personne physique",
     "dora.cl.additional_id_type.EUID": "EUID — Identifiant unique européen",
@@ -137,6 +141,7 @@ _registerTranslations("fr", {
     "dora.cl.hierarchy.subsidiary": "Filiale",
     "dora.cl.hierarchy.sole_entity": "Entité unique (hors groupe)",
     "dora.cl.hierarchy.branch": "Succursale",
+
     "dora.byvendor.arrangements": "Accords",
     "dora.byvendor.functions": "Fonctions supportées",
     "dora.byvendor.signers": "Signataires",
@@ -171,6 +176,7 @@ _registerTranslations("fr", {
     "dora.byvendor.no_informal_subs": "—",
     "dora.byvendor.dora_subs": "Sous-traitants DORA (rattachés à un accord)",
     "dora.byvendor.under_arr": "Sous l'accord",
+
     "dora.modal.arr_title_new": "Nouvel accord contractuel",
     "dora.modal.arr_title_edit": "Modifier l'accord contractuel",
     "dora.modal.arr_ref": "Référence (B_02.01.0010)",
@@ -260,6 +266,7 @@ _registerTranslations("fr", {
     "dora.fn.impact_tolerance": "Impact de l'arrêt de la fonction (B_06.01.0100)",
     "dora.fn.last_assessment": "Date de la dernière évaluation (B_06.01.0070)",
     "dora.fn.confirm_delete": "Supprimer cette fonction ?",
+
     "dora.modal.sub_title_new": "Nouveau sous-traitant",
     "dora.modal.sub_title_edit": "Modifier le sous-traitant",
     "dora.modal.sub_name": "Nom (B_05.01.0050)",
@@ -306,9 +313,11 @@ _registerTranslations("fr", {
     "dora.subs.delete_confirm": "Supprimer ce sous-traitant et le délier de tous les accords ?",
     "dora.modal.search_ph": "Rechercher…",
     "dora.modal.cancel": "Annuler",
+
     "btn_save": "Enregistrer",
     "btn_delete": "Supprimer",
     "btn_cancel": "Annuler",
+
     "dashboard.title": "Vue d'ensemble",
     "dashboard.total_vendors": "Fournisseurs",
     "dashboard.critical_risks": "Risques critiques",
@@ -323,6 +332,7 @@ _registerTranslations("fr", {
     "dashboard.upcoming_deadlines": "Prochaines échéances",
     "dashboard.risk_timeline": "Évolution des risques",
     "dashboard.today": "Aujourd'hui",
+
     "vendor.title": "Registre des fournisseurs",
     "vendor.add": "Ajouter un fournisseur",
     "vendor.tab_vendors": "Fournisseurs",
@@ -377,6 +387,7 @@ _registerTranslations("fr", {
     "vendor.inherent_risk": "Risque initial",
     "vendor.residual_risk": "Risque résiduel",
     "vendor.target_date": "Échéance mesures",
+
     // Measures
     "measure.title": "Mesures d'attenuation",
     "measure.add": "Ajouter",
@@ -407,6 +418,7 @@ _registerTranslations("fr", {
     "measure.effet": "Effet attendu",
     "measure.saved": "Mesure enregistrée",
     "measure.selected_n": "{n} mesure(s) sélectionnée(s)",
+
     "vendor.search": "Rechercher...",
     "vendor.filter_all": "Tous les statuts",
     "vendor.no_results": "Aucun fournisseur trouvé.",
@@ -445,14 +457,17 @@ _registerTranslations("fr", {
     "vendor.tab_assessments": "Évaluations",
     "vendor.tab_documents": "Documents",
     "vendor.tab_dora": "Registre DORA",
+
     "vendor.status_prospect": "Envisagé",
     "vendor.status_active": "Actif",
     "vendor.status_review": "En revue",
     "vendor.status_offboarded": "Ancien",
+
     "vendor.tier_low": "Faible",
     "vendor.tier_medium": "Moyen",
     "vendor.tier_high": "Élevé",
     "vendor.tier_critical": "Critique",
+
     "risk.title": "Registre des risques tiers",
     "risk.add": "Ajouter un risque",
     "risk.id": "ID",
@@ -479,6 +494,7 @@ _registerTranslations("fr", {
     "risk.status_closed": "Clos",
     "risk.status_archived": "Archivé",
     "risk.empty": "Aucun risque identifié.",
+
     "assessment.title": "Évaluations de sécurité",
     "assessment.new": "Nouvelle évaluation",
     "assessment.vendor": "Fournisseur",
@@ -500,6 +516,7 @@ _registerTranslations("fr", {
     "assessment.deleted": "Évaluation supprimée.",
     "assessment.comment": "Commentaire",
     "assessment.expected": "Réponse attendue",
+
     // Assessment V2 (template-driven) — phase 0 step 2
     "assessment.from_template": "Nouvelle évaluation depuis un template",
     "assessment.choose_template": "Choisir un template",
@@ -563,6 +580,7 @@ _registerTranslations("fr", {
     "maturity.col_effective_weight": "Poids effectif",
     "maturity.col_excluded": "Exclure",
     "maturity.weighted_score": "Score pondéré",
+
     "assessment.self_validation_title_audit": "Validation de l'audit",
     "assessment.self_validation_hint_audit": "En cochant la case ci-dessous, l'auditeur confirme avoir relu ses constats et recommandations avant transmission au client pour approbation.",
     "assessment.self_validation_label_audit": "Je valide mes constats et mes recommandations",
@@ -651,12 +669,15 @@ _registerTranslations("fr", {
     "assessment.col_justification": "Justification",
     "assessment.self_validation_check_label": "Je valide mes réponses et mes engagements",
     "assessment.self_validation_tick_hint": "Remplacez par [X] pour valider",
+
     "coverage.covered": "Couverte",
     "coverage.partial": "Partielle",
     "coverage.not_covered": "Non couverte",
     "coverage.not_applicable": "Non applicable",
+
     "answer.yes": "Oui",
     "answer.no": "Non",
+
     "doc.title": "Suivi documentaire",
     "doc.name": "Nom du document",
     "doc.type": "Type",
@@ -675,11 +696,14 @@ _registerTranslations("fr", {
     "doc.confidence_4": "Totale",
     "doc.confidence_hint": "Utilise pour le calcul du niveau de menace",
     "doc.empty": "Aucun document.",
+
+
     "settings.dora_section": "DORA",
     "settings.dora_enable": "Activer la conformité DORA",
     "settings.dora_hint": "Le fournisseur est considéré comme prestataire TIC critique si l'un des seuils est atteint.",
     "settings.dora_max_criteria": "Critères au maximum",
     "settings.dora_avg_score": "Note moyenne",
+
     "common.save": "Enregistrer",
     "common.cancel": "Annuler",
     "common.close": "Fermer",
@@ -691,6 +715,7 @@ _registerTranslations("fr", {
     "common.search": "Rechercher...",
     "common.move_up": "Monter",
     "common.move_down": "Descendre",
+
     "template.title": "Modeles d'evaluation",
     "template.intro": "Creez et gerez vos modeles d'evaluation reutilisables : questionnaires envoyes aux fournisseurs ou grilles d'audit remplies en interne.",
     "template.new": "+ Nouveau template",
@@ -760,12 +785,14 @@ _registerTranslations("fr", {
     "template.xlsx_import_empty": "Aucune question trouvee dans ce fichier. Verifiez que les colonnes \"Section\" et \"Question\" sont remplies.",
     "template.xlsx_import_missing_cols": "Colonnes obligatoires manquantes : \"Section\" et \"Question\" doivent etre presentes sur la premiere ligne.",
     "template.xlsx_import_error": "Echec de l'import du template",
+
     "qtype.yes_no": "Oui / Non",
     "qtype.scale_1_5": "Echelle 1-5",
     "qtype.single_choice": "Choix unique",
     "qtype.multi_choice": "Choix multiple",
     "qtype.free_text": "Texte libre",
     "qtype.file_upload": "Fichier joint",
+
     "criticality.info": "Info",
     "criticality.major": "Majeur",
     "criticality.blocker": "Bloquant",
@@ -782,6 +809,7 @@ _registerTranslations("fr", {
     "btn_discard": "Ignorer",
     "status_session_restored": "Session restauree.",
     "status_new": "Nouvelle {label} créée.",
+
     "ai.option_risks": "Proposer des risques",
     "ai.option_risks_hint": "L'IA analyse le fournisseur et propose des risques spécifiques à la relation. Laissez vide pour une analyse automatique ou precisez votre besoin.",
     "ai.option_measures": "Ajouter des mesures",
@@ -802,6 +830,8 @@ _registerTranslations("fr", {
     "ai.docs_phase_probe": "Analyse des URLs du fournisseur...",
     "ai.docs_phase_ai": "Recherche IA en cours...",
     "ai.docs_found": "document(s) trouvé(s)",
+
+
     "impact.1": "Negligeable",
     "impact.2": "Mineur",
     "impact.3": "Modéré",
@@ -812,6 +842,7 @@ _registerTranslations("fr", {
     "likelihood.3": "Possible",
     "likelihood.4": "Probable",
     "likelihood.5": "Quasi-certain",
+
     "matrix.low": "Faible",
     "matrix.moderate": "Modéré",
     "matrix.significant": "Significatif",
@@ -820,6 +851,7 @@ _registerTranslations("fr", {
     "matrix.extreme": "Extrême",
     "matrix.x": "Impact",
     "matrix.y": "Vraisemblance",
+
     // ── Help / sidebar ──
     "tprm.sidebar.section_aide": "Aide",
     "tprm.sidebar.methodo": "Méthodologie",
@@ -844,10 +876,12 @@ _registerTranslations("fr", {
     "tprm.help.tab_usage": "Utilisation de l'application",
     "tprm.help.tab_dora": "Registre DORA (RoI)",
     "tprm.help.dora": "<h1 class=\"heading-blue\">Registre DORA d'information (RoI)</h1><p class=\"text-muted\">Conforme au règlement UE 2024/2956 et aux ITS RoI de l'EBA.</p><h2>Objet du module</h2><p>Le <strong>Registre d'information</strong> (Register of Information, RoI) est un livrable obligatoire pour toute entité financière soumise à DORA. Il recense l'ensemble des accords contractuels avec les prestataires tiers de services TIC, leurs sous-traitants, et les fonctions opérationnelles couvertes. Le module Registre DORA produit ce registre au format <strong>XLSX EBA RoI ITS</strong> (un onglet par table B_xx) prêt à être transmis à votre autorité compétente.</p><h2>Accès</h2><ul><li><strong>Vue centrale</strong> &mdash; menu latéral &laquo; Registre DORA &raquo; : édition complète des entités, branches, fonctions, accords, signataires, sous-traitants.</li><li><strong>Onglet par fournisseur</strong> &mdash; ouvrir un fournisseur &rarr; onglet &laquo; DORA &raquo; : carte agrégée des éléments DORA liés au fournisseur (accords, signataires, sous-traitants déclarés, fonctions supportées).</li><li><strong>Onglet sous-traitants</strong> &mdash; depuis la liste des fournisseurs, bascule &laquo; Sous-traitants &raquo; pour gérer directement les entités sous-traitantes (4th parties).</li></ul><h2>Tables EBA prises en charge</h2><table><thead><tr><th>Table</th><th>Contenu</th></tr></thead><tbody><tr><td><strong>B_01.01</strong></td><td>Entités déclarantes (RFE) &mdash; identité, LEI, secteur, devise, période de reporting</td></tr><tr><td><strong>B_01.02</strong></td><td>Branches / succursales des RFE</td></tr><tr><td><strong>B_01.03</strong></td><td>Périmètre groupe et hiérarchie</td></tr><tr><td><strong>B_02.01 / B_02.02 / B_02.03</strong></td><td>Accords contractuels &mdash; type, services, criticité, gouvernance, données, substituabilité</td></tr><tr><td><strong>B_03</strong></td><td>Signataires des accords (TPP, RFE, intermédiaires, sous-traitants)</td></tr><tr><td><strong>B_04 / B_05</strong></td><td>Sous-traitants (4th parties) et chaîne TIC</td></tr><tr><td><strong>B_06.01 / B_06.02</strong></td><td>Fonctions opérationnelles supportées &mdash; activité agréée (B_06.01.0020), tolérance d'impact (B_06.01.0100)</td></tr><tr><td><strong>B_07.01</strong></td><td>Évaluation de la substituabilité du prestataire</td></tr></tbody></table><h2>Listes de valeurs EBA</h2><p>Les champs codifiés (activité agréée, type de service TIC, type d'accord, motif de résiliation, devise, pays, etc.) utilisent les <strong>listes de valeurs officielles EBA DPM v4.0</strong>. Les libellés sont localisés FR/EN à l'écran ; le code ITS (ex. <code>eba_TA:x182</code>) est conservé en stockage et émis tel quel à l'export.</p><h2>Export RoI</h2><p>Menu <strong>Fichier &rarr; Export RoI DORA</strong>. Vous saisissez la période de reporting (format <code>YYYY-12-31</code>) et la devise cible &mdash; les montants en devises étrangères restent dans leur devise d'origine, complétés d'une colonne normalisée vers la devise cible. Le fichier .xlsx généré contient un onglet par table EBA et est aligné sur le schéma RoI ITS.</p><div class=\"help-tip\"><strong>LEI</strong> : un service GLEIF intégré permet de récupérer le LEI à partir d'une raison sociale. Cliquer sur l'icône à côté du champ LEI lance la recherche.</div><h2>Sous-traitants (4th parties)</h2><p>Deux modes de saisie :</p><ul><li><strong>Liste fournisseurs &rarr; onglet Sous-traitants</strong> : édition autonome de l'identité (nom, LEI, pays). Les liens vers les accords sont créés ensuite depuis chaque accord.</li><li><strong>Modale d'accord &rarr; bloc Sous-traitants</strong> : crée la liaison accord&hArr;sous-traitant avec les attributs spécifiques (rang, service fourni, etc.).</li></ul><p>Supprimer un sous-traitant le retire de tous les accords où il était lié.</p><h2>Bonnes pratiques</h2><ul><li>Renseigner d'abord les <strong>entités déclarantes</strong> (B_01.01) avant les accords &mdash; chaque accord doit être rattaché à une RFE.</li><li>Saisir le <strong>LEI</strong> dès que possible pour vos contreparties &mdash; il est exigé par l'EBA pour les TPP et facilite l'intégrité référentielle.</li><li>Pour les <strong>fonctions critiques</strong> (B_06.01.0050 = oui), ne pas oublier de renseigner la <strong>tolérance d'impact</strong> (B_06.01.0100).</li><li>La <strong>période de reporting</strong> est enregistrée sur chaque RFE au moment de l'export &mdash; vous pouvez aussi la définir manuellement dans la fiche entité.</li><li>Conservez une <strong>sauvegarde JSON</strong> (Fichier &rarr; Enregistrer sous) avant chaque export trimestriel.</li></ul>",
+
     // ── Help content ──
     "tprm.help.methodo": "<h1 class=\"heading-blue\">Guide methodologique TPRM</h1>\n<p class=\"text-muted\">Gestion des risques lies aux fournisseurs et prestataires tiers</p>\n\n<h2>Introduction au TPRM</h2>\n<p>Le <strong>Third-Party Risk Management</strong> (TPRM) est un processus structure qui permet d'identifier, evaluer et maitriser les risques lies aux relations avec les fournisseurs, prestataires et partenaires. L'externalisation de services critiques (cloud, infogérance, développement, paie...) augmente la <strong>surface d'attaque</strong> et la <strong>dependance operationnelle</strong> de l'organisation.</p>\n<p>Un programme TPRM efficace couvre l'ensemble du cycle de vie fournisseur : <strong>selection</strong> (onboarding), <strong>evaluation periodique</strong>, <strong>suivi des risques</strong> et <strong>sortie</strong> (offboarding). Cette application implemente une methodologie structuree en 4 etapes : classification, evaluation, analyse des risques et suivi des mesures.</p>\n\n<h2>Classification des fournisseurs</h2>\n<h3>Les 6 axes de classification</h3>\n<p>Chaque fournisseur est evalue sur <strong>6 axes</strong>, notes de 0 (aucun impact) a 4 (impact maximal) :</p>\n<table><thead><tr><th>Axe</th><th>Description</th><th>Exemples</th></tr></thead><tbody>\n<tr><td><strong>Impact operations critiques</strong></td><td>Effet d'une defaillance sur les operations vitales</td><td>0 = aucun impact ; 4 = arret total d'activite</td></tr>\n<tr><td><strong>Processus dependants</strong></td><td>Nombre de processus metier qui reposent sur ce fournisseur</td><td>0 = aucun ; 4 = tous les processus coeur</td></tr>\n<tr><td><strong>Difficulte de remplacement</strong></td><td>Effort et delai pour changer de fournisseur</td><td>0 = remplacement immediat ; 4 = lock-in total</td></tr>\n<tr><td><strong>Donnees sensibles</strong></td><td>Volume et sensibilite des donnees accessibles au fournisseur</td><td>0 = aucune donnee ; 4 = donnees de sante/financieres critiques</td></tr>\n<tr><td><strong>Integration systemes</strong></td><td>Profondeur de l'interconnexion technique</td><td>0 = aucune integration ; 4 = acces admin au SI</td></tr>\n<tr><td><strong>Impact reglementaire</strong></td><td>Consequences reglementaires en cas de defaillance</td><td>0 = aucune ; 4 = sanctions/perte d'agrement</td></tr>\n</tbody></table>\n\n<h3>Dependance et penetration</h3>\n<p>Les 6 axes sont regroupes en deux indicateurs composites :</p>\n<ul>\n<li><strong>Dependance</strong> = moyenne(Impact operations, Processus dependants, Difficulte de remplacement) &mdash; mesure a quel point l'organisation depend du fournisseur</li>\n<li><strong>Penetration</strong> = moyenne(Donnees sensibles, Integration systemes, Impact reglementaire) &mdash; mesure a quel point le fournisseur penetre dans le SI et les donnees</li>\n</ul>\n\n<h2>Niveau de menace</h2>\n<h3>Formule</h3>\n<p>Le niveau de menace combine la dependance, la penetration, la maturite cyber du fournisseur et le niveau de confiance :</p>\n<p style=\"background:var(--bg-subtle);padding:10px;border-radius:6px;font-family:monospace\"><strong>Menace = (Dependance &times; Penetration) / (Maturite &times; Confiance)</strong></p>\n<p>Formule identique a EBIOS RM (atelier 3). Resultat sur une echelle de 0.0625 a 16. Les valeurs de maturite et confiance ne peuvent pas etre a 0 (minimum 1).</p>\n<h3>Facteurs</h3>\n<table><thead><tr><th>Facteur</th><th>Echelle</th><th>Logique</th></tr></thead><tbody>\n<tr><td><strong>Dependance</strong></td><td>0-4</td><td>Plus la dependance est elevee, plus la menace augmente</td></tr>\n<tr><td><strong>Penetration</strong></td><td>0-4</td><td>Plus la penetration est profonde, plus la menace augmente</td></tr>\n<tr><td><strong>Maturite cyber</strong></td><td>1-4</td><td>Plus la maturite est elevee, plus la menace <em>diminue</em> (diviseur)</td></tr>\n<tr><td><strong>Confiance</strong></td><td>1-4</td><td>Plus la confiance est elevee, plus la menace <em>diminue</em> (diviseur)</td></tr>\n</tbody></table>\n<div class=\"help-tip\"><strong>Maturite</strong> : initialisee a 0, elle est automatiquement mise a jour par le score de la derniere evaluation de securite (voir section Questionnaire).</div>\n<div class=\"help-tip\"><strong>Confiance</strong> : initialisee a 0, elle est mise a jour via le suivi documentaire (documents de conformite fournis et verifies).</div>\n\n<h2>Tiers de criticite</h2>\n<p>Le niveau de menace determine le <strong>tier</strong> (niveau de criticite) du fournisseur :</p>\n<table><thead><tr><th>Tier</th><th>Menace</th><th>Signification</th></tr></thead><tbody>\n<tr><td><strong class=\"score-critical\">Critique</strong></td><td>&ge; 4</td><td>Fournisseur a tres haut risque, suivi renforce obligatoire</td></tr>\n<tr><td><strong class=\"score-high\">Eleve</strong></td><td>&ge; 2</td><td>Fournisseur a haut risque, evaluation approfondie requise</td></tr>\n<tr><td><strong class=\"score-medium\">Moyen</strong></td><td>&ge; 1</td><td>Fournisseur a risque modere, evaluation standard</td></tr>\n<tr><td><strong class=\"score-low\">Faible</strong></td><td>&lt; 1</td><td>Fournisseur a risque faible, suivi allege</td></tr>\n</tbody></table>\n\n<h2>DORA &mdash; Prestataire TIC critique</h2>\n<p>Le reglement DORA (Digital Operational Resilience Act) impose des exigences renforcees pour les <strong>prestataires TIC critiques</strong> des entites financieres. L'application detecte automatiquement les fournisseurs qui correspondent aux criteres DORA.</p>\n<h3>Criteres de detection (configurable dans Reglages)</h3>\n<p>Un fournisseur est considere <strong>prestataire TIC critique</strong> si :</p>\n<ul>\n<li><strong>Critere 1</strong> : au moins 3 axes de classification sont au maximum (note 4/4), <strong>OU</strong></li>\n<li><strong>Critere 2</strong> : la moyenne des 6 axes &ge; 3.5</li>\n</ul>\n<p>Les seuils (3 criteres, 3.5 moyenne) sont configurables dans les Reglages. Lorsque DORA est active, <strong>5 questions supplementaires</strong> sont ajoutees au questionnaire d'evaluation (resilience, plan de sortie, notification d'incidents, sous-traitance TIC, localisation des données).</p>\n\n<h2>Questionnaire d'evaluation</h2>\n<h3>Structure</h3>\n<p>Le questionnaire comprend <strong>10 questions essentielles</strong> couvrant les domaines de securite fondamentaux, plus <strong>5 questions DORA</strong> si le fournisseur est prestataire TIC critique :</p>\n<table><thead><tr><th>ID</th><th>Domaine</th><th>Theme</th></tr></thead><tbody>\n<tr><td>Q01</td><td>Gouvernance</td><td>Politique de securite et analyse de risques</td></tr>\n<tr><td>Q02</td><td>Gestion des acces</td><td>SSO et integration IAM</td></tr>\n<tr><td>Q03</td><td>Acces privilegies</td><td>MFA + bastion pour les administrateurs</td></tr>\n<tr><td>Q04</td><td>Gestion des vulnerabilites</td><td>Patch management avec SLA</td></tr>\n<tr><td>Q05</td><td>Securite du developpement</td><td>Isolation des environnements, revue de code</td></tr>\n<tr><td>Q06</td><td>Protection des donnees</td><td>Chiffrement, conformite RGPD</td></tr>\n<tr><td>Q07</td><td>Protection des postes</td><td>EDR deploye et supervise</td></tr>\n<tr><td>Q08</td><td>Continuite</td><td>Backups, RTO/RPO, plan de reprise</td></tr>\n<tr><td>Q09</td><td>Chaine d'approvisionnement</td><td>Gestion des sous-traitants (4th parties)</td></tr>\n<tr><td>Q10</td><td>Audit</td><td>Pentest annuel independant</td></tr>\n<tr><td>D01</td><td>DORA &mdash; Resilience</td><td>Tests de resilience operationnelle</td></tr>\n<tr><td>D02</td><td>DORA &mdash; Sortie</td><td>Plan de sortie et reversibilite</td></tr>\n<tr><td>D03</td><td>DORA &mdash; Notification</td><td>Processus de notification des incidents</td></tr>\n<tr><td>D04</td><td>DORA &mdash; Sous-traitance</td><td>Maitrise de la chaine TIC</td></tr>\n<tr><td>D05</td><td>DORA &mdash; Localisation</td><td>Localisation des donnees et traitements</td></tr>\n</tbody></table>\n\n<h3>Notation</h3>\n<p>Chaque question recoit une reponse parmi :</p>\n<table><thead><tr><th>Reponse</th><th>Score</th></tr></thead><tbody>\n<tr><td><strong>Conforme</strong></td><td>100%</td></tr>\n<tr><td><strong>Partiel</strong></td><td>50%</td></tr>\n<tr><td><strong>Non conforme</strong></td><td>0%</td></tr>\n<tr><td><strong>N/A</strong></td><td>Exclu du calcul</td></tr>\n</tbody></table>\n<p>Le score global = moyenne ponderee des questions repondues (hors N/A).</p>\n\n<h3>Score &rarr; Maturite</h3>\n<p>Le score d'evaluation est converti en niveau de maturite (0-4) qui alimente le calcul de menace :</p>\n<table><thead><tr><th>Score</th><th>Maturite</th></tr></thead><tbody>\n<tr><td>0-20%</td><td>0 &mdash; Inexistant</td></tr>\n<tr><td>21-40%</td><td>1 &mdash; Initial</td></tr>\n<tr><td>41-60%</td><td>2 &mdash; Reproductible</td></tr>\n<tr><td>61-80%</td><td>3 &mdash; Defini</td></tr>\n<tr><td>81-100%</td><td>4 &mdash; Maitrise</td></tr>\n</tbody></table>\n\n<h2>Matrice de risques</h2>\n<p>Chaque risque est evalue selon deux dimensions :</p>\n<ul>\n<li><strong>Impact</strong> (1-5) : Negligeable, Mineur, Modere, Majeur, Critique</li>\n<li><strong>Vraisemblance</strong> (1-5) : Rare, Improbable, Possible, Probable, Quasi-certain</li>\n</ul>\n<p style=\"background:var(--bg-alt);padding:10px;border-radius:6px;font-family:monospace\"><strong>Score = Impact &times; Vraisemblance</strong></p>\n<table><thead><tr><th>Niveau</th><th>Score</th><th>Couleur</th></tr></thead><tbody>\n<tr><td><strong class=\"score-critical\">Critique</strong></td><td>&ge; 16</td><td>Rouge</td></tr>\n<tr><td><strong class=\"score-high\">Eleve</strong></td><td>&ge; 10</td><td>Orange</td></tr>\n<tr><td><strong class=\"score-medium\">Modere</strong></td><td>&ge; 5</td><td>Jaune</td></tr>\n<tr><td><strong class=\"score-low\">Faible</strong></td><td>&lt; 5</td><td>Vert</td></tr>\n</tbody></table>\n<p>La matrice 5&times;5 est affichee sur le tableau de bord pour visualiser la repartition des risques.</p>\n\n<h2>Risque residuel</h2>\n<p>Le risque residuel represente le niveau de risque <strong>apres application des mesures</strong> d'attenuation :</p>\n<ul>\n<li><strong>Impact residuel</strong> : impact apres mise en oeuvre des mesures (peut etre inferieur ou egal a l'impact initial)</li>\n<li><strong>Vraisemblance residuelle</strong> : vraisemblance apres mise en oeuvre des mesures</li>\n<li><strong>Score residuel</strong> = Impact residuel &times; Vraisemblance residuelle</li>\n</ul>\n<p>Le traitement du risque peut etre :</p>\n<table><thead><tr><th>Traitement</th><th>Description</th></tr></thead><tbody>\n<tr><td><strong>Attenuer</strong></td><td>Mettre en place des mesures pour reduire l'impact ou la vraisemblance</td></tr>\n<tr><td><strong>Transferer</strong></td><td>Reporter le risque (assurance, clause contractuelle)</td></tr>\n<tr><td><strong>Accepter</strong></td><td>Accepter le risque en l'etat (residuel = initial)</td></tr>\n<tr><td><strong>Eviter</strong></td><td>Supprimer la source du risque (changer de fournisseur)</td></tr>\n</tbody></table>\n<div class=\"help-tip\"><strong>Important</strong> : lorsqu'un risque est traite par Accepter ou Eviter, les champs residuels sont automatiquement verrouilles a la valeur initiale.</div>\n\n<h2>Documents</h2>\n<p>Le suivi documentaire permet de tracer les preuves de conformite du fournisseur :</p>\n<ul>\n<li><strong>Types</strong> : certifications (ISO 27001, SOC 2...), DPA, politique de securite, rapport de pentest, PCA/PRA, etc.</li>\n<li><strong>Date d'expiration</strong> : suivi automatique avec alertes (Valide, Bientot expire, Expire)</li>\n<li><strong>Niveau de confiance</strong> : de 0 (aucune confiance) a 4 (confiance totale), utilise pour le calcul de la menace</li>\n</ul>\n<h3>Verification des URLs</h3>\n<p>Lorsqu'un document est ajoute avec une URL, l'application tente de verifier son accessibilite :</p>\n<ul>\n<li><strong>Probe initiale</strong> : requete no-cors pour verifier que l'URL repond</li>\n<li><strong>Collecte IA</strong> : l'assistant peut proposer des URLs de documentation publique du fournisseur (certifications, politiques publiees)</li>\n<li><strong>Verification HEAD</strong> : si un backend est disponible (version client), verification HTTP HEAD pour le code de statut</li>\n</ul>\n\n<h2>Glossaire</h2>\n<table><thead><tr><th>Terme</th><th>Definition</th></tr></thead><tbody>\n<tr><td><strong>TPRM</strong></td><td>Third-Party Risk Management &mdash; gestion des risques tiers</td></tr>\n<tr><td><strong>Tier</strong></td><td>Niveau de criticite du fournisseur (Critique, Eleve, Moyen, Faible)</td></tr>\n<tr><td><strong>DORA</strong></td><td>Digital Operational Resilience Act &mdash; reglement europeen sur la resilience numerique des entites financieres</td></tr>\n<tr><td><strong>TIC</strong></td><td>Technologies de l'Information et de la Communication (ICT en anglais)</td></tr>\n<tr><td><strong>DPA</strong></td><td>Data Processing Agreement &mdash; accord de traitement des donnees (RGPD)</td></tr>\n<tr><td><strong>4th party</strong></td><td>Sous-traitant du fournisseur (fournisseur de votre fournisseur)</td></tr>\n</tbody></table>",
+
     "tprm.help.usage": "<h1 class=\"heading-blue\">Guide d'utilisation</h1>\n<p class=\"text-muted\">Comment utiliser l'application TPRM</p>\n\n<h2>Vue d'ensemble</h2>\n<p>L'application est organisee en <strong>3 zones</strong> : la <strong>barre d'outils</strong> en haut (menu Fichier, reglages), le <strong>menu lateral</strong> a gauche (navigation entre les sections) et la <strong>zone de travail</strong> au centre.</p>\n<div class=\"help-tip\">Toutes les donnees restent dans votre navigateur. Aucune information n'est envoyee a un serveur (sauf si l'assistant IA est actif). Pensez a sauvegarder regulierement en JSON.</div>\n\n<h2>Tableau de bord</h2>\n<p>La vue d'ensemble affiche :</p>\n<ul>\n<li><strong>Indicateurs</strong> : nombre de fournisseurs, fournisseurs critiques, evaluations en cours, risques ouverts, echeances proches</li>\n<li><strong>Matrices de risques</strong> : matrice 5&times;5 des risques actuels et residuels, avec code couleur</li>\n<li><strong>Top 5 risques</strong> : les 5 risques les plus eleves</li>\n<li><strong>Prochaines echeances</strong> : mesures et evaluations arrivant a echeance</li>\n<li><strong>Evolution des risques</strong> : frise chronologique des evenements (evaluations, mesures, dates de revue)</li>\n</ul>\n\n<h2>Fournisseurs</h2>\n<h3>Liste des fournisseurs</h3>\n<p>La liste affiche tous les fournisseurs avec leur tier, menace, score d'evaluation et nombre de risques. Utilisez la <strong>barre de recherche</strong> pour filtrer par nom, et le <strong>filtre de statut</strong> pour afficher un sous-ensemble.</p>\n<h3>Ajouter un fournisseur</h3>\n<p>Cliquez sur <strong>+ Ajouter un fournisseur</strong>. Un nom est demande. Le fournisseur est cree avec le statut &laquo; Envisage &raquo; par defaut.</p>\n<div class=\"help-tip\"><strong>Collecte IA</strong> : si l'IA est activee, un bouton &laquo; Collecter (IA) &raquo; permet de pre-remplir les informations du fournisseur (site web, secteur, pays, services) a partir de son nom.</div>\n<h3>Detail d'un fournisseur</h3>\n<p>Cliquer sur un fournisseur ouvre sa fiche detaillee avec 4 onglets :</p>\n<table><thead><tr><th>Onglet</th><th>Contenu</th></tr></thead><tbody>\n<tr><td><strong>Informations</strong></td><td>Identite, contacts, contrat, classification (6 curseurs), niveau de menace calcule</td></tr>\n<tr><td><strong>Risques</strong></td><td>Risques lies a ce fournisseur, mesures associees, ajout/suppression</td></tr>\n<tr><td><strong>Evaluations</strong></td><td>Historique des evaluations de securite, creation, questionnaire</td></tr>\n<tr><td><strong>Documents</strong></td><td>Suivi documentaire, ajout manuel ou IA, verification des URLs</td></tr>\n</tbody></table>\n\n<h2>Classification</h2>\n<p>Dans l'onglet <strong>Informations</strong> d'un fournisseur, la section Classification contient :</p>\n<ul>\n<li><strong>6 curseurs</strong> (0-4) pour les axes de classification</li>\n<li><strong>Maturite cyber</strong> (0-4) : mise a jour automatique par le score d'evaluation</li>\n<li><strong>Confiance</strong> (0-4) : mise a jour via les documents de conformite</li>\n<li><strong>Resultat</strong> : niveau de menace calcule en temps reel, tier affiche, badge DORA si applicable</li>\n</ul>\n<p>Les curseurs sont interactifs : deplacez-les et le niveau de menace se recalcule instantanement.</p>\n\n<h2>Modèles d'évaluation (questionnaires et audits)</h2>\n<p>La section <strong>Modèles d'évaluation</strong> du menu latéral permet de créer des modèles réutilisables qui serviront de base aux évaluations.</p>\n<h3>Deux types de templates</h3>\n<ul>\n<li><strong>Questionnaire</strong> &mdash; envoyé au fournisseur (remplissage externe via le portail ou par fichier)</li>\n<li><strong>Audit</strong> &mdash; rempli en interne par l'équipe sécurité (le modèle par défaut reprend les 42 règles d'hygiène ANSSI)</li>\n</ul>\n<p>Un template par défaut est créé automatiquement à la première visite (TPL-001 pour les questionnaires, TPL-002 pour les audits ANSSI 42).</p>\n<h3>Créer un template</h3>\n<p>Trois options sur la page Modèles d'évaluation :</p>\n<ul>\n<li><strong>+ Questionnaire</strong> / <strong>+ Audit</strong> &mdash; éditeur graphique : sections, questions (texte libre uniquement), criticité (info/majeur/bloquant), poids (0-100)</li>\n<li><strong>Importer depuis Excel</strong> &mdash; charger un fichier .xlsx avec les colonnes Section, Question, Réponse attendue, Criticité, Poids. Toutes les lignes deviennent des questions texte libre</li>\n<li><strong>Télécharger l'exemple</strong> &mdash; récupère un .xlsx pré-rempli avec 8 questions types et les validations de données</li>\n</ul>\n<div class=\"help-tip\"><strong>Texte libre uniquement</strong> : les questions acceptent uniquement des réponses en texte libre. La notation de couverture (Couverte/Partielle/Non couverte/N/A) se fait séparément, ce qui simplifie la structure des fichiers Excel.</div>\n\n<h2>Évaluations</h2>\n<h3>Créer une évaluation</h3>\n<p>Depuis l'onglet <strong>Évaluations</strong> d'un fournisseur, cliquez sur <strong>Nouvelle évaluation</strong>. Une modale liste les templates disponibles, groupés par type (Questionnaire / Audit). Sélectionnez celui à utiliser : un instantané du template est copié dans l'évaluation (les modifications ultérieures du template n'affectent pas les évaluations déjà créées).</p>\n<h3>Répondre à une évaluation</h3>\n<p>Pour chaque question, vous devez fournir :</p>\n<ul>\n<li>Une <strong>réponse</strong> en texte libre</li>\n<li>Un <strong>statut de couverture</strong> : <code>Couverte</code>, <code>Partielle</code>, <code>Non couverte</code> ou <code>Non applicable</code></li>\n<li>Un <strong>commentaire</strong> libre si nécessaire</li>\n</ul>\n<p>Lorsque la couverture est <strong>partielle</strong> ou <strong>non couverte</strong>, il faut obligatoirement :</p>\n<ul>\n<li>Soit une ou plusieurs <strong>actions correctives</strong> (titre, description, date cible, responsable)</li>\n<li>Soit une <strong>justification</strong> expliquant pourquoi aucune action n'est possible</li>\n</ul>\n<p>Le bloc de chaque question passe <strong>au vert</strong> dès qu'il est complet, et la barre de progression se met à jour en temps réel.</p>\n<h3>Validation et approbation</h3>\n<p>Une fois toutes les questions traitées, cochez la case de <strong>validation</strong> en bas du formulaire (disponible uniquement lorsque la complétion est à 100%) puis cliquez sur <strong>Soumettre pour approbation</strong>. L'évaluation passe en statut &laquo; En attente d'approbation &raquo;. L'équipe interne peut alors l'approuver ou la renvoyer pour corrections.</p>\n<div class=\"help-tip\"><strong>Suggestions IA</strong> : si l'IA est activée, un bouton permet de générer des réponses suggérées basées sur les informations connues du fournisseur. Chaque suggestion peut être acceptée ou ignorée.</div>\n\n<h2>Score de maturité pondéré</h2>\n<p>Lorsqu'un fournisseur a plusieurs évaluations approuvées, son <strong>score de maturité</strong> global est une moyenne pondérée qui prend en compte :</p>\n<ul>\n<li>La <strong>criticité</strong> de chaque question (les bloquants pèsent plus que les info)</li>\n<li>Le <strong>poids par type</strong> d'évaluation (questionnaire vs audit, configurable)</li>\n<li>La <strong>décroissance temporelle</strong> : les évaluations anciennes ont un poids réduit</li>\n<li>Les <strong>surcharges manuelles</strong> : vous pouvez exclure une évaluation ou modifier son poids individuellement</li>\n</ul>\n<p>Le panneau Maturité apparaît sur la fiche du fournisseur dès qu'au moins une évaluation est approuvée, avec le détail du calcul et le score final 0-100%.</p>\n\n<h2>Portail fournisseur</h2>\n<p>Une application séparée <strong>Vendor Portal</strong> (vendor.cisotoolbox.org/portal/) permet aux fournisseurs de remplir vos questionnaires sans compte ni installation, directement dans leur navigateur.</p>\n<h3>Envoyer un questionnaire</h3>\n<p>Depuis l'évaluation, trois options de partage :</p>\n<ul>\n<li><strong>Lien direct</strong> &mdash; génère une URL qui encode le questionnaire (gzippé + chiffré AES-256). Le fournisseur clique, saisit le mot de passe communiqué séparément, et le questionnaire s'ouvre immédiatement. Pratique pour les petits questionnaires (&lt; 2 Mo).</li>\n<li><strong>Fichier JSON</strong> &mdash; exporte un .json (texte clair) ou .ctenc (chiffré) à envoyer en pièce jointe.</li>\n<li><strong>Fichier Excel</strong> &mdash; exporte un .xlsx avec validation de données et mise en forme conditionnelle (rouge sur les actions/justifications manquantes).</li>\n</ul>\n<p>Un bouton <strong>Copier modèle email</strong> génère un message HTML prêt à l'emploi avec le lien hyperlié et les consignes pour le fournisseur.</p>\n<h3>Côté fournisseur</h3>\n<p>Le fournisseur reçoit le lien, ouvre le portail, saisit le mot de passe et remplit le questionnaire. Ses données sont sauvegardées automatiquement dans son navigateur (localStorage). Quand il a terminé, il ré-exporte en JSON (chiffré avec le même mot de passe) ou en Excel, puis renvoie le fichier par email. Vous l'importez dans l'évaluation correspondante.</p>\n<div class=\"help-tip\"><strong>Date limite dépassée</strong> : si la date limite est passée lorsque le fournisseur ouvre le questionnaire, un badge rouge &laquo; Date limite dépassée &raquo; s'affiche dans l'en-tête pour le signaler.</div>\n\n<h2>Risques</h2>\n<h3>Ajouter un risque</h3>\n<p>Depuis l'onglet <strong>Risques</strong> d'un fournisseur ou depuis le <strong>Registre des risques</strong> (menu lateral), cliquez sur <strong>Ajouter un risque</strong>.</p>\n<h3>Evaluer un risque</h3>\n<ul>\n<li><strong>Categorie</strong> : Cybersecurite, Operationnel, Financier, Conformite, Strategique, Reputation, Geopolitique</li>\n<li><strong>Impact</strong> (1-5) et <strong>Vraisemblance</strong> (1-5) : le score initial est calcule automatiquement</li>\n<li><strong>Traitement</strong> : Attenuer, Transferer, Accepter, Eviter</li>\n<li><strong>Mesures</strong> : associer des mesures existantes ou en creer de nouvelles</li>\n<li><strong>Impact residuel</strong> et <strong>Vraisemblance residuelle</strong> : a evaluer apres mise en place des mesures</li>\n</ul>\n<div class=\"help-tip\"><strong>Risques IA</strong> : le bouton &laquo; IA &raquo; analyse le profil du fournisseur et propose des risques spécifiques à la relation, avec des mesures associees.</div>\n\n<h2>Mesures</h2>\n<p>Le <strong>Registre des mesures</strong> (menu lateral) centralise toutes les mesures d'attenuation :</p>\n<ul>\n<li><strong>Statut</strong> : Planifie, En cours, Termine</li>\n<li><strong>Responsable</strong> et <strong>Echeance</strong></li>\n<li><strong>Reference</strong> : norme associee (ISO 27001, ANSSI...)</li>\n<li><strong>Liaison</strong> : chaque mesure est liee a un ou plusieurs risques</li>\n</ul>\n<p>Les mesures peuvent etre creees depuis le registre ou directement depuis un risque.</p>\n\n<h2>Documents</h2>\n<p>Depuis l'onglet <strong>Documents</strong> d'un fournisseur :</p>\n<ul>\n<li><strong>Ajouter manuellement</strong> : nom, type, URL, date d'expiration</li>\n<li><strong>Collecte IA</strong> : l'assistant recherche les documents publics du fournisseur (certifications, politiques, rapports) et propose des URLs verifiees</li>\n<li><strong>Niveau de confiance</strong> : de 0 a 4, contribue au calcul de la menace</li>\n<li><strong>Suivi d'expiration</strong> : alertes visuelles pour les documents bientot expires ou expires</li>\n</ul>\n\n<h2>Assistant IA</h2>\n<p>L'assistant IA est un module optionnel (desactive par defaut) qui propose :</p>\n<ul>\n<li><strong>Collecte d'informations</strong> : pre-remplissage de la fiche fournisseur a partir du nom</li>\n<li><strong>Suggestion de risques</strong> : risques spécifiques à la relation avec le fournisseur</li>\n<li><strong>Suggestion de mesures</strong> : mesures d'attenuation pour chaque risque identifie</li>\n<li><strong>Collecte de documents</strong> : recherche de documentation publique avec verification d'URL</li>\n<li><strong>Suggestion de reponses</strong> : aide au remplissage du questionnaire d'evaluation</li>\n</ul>\n<div class=\"help-tip\"><strong>Important</strong> : l'activation de l'assistant IA implique l'envoi de donnees au fournisseur IA choisi. Verifiez que votre politique de confidentialite le permet. La cle API est stockee dans le navigateur, jamais dans les fichiers sauvegardes.</div>\n\n<h2>Reglages</h2>\n<p>Cliquer sur l'icone <strong>roue crantee</strong> (&#9881;) dans la barre d'outils :</p>\n<ul>\n<li><strong>Langue</strong> : basculer entre francais et anglais</li>\n<li><strong>Assistant IA</strong> : activer/desactiver, choisir le fournisseur (Anthropic/OpenAI), le modele et la cle API</li>\n<li><strong>DORA</strong> : activer/desactiver la conformite DORA, configurer les seuils de detection des prestataires TIC critiques</li>\n<li><strong>Donnees de demo</strong> : charger un jeu de donnees exemple (MedSecure)</li>\n</ul>\n\n<h2>Import / Export</h2>\n<table><thead><tr><th>Action</th><th>Format</th><th>Description</th></tr></thead><tbody>\n<tr><td><strong>Ouvrir</strong></td><td>.json</td><td>Charge un fichier JSON depuis le disque et remplace toutes les donnees</td></tr>\n<tr><td><strong>Enregistrer sous</strong></td><td>.json</td><td>Sauvegarde toutes les donnees en fichier JSON</td></tr>\n<tr><td><strong>Export évaluation Excel</strong></td><td>.xlsx</td><td>Sur une évaluation : export Excel préfabriqué (questions, couverture, actions) à envoyer au fournisseur. Les cellules d'identité sont verrouillées, les cellules réponse font l'objet d'une mise en forme conditionnelle.</td></tr>\n<tr><td><strong>Import évaluation Excel</strong></td><td>.xlsx</td><td>Sur une évaluation : ré-importer le fichier rempli par le fournisseur (les réponses et actions sont fusionnées dans l'évaluation existante).</td></tr>\n<tr><td><strong>Lien d'évaluation</strong></td><td>URL</td><td>Sur une évaluation : génère un lien direct gzippé/chiffré pour le portail fournisseur.</td></tr>\n<tr><td><strong>Import template Excel</strong></td><td>.xlsx</td><td>Sur la page Modèles d'évaluation : crée un nouveau template à partir d'un .xlsx structuré en colonnes (Section, Question, Criticité, Poids).</td></tr>\n</tbody></table>\n<h2>Securite des donnees</h2>\n<ul>\n<li><strong>Aucun envoi serveur</strong> : toutes les donnees restent dans votre navigateur (sauf si l'assistant IA est actif)</li>\n<li><strong>Chiffrement JSON</strong> : AES-256-GCM avec cle derivee par PBKDF2 (250 000 iterations)</li>\n<li><strong>Validation import</strong> : chaque fichier JSON importe est valide avant chargement</li>\n<li><strong>CSP</strong> : Content Security Policy strict (pas d'inline, pas d'eval)</li>\n</ul>\n\n<h2>Raccourcis clavier</h2>\n<table><thead><tr><th>Raccourci</th><th>Action</th></tr></thead><tbody>\n<tr><td><strong>Ctrl+S</strong> / <strong>Cmd+S</strong></td><td>Enregistrer</td></tr>\n<tr><td><strong>Ctrl+Z</strong> / <strong>Cmd+Z</strong></td><td>Annuler</td></tr>\n<tr><td><strong>Ctrl+Y</strong> / <strong>Cmd+Y</strong></td><td>Retablir</td></tr>\n<tr><td><strong>Echap</strong></td><td>Fermer le panneau d'aide ou un selecteur ouvert</td></tr>\n</tbody></table>\n\n<h2>Bonnes pratiques</h2>\n<ul>\n<li><strong>Sauvegarder souvent</strong> : utilisez Fichier &rarr; Enregistrer sous regulierement</li>\n<li><strong>Commencer par la classification</strong> : evaluez les 6 axes avant de creer des risques</li>\n<li><strong>Realiser l'evaluation de securite</strong> : le questionnaire met a jour la maturite, ce qui affine le niveau de menace</li>\n<li><strong>Lier les mesures aux risques</strong> : chaque mesure doit etre rattachee a un risque pour apparaitre dans le suivi</li>\n<li><strong>Suivre les documents</strong> : les certifications expirees augmentent le risque — surveillez les echeances</li>\n<li><strong>Utiliser le dashboard</strong> : les matrices et indicateurs donnent une vue synthetique de la posture risque tiers</li>\n<li><strong>Partage fournisseur</strong> : pour envoyer une évaluation, préférez le lien direct (gzippé + chiffré) au fichier Excel — plus simple côté fournisseur</li>\n</ul>",
-    "settings.custom_questionnaire": "Questionnaire personnalisé (admin)",
+"settings.custom_questionnaire": "Questionnaire personnalisé (admin)",
     "settings.custom_questionnaire_active": "Questionnaire actif ({count} questions)",
     "settings.custom_questionnaire_clear": "Supprimer le questionnaire",
     "settings.custom_questionnaire_cleared": "Questionnaire personnalisé supprimé",

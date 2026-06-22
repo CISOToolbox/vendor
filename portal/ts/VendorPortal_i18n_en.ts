@@ -1,6 +1,7 @@
 _registerTranslations("en", {
     "portal.title": "Vendor portal",
     "portal.help_button": "Help",
+
     "portal.welcome_title": "Welcome to the vendor portal",
     "portal.welcome_subtitle": "Fill in your browser the security questionnaire sent by your client — no account, no installation.",
     "portal.primary_title": "Received a link?",
@@ -12,10 +13,12 @@ _registerTranslations("en", {
     "portal.loading_hint": "Enter the password shared by your client.",
     "portal.invalid_link": "Invalid or corrupted link.",
     "portal.privacy_notice": "<strong>Privacy:</strong> all data stays in your browser. No information is sent over the Internet. Closing this tab does not erase your work in progress (automatic local save).",
+
     "portal.password_prompt": "Decryption password",
     "portal.password_prompt_hint": "Your input is masked. Press Enter to submit or Esc to cancel.",
     "portal.password_prompt_export": "Encryption password (leave empty for a plain export)",
     "portal.password_prompt_export_custom": "New encryption password",
+
     "portal.export_modal_title": "Export questionnaire",
     "portal.export_session_hint": "Your response will be encrypted with the same password you used to open the questionnaire. Your client can then open it with that same password, without any additional exchange.",
     "portal.export_encrypted_session": "Export encrypted (same password)",
@@ -29,6 +32,7 @@ _registerTranslations("en", {
     "portal.invalid_excel": "Invalid or unrecognized Excel file.",
     "portal.file_loaded": "Questionnaire loaded",
     "portal.unsupported_format": "Unsupported format. Use a .json, .ctenc or .xlsx file.",
+
     "portal.header_for": "Questionnaire for",
     "portal.header_from": "Sent by",
     "portal.header_due": "Due date",
@@ -38,16 +42,19 @@ _registerTranslations("en", {
     "portal.export_excel": "Export as Excel",
     "portal.export_done": "Export completed",
     "portal.confirm_new": "Discard the current questionnaire and start over?",
+
     "portal.assessment.status": "Status",
     "portal.assessment.status_draft": "Draft",
     "portal.assessment.status_in_progress": "In progress",
     "portal.assessment.status_ready": "Ready to send",
+
     // Help overlay
     "portal.help_title": "Portal user guide",
     "portal.help_principle_h": "Principle",
     "portal.help_principle_p1": "This portal lets you fill a security questionnaire sent by one of your clients, directly in your browser.",
     "portal.help_principle_p2": "Your data stays local: nothing is sent over the Internet. The portal is a static HTML file running in your browser.",
     "portal.help_principle_p3": "Once the questionnaire is filled in, you export it (as encrypted JSON or Excel) and send it back to your client by email.",
+
     "portal.help_steps_h": "How to proceed",
     "portal.help_step1_h": "1. Receive the questionnaire",
     "portal.help_step1_p": "Your client sends you a .json, .ctenc (encrypted) or .xlsx file by email. Save it to your computer.",
@@ -63,15 +70,19 @@ _registerTranslations("en", {
     "portal.help_step4_p": "Once all questions are handled, tick the validation checkbox at the bottom of the form. This confirms you commit to the answers and corrective actions.",
     "portal.help_step5_h": "5. Export and send back",
     "portal.help_step5_p": "Click \"Export as JSON\" or \"Export as Excel\". To encrypt your response, enter a password during export (the file will get the .ctenc extension) and share it with your client through a separate channel. Attach the file to your reply.",
+
     "portal.help_save_h": "Local save",
     "portal.help_save_p": "Your entries are automatically saved in your browser. You can close the tab and resume later on the same browser. To move your data from one computer to another, export the JSON file and reload it on the other machine.",
+
     "portal.help_security_h": "Security and privacy",
     "portal.help_security_ul1": "No data is sent over the Internet. The portal runs entirely in your browser.",
     "portal.help_security_ul2": "Encrypted files use AES-256-GCM with PBKDF2 (250,000 iterations).",
     "portal.help_security_ul3": "Never share the encryption password in the same email as the encrypted file.",
     "portal.help_security_ul4": "If your client asks for evidence (file attachments), only include strictly necessary documents.",
+
     "portal.help_contact_h": "Need help?",
     "portal.help_contact_p": "Contact the person who sent you the questionnaire. This portal is an open-source CISO Toolbox tool and is not attached to a support service.",
+
     "common.close": "Close",
     "common.cancel": "Cancel",
     "common.save": "Save",

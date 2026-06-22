@@ -3,7 +3,8 @@
  * Covers: governance, access, network, dev, data, endpoints, detection,
  *         continuity, supply chain, audit, HR, physical, cloud, incidents, compliance
  */
-var TPRM_QUESTIONS = [
+
+var TPRM_QUESTIONS: TprmLegacyQuestion[] = [
     // ── Gouvernance & organisation ──────────────────────────────────
     {
         id: "Q01", domain: "governance",
@@ -318,6 +319,7 @@ var TPRM_QUESTIONS = [
         weight: 10
     }
 ];
+
 var TPRM_DORA_QUESTIONS = [
     {
         id: "D01", domain: "dora_resilience",
@@ -380,16 +382,18 @@ var TPRM_DORA_QUESTIONS = [
         weight: 10
     }
 ];
+
 // Risk categories
 var TPRM_RISK_CATEGORIES = [
     { id: "CYBER", label_fr: "Cybersécurité", label_en: "Cybersecurity" },
-    { id: "OPS", label_fr: "Opérationnel", label_en: "Operational" },
-    { id: "FIN", label_fr: "Financier", label_en: "Financial" },
-    { id: "COMP", label_fr: "Conformité", label_en: "Compliance" },
-    { id: "STRAT", label_fr: "Stratégique", label_en: "Strategic" },
-    { id: "REP", label_fr: "Réputation", label_en: "Reputational" },
-    { id: "GEO", label_fr: "Géopolitique", label_en: "Geopolitical" }
+    { id: "OPS",   label_fr: "Opérationnel",  label_en: "Operational" },
+    { id: "FIN",   label_fr: "Financier",     label_en: "Financial" },
+    { id: "COMP",  label_fr: "Conformité",    label_en: "Compliance" },
+    { id: "STRAT", label_fr: "Stratégique",   label_en: "Strategic" },
+    { id: "REP",   label_fr: "Réputation",    label_en: "Reputational" },
+    { id: "GEO",   label_fr: "Géopolitique",  label_en: "Geopolitical" }
 ];
+
 // Certifications list
 var TPRM_CERTIFICATIONS = [
     "ISO 27001", "SOC 2 Type I", "SOC 2 Type II", "HDS", "PCI DSS",

@@ -7,6 +7,7 @@ _registerTranslations("en", {
     "nav.templates": "Assessment templates",
     "nav.dora": "DORA Register",
     "nav.settings": "Settings",
+
     "dora.overview.intro": "Centralised input for entity-level information: declarant entities, branches, consolidation perimeter and operational functions. Contractual arrangements and subcontractors are entered through the TPSP and subcontractor screens.",
     "dora.help.toggle": "Show / hide help",
     "dora.overview.title_b01": "Reporting financial entity",
@@ -76,12 +77,14 @@ _registerTranslations("en", {
     "dora.export.modal_title": "DORA RoI export",
     "dora.export.modal_intro": "Generates an EBA RoI ITS workbook (one sheet per table). The reporting period is saved on every declarant entity before export.",
     "dora.export.load_error": "Could not load DORA data.",
+
     "dora.bridge.arr_short": "arr.",
     "dora.bridge.arr_tooltip": "DORA contractual arrangements for this vendor",
     "dora.bridge.roi_incomplete": "RoI incomplete",
     "dora.bridge.roi_complete": "RoI complete",
     "dora.bridge.roi_missing": "Missing RoI fields",
     "dora.bridge.complete_roi": "Complete RoI",
+
     "dora.vtab.title": "DORA Register (Reg. EU 2024/2956)",
     "dora.vtab.intro": "Fields required for EBA RoI reporting when this vendor signs critical-function arrangements.",
     "dora.vtab.lei": "LEI ISO 17442 (B_05.01.0010)",
@@ -103,6 +106,7 @@ _registerTranslations("en", {
     "dora.vtab.add_additional_id": "Add an additional identifier if LEI unavailable",
     "dora.vtab.add_additional_id_hint": "Optional. Use only if no LEI is available.",
     "dora.vtab.country_placeholder": "— Select a country —",
+
     "dora.cl.person_type.legal": "Legal person",
     "dora.cl.person_type.natural": "Natural person",
     "dora.cl.additional_id_type.EUID": "EUID — European Unique Identifier",
@@ -137,6 +141,7 @@ _registerTranslations("en", {
     "dora.cl.hierarchy.subsidiary": "Subsidiary",
     "dora.cl.hierarchy.sole_entity": "Sole entity (no group)",
     "dora.cl.hierarchy.branch": "Branch",
+
     "dora.byvendor.arrangements": "Arrangements",
     "dora.byvendor.functions": "Supported functions",
     "dora.byvendor.signers": "Signers",
@@ -170,6 +175,7 @@ _registerTranslations("en", {
     "dora.byvendor.no_informal_subs": "—",
     "dora.byvendor.dora_subs": "DORA subcontractors (linked to an arrangement)",
     "dora.byvendor.under_arr": "Under arrangement",
+
     "dora.modal.arr_title_new": "New contractual arrangement",
     "dora.modal.arr_title_edit": "Edit contractual arrangement",
     "dora.modal.arr_ref": "Reference (B_02.01.0010)",
@@ -259,6 +265,7 @@ _registerTranslations("en", {
     "dora.fn.impact_tolerance": "Impact of discontinuing the function (B_06.01.0100)",
     "dora.fn.last_assessment": "Date of last assessment (B_06.01.0070)",
     "dora.fn.confirm_delete": "Delete this function?",
+
     "dora.modal.sub_title_new": "New sub-contractor",
     "dora.modal.sub_title_edit": "Edit sub-contractor",
     "dora.modal.sub_name": "Name (B_05.01.0050)",
@@ -306,9 +313,11 @@ _registerTranslations("en", {
     "dora.modal.search_ph": "Search…",
     "dora.modal.cancel": "Cancel",
     "dora.modal.vendor_locked": "Vendor cannot be changed from a vendor context",
+
     "btn_save": "Save",
     "btn_delete": "Delete",
     "btn_cancel": "Cancel",
+
     "dashboard.title": "Overview",
     "dashboard.total_vendors": "Vendors",
     "dashboard.critical_risks": "Critical risks",
@@ -323,6 +332,7 @@ _registerTranslations("en", {
     "dashboard.upcoming_deadlines": "Upcoming deadlines",
     "dashboard.risk_timeline": "Risk evolution",
     "dashboard.today": "Today",
+
     "vendor.title": "Vendor registry",
     "vendor.add": "Add vendor",
     "vendor.tab_vendors": "Vendors",
@@ -377,6 +387,7 @@ _registerTranslations("en", {
     "vendor.inherent_risk": "Inherent risk",
     "vendor.residual_risk": "Residual risk",
     "vendor.target_date": "Measures deadline",
+
     // Measures
     "measure.title": "Risk mitigation measures",
     "measure.add": "Add",
@@ -407,6 +418,7 @@ _registerTranslations("en", {
     "measure.effet": "Expected effect",
     "measure.saved": "Measure saved",
     "measure.selected_n": "{n} measure(s) selected",
+
     "vendor.search": "Search...",
     "vendor.filter_all": "All statuses",
     "vendor.no_results": "No vendor found.",
@@ -445,14 +457,17 @@ _registerTranslations("en", {
     "vendor.tab_assessments": "Assessments",
     "vendor.tab_documents": "Documents",
     "vendor.tab_dora": "DORA Register",
+
     "vendor.status_prospect": "Considered",
     "vendor.status_active": "Active",
     "vendor.status_review": "Under review",
     "vendor.status_offboarded": "Former",
+
     "vendor.tier_low": "Low",
     "vendor.tier_medium": "Medium",
     "vendor.tier_high": "High",
     "vendor.tier_critical": "Critical",
+
     "risk.title": "Third-party risk register",
     "risk.add": "Add risk",
     "risk.id": "ID",
@@ -479,6 +494,7 @@ _registerTranslations("en", {
     "risk.status_closed": "Closed",
     "risk.status_archived": "Archived",
     "risk.empty": "No risks identified.",
+
     "assessment.title": "Security assessments",
     "assessment.new": "New assessment",
     "assessment.vendor": "Vendor",
@@ -500,6 +516,7 @@ _registerTranslations("en", {
     "assessment.deleted": "Assessment deleted.",
     "assessment.comment": "Comment",
     "assessment.expected": "Expected answer",
+
     // Assessment V2 (template-driven) — phase 0 step 2
     "assessment.from_template": "New assessment from a template",
     "assessment.choose_template": "Choose a template",
@@ -563,6 +580,7 @@ _registerTranslations("en", {
     "maturity.col_effective_weight": "Effective weight",
     "maturity.col_excluded": "Exclude",
     "maturity.weighted_score": "Weighted score",
+
     "assessment.self_validation_title_audit": "Audit validation",
     "assessment.self_validation_hint_audit": "By checking the box below, the auditor confirms that they have reviewed their findings and recommendations before submitting them to the client for approval.",
     "assessment.self_validation_label_audit": "I validate my findings and recommendations",
@@ -651,12 +669,15 @@ _registerTranslations("en", {
     "assessment.col_justification": "Justification",
     "assessment.self_validation_check_label": "I validate my answers and commitments",
     "assessment.self_validation_tick_hint": "Replace with [X] to validate",
+
     "coverage.covered": "Covered",
     "coverage.partial": "Partial",
     "coverage.not_covered": "Not covered",
     "coverage.not_applicable": "Not applicable",
+
     "answer.yes": "Yes",
     "answer.no": "No",
+
     "doc.title": "Document tracking",
     "doc.name": "Document name",
     "doc.type": "Type",
@@ -675,11 +696,14 @@ _registerTranslations("en", {
     "doc.confidence_4": "Full",
     "doc.confidence_hint": "Used to compute the threat level",
     "doc.empty": "No documents.",
+
+
     "settings.dora_section": "DORA",
     "settings.dora_enable": "Enable DORA compliance",
     "settings.dora_hint": "The vendor is considered a critical ICT provider if either threshold is reached.",
     "settings.dora_max_criteria": "Criteria at maximum",
     "settings.dora_avg_score": "Average score",
+
     "common.save": "Save",
     "common.cancel": "Cancel",
     "common.close": "Close",
@@ -691,6 +715,7 @@ _registerTranslations("en", {
     "common.search": "Search...",
     "common.move_up": "Move up",
     "common.move_down": "Move down",
+
     "template.title": "Assessment templates",
     "template.intro": "Create and manage reusable assessment templates: questionnaires sent to vendors or audit checklists filled internally.",
     "template.new": "+ New template",
@@ -760,12 +785,14 @@ _registerTranslations("en", {
     "template.xlsx_import_empty": "No question found in this file. Check that the \"Section\" and \"Question\" columns are filled.",
     "template.xlsx_import_missing_cols": "Required columns missing: \"Section\" and \"Question\" must be present in the first row.",
     "template.xlsx_import_error": "Template import failed",
+
     "qtype.yes_no": "Yes / No",
     "qtype.scale_1_5": "Scale 1-5",
     "qtype.single_choice": "Single choice",
     "qtype.multi_choice": "Multi choice",
     "qtype.free_text": "Free text",
     "qtype.file_upload": "File upload",
+
     "criticality.info": "Info",
     "criticality.major": "Major",
     "criticality.blocker": "Blocker",
@@ -782,6 +809,7 @@ _registerTranslations("en", {
     "btn_discard": "Discard",
     "status_session_restored": "Session restored.",
     "status_new": "New {label} created.",
+
     "ai.option_risks": "Suggest risks",
     "ai.option_risks_hint": "AI analyzes the vendor and proposes relationship-specific risks. Leave empty for automatic analysis or describe your need.",
     "ai.option_measures": "Add measures",
@@ -802,6 +830,8 @@ _registerTranslations("en", {
     "ai.docs_phase_probe": "Probing vendor URLs...",
     "ai.docs_phase_ai": "AI search in progress...",
     "ai.docs_found": "document(s) found",
+
+
     "impact.1": "Negligible",
     "impact.2": "Minor",
     "impact.3": "Moderate",
@@ -812,6 +842,7 @@ _registerTranslations("en", {
     "likelihood.3": "Possible",
     "likelihood.4": "Likely",
     "likelihood.5": "Almost certain",
+
     "matrix.low": "Low",
     "matrix.moderate": "Moderate",
     "matrix.significant": "Significant",
@@ -820,6 +851,7 @@ _registerTranslations("en", {
     "matrix.extreme": "Extreme",
     "matrix.x": "Impact",
     "matrix.y": "Likelihood",
+
     // ── Help / sidebar ──
     "tprm.sidebar.section_aide": "Help",
     "tprm.sidebar.methodo": "Methodology",
@@ -844,10 +876,12 @@ _registerTranslations("en", {
     "tprm.help.tab_usage": "How to use the application",
     "tprm.help.tab_dora": "DORA Register (RoI)",
     "tprm.help.dora": "<h1 class=\"heading-blue\">DORA Register of Information (RoI)</h1><p class=\"text-muted\">Aligned with EU Regulation 2024/2956 and the EBA RoI ITS.</p><h2>Purpose</h2><p>The <strong>Register of Information</strong> (RoI) is a mandatory deliverable for every financial entity in scope of DORA. It catalogues every contractual arrangement with ICT third-party service providers, their subcontractors, and the operational functions they support. The DORA Register module produces this register in <strong>EBA RoI ITS XLSX format</strong> (one tab per B_xx table), ready to be filed with your competent authority.</p><h2>How to access</h2><ul><li><strong>Central view</strong> &mdash; sidebar &laquo; DORA Register &raquo;: full editing of entities, branches, functions, arrangements, signers and subcontractors.</li><li><strong>Per-vendor tab</strong> &mdash; open a vendor &rarr; &laquo; DORA &raquo; tab: aggregated card of DORA items linked to the vendor (arrangements, signers, declared subcontractors, supported functions).</li><li><strong>Subcontractors tab</strong> &mdash; from the vendor list, switch to &laquo; Subcontractors &raquo; to manage 4th-party entities directly.</li></ul><h2>EBA tables covered</h2><table><thead><tr><th>Table</th><th>Content</th></tr></thead><tbody><tr><td><strong>B_01.01</strong></td><td>Reporting financial entities (RFE) &mdash; identity, LEI, sector, currency, reporting period</td></tr><tr><td><strong>B_01.02</strong></td><td>Branches of RFEs</td></tr><tr><td><strong>B_01.03</strong></td><td>Group scope and hierarchy</td></tr><tr><td><strong>B_02.01 / B_02.02 / B_02.03</strong></td><td>Contractual arrangements &mdash; type, services, criticality, governance, data, substitutability</td></tr><tr><td><strong>B_03</strong></td><td>Signers of arrangements (TPP, RFE, intermediaries, subcontractors)</td></tr><tr><td><strong>B_04 / B_05</strong></td><td>Subcontractors (4th parties) and ICT chain</td></tr><tr><td><strong>B_06.01 / B_06.02</strong></td><td>Supported operational functions &mdash; licenced activity (B_06.01.0020), impact tolerance (B_06.01.0100)</td></tr><tr><td><strong>B_07.01</strong></td><td>Provider substitutability assessment</td></tr></tbody></table><h2>EBA codelists</h2><p>Coded fields (licenced activity, ICT service type, arrangement type, termination reason, currency, country…) use the <strong>official EBA DPM v4.0 codelists</strong>. Labels are localised FR/EN on screen; the ITS code (e.g. <code>eba_TA:x182</code>) is preserved in storage and emitted as-is on export.</p><h2>RoI export</h2><p>Menu <strong>File &rarr; DORA RoI export</strong>. Enter the reporting period (format <code>YYYY-12-31</code>) and target currency &mdash; foreign-currency amounts stay in their original currency, augmented with a normalised column in the target currency. The .xlsx output has one tab per EBA table and follows the RoI ITS schema.</p><div class=\"help-tip\"><strong>LEI</strong>: an embedded GLEIF lookup retrieves an LEI from a legal name. Click the icon next to the LEI field to launch the search.</div><h2>Subcontractors (4th parties)</h2><p>Two ways to capture them:</p><ul><li><strong>Vendor list &rarr; Subcontractors tab</strong>: standalone identity editing (name, LEI, country). Links to arrangements are added later from each arrangement.</li><li><strong>Arrangement modal &rarr; Subcontractors block</strong>: creates the arrangement&hArr;subcontractor link with link-specific attributes (tier, service provided, etc.).</li></ul><p>Deleting a subcontractor unlinks it from every arrangement it was tied to.</p><h2>Best practice</h2><ul><li>Capture <strong>reporting entities</strong> (B_01.01) before arrangements &mdash; each arrangement must reference an RFE.</li><li>Capture the <strong>LEI</strong> early for every counterparty &mdash; the EBA requires it for TPPs and it improves referential integrity.</li><li>For <strong>critical functions</strong> (B_06.01.0050 = yes), do not forget the <strong>impact tolerance</strong> (B_06.01.0100).</li><li>The <strong>reporting period</strong> is stamped on every RFE on export &mdash; you can also set it manually on the entity card.</li><li>Keep a <strong>JSON snapshot</strong> (File &rarr; Save as) before every quarterly export.</li></ul>",
+
     // ── Help content ──
     "tprm.help.methodo": "<h1 class=\"heading-blue\">TPRM Methodology Guide</h1>\n<p class=\"text-muted\">Third-party risk management for vendors and service providers</p>\n\n<h2>Introduction to TPRM</h2>\n<p><strong>Third-Party Risk Management</strong> (TPRM) is a structured process for identifying, assessing, and controlling risks associated with vendors, service providers, and partners. Outsourcing critical services (cloud, managed services, development, payroll...) increases the organization's <strong>attack surface</strong> and <strong>operational dependency</strong>.</p>\n<p>An effective TPRM program covers the entire vendor lifecycle: <strong>selection</strong> (onboarding), <strong>periodic assessment</strong>, <strong>risk monitoring</strong>, and <strong>exit</strong> (offboarding). This application implements a structured methodology in 4 steps: classification, assessment, risk analysis, and measures tracking.</p>\n\n<h2>Vendor Classification</h2>\n<h3>6 Classification Axes</h3>\n<p>Each vendor is assessed on <strong>6 axes</strong>, rated from 0 (no impact) to 4 (maximum impact):</p>\n<table><thead><tr><th>Axis</th><th>Description</th><th>Examples</th></tr></thead><tbody>\n<tr><td><strong>Critical operations impact</strong></td><td>Effect of a failure on vital operations</td><td>0 = no impact; 4 = total business shutdown</td></tr>\n<tr><td><strong>Dependent processes</strong></td><td>Number of business processes relying on this vendor</td><td>0 = none; 4 = all core processes</td></tr>\n<tr><td><strong>Replacement difficulty</strong></td><td>Effort and time to switch vendors</td><td>0 = immediate replacement; 4 = total lock-in</td></tr>\n<tr><td><strong>Sensitive data</strong></td><td>Volume and sensitivity of data accessible to the vendor</td><td>0 = no data; 4 = critical health/financial data</td></tr>\n<tr><td><strong>Systems integration</strong></td><td>Depth of technical interconnection</td><td>0 = no integration; 4 = admin access to IT systems</td></tr>\n<tr><td><strong>Regulatory impact</strong></td><td>Regulatory consequences in case of failure</td><td>0 = none; 4 = sanctions/loss of license</td></tr>\n</tbody></table>\n\n<h3>Dependency and Penetration</h3>\n<p>The 6 axes are grouped into two composite indicators:</p>\n<ul>\n<li><strong>Dependency</strong> = average(Critical ops impact, Dependent processes, Replacement difficulty) &mdash; measures how much the organization depends on the vendor</li>\n<li><strong>Penetration</strong> = average(Sensitive data, Systems integration, Regulatory impact) &mdash; measures how deeply the vendor reaches into IT systems and data</li>\n</ul>\n\n<h2>Threat Level</h2>\n<h3>Formula</h3>\n<p>The threat level combines dependency, penetration, vendor cyber maturity, and trust level:</p>\n<p style=\"background:var(--bg-subtle);padding:10px;border-radius:6px;font-family:monospace\"><strong>Threat = (Dependency &times; Penetration) / (Maturity &times; Trust)</strong></p>\n<p>Same formula as EBIOS RM (workshop 3). Result on a scale from 0.0625 to 16. Maturity and trust values cannot be 0 (minimum 1).</p>\n<h3>Factors</h3>\n<table><thead><tr><th>Factor</th><th>Scale</th><th>Logic</th></tr></thead><tbody>\n<tr><td><strong>Dependency</strong></td><td>0-4</td><td>Higher dependency increases the threat</td></tr>\n<tr><td><strong>Penetration</strong></td><td>0-4</td><td>Deeper penetration increases the threat</td></tr>\n<tr><td><strong>Cyber maturity</strong></td><td>1-4</td><td>Higher maturity <em>decreases</em> the threat (divisor)</td></tr>\n<tr><td><strong>Trust</strong></td><td>1-4</td><td>Higher trust <em>decreases</em> the threat (divisor)</td></tr>\n</tbody></table>\n<div class=\"help-tip\"><strong>Maturity</strong>: initialized at 0, automatically updated by the score of the latest security assessment (see Questionnaire section).</div>\n<div class=\"help-tip\"><strong>Trust</strong>: initialized at 0, updated via document tracking (compliance documents provided and verified).</div>\n\n<h2>Criticality Tiers</h2>\n<p>The threat level determines the vendor's <strong>tier</strong> (criticality level):</p>\n<table><thead><tr><th>Tier</th><th>Threat</th><th>Meaning</th></tr></thead><tbody>\n<tr><td><strong class=\"score-critical\">Critical</strong></td><td>&ge; 4</td><td>Very high-risk vendor, enhanced monitoring required</td></tr>\n<tr><td><strong class=\"score-high\">High</strong></td><td>&ge; 2</td><td>High-risk vendor, in-depth assessment required</td></tr>\n<tr><td><strong class=\"score-medium\">Medium</strong></td><td>&ge; 1</td><td>Moderate-risk vendor, standard assessment</td></tr>\n<tr><td><strong class=\"score-low\">Low</strong></td><td>&lt; 1</td><td>Low-risk vendor, lightweight monitoring</td></tr>\n</tbody></table>\n\n<h2>DORA &mdash; Critical ICT Provider</h2>\n<p>The DORA regulation (Digital Operational Resilience Act) imposes enhanced requirements for <strong>critical ICT providers</strong> of financial entities. The application automatically detects vendors matching DORA criteria.</p>\n<h3>Detection Criteria (configurable in Settings)</h3>\n<p>A vendor is considered a <strong>critical ICT provider</strong> if:</p>\n<ul>\n<li><strong>Criterion 1</strong>: at least 3 classification axes are at maximum (score 4/4), <strong>OR</strong></li>\n<li><strong>Criterion 2</strong>: the average of all 6 axes &ge; 3.5</li>\n</ul>\n<p>Thresholds (3 criteria, 3.5 average) are configurable in Settings. When DORA is enabled, <strong>5 additional questions</strong> are added to the assessment questionnaire (resilience, exit plan, incident notification, ICT subcontracting, data location).</p>\n\n<h2>Security Assessment Questionnaire</h2>\n<h3>Structure</h3>\n<p>The questionnaire includes <strong>10 essential questions</strong> covering fundamental security domains, plus <strong>5 DORA questions</strong> if the vendor is a critical ICT provider:</p>\n<table><thead><tr><th>ID</th><th>Domain</th><th>Topic</th></tr></thead><tbody>\n<tr><td>Q01</td><td>Governance</td><td>Security policy and risk analysis</td></tr>\n<tr><td>Q02</td><td>Access management</td><td>SSO and IAM integration</td></tr>\n<tr><td>Q03</td><td>Privileged access</td><td>MFA + bastion for administrators</td></tr>\n<tr><td>Q04</td><td>Vulnerability management</td><td>Patch management with SLAs</td></tr>\n<tr><td>Q05</td><td>Development security</td><td>Environment isolation, code review</td></tr>\n<tr><td>Q06</td><td>Data protection</td><td>Encryption, GDPR compliance</td></tr>\n<tr><td>Q07</td><td>Endpoint protection</td><td>EDR deployed and monitored</td></tr>\n<tr><td>Q08</td><td>Business continuity</td><td>Backups, RTO/RPO, disaster recovery plan</td></tr>\n<tr><td>Q09</td><td>Supply chain</td><td>Sub-contractor management (4th parties)</td></tr>\n<tr><td>Q10</td><td>Audit</td><td>Annual independent penetration test</td></tr>\n<tr><td>D01</td><td>DORA &mdash; Resilience</td><td>Operational resilience testing</td></tr>\n<tr><td>D02</td><td>DORA &mdash; Exit</td><td>Exit plan and reversibility</td></tr>\n<tr><td>D03</td><td>DORA &mdash; Notification</td><td>Incident notification process</td></tr>\n<tr><td>D04</td><td>DORA &mdash; Subcontracting</td><td>ICT chain control</td></tr>\n<tr><td>D05</td><td>DORA &mdash; Location</td><td>Data and processing location</td></tr>\n</tbody></table>\n\n<h3>Scoring</h3>\n<p>Each question receives an answer:</p>\n<table><thead><tr><th>Answer</th><th>Score</th></tr></thead><tbody>\n<tr><td><strong>Compliant</strong></td><td>100%</td></tr>\n<tr><td><strong>Partial</strong></td><td>50%</td></tr>\n<tr><td><strong>Non-compliant</strong></td><td>0%</td></tr>\n<tr><td><strong>N/A</strong></td><td>Excluded from calculation</td></tr>\n</tbody></table>\n<p>Overall score = weighted average of answered questions (excluding N/A).</p>\n\n<h3>Score &rarr; Maturity</h3>\n<p>The assessment score is converted to a maturity level (0-4) that feeds into the threat calculation:</p>\n<table><thead><tr><th>Score</th><th>Maturity</th></tr></thead><tbody>\n<tr><td>0-20%</td><td>0 &mdash; Non-existent</td></tr>\n<tr><td>21-40%</td><td>1 &mdash; Initial</td></tr>\n<tr><td>41-60%</td><td>2 &mdash; Repeatable</td></tr>\n<tr><td>61-80%</td><td>3 &mdash; Defined</td></tr>\n<tr><td>81-100%</td><td>4 &mdash; Managed</td></tr>\n</tbody></table>\n\n<h2>Risk Matrix</h2>\n<p>Each risk is assessed on two dimensions:</p>\n<ul>\n<li><strong>Impact</strong> (1-5): Negligible, Minor, Moderate, Major, Critical</li>\n<li><strong>Likelihood</strong> (1-5): Rare, Unlikely, Possible, Likely, Almost certain</li>\n</ul>\n<p style=\"background:var(--bg-alt);padding:10px;border-radius:6px;font-family:monospace\"><strong>Score = Impact &times; Likelihood</strong></p>\n<table><thead><tr><th>Level</th><th>Score</th><th>Color</th></tr></thead><tbody>\n<tr><td><strong class=\"score-critical\">Critical</strong></td><td>&ge; 16</td><td>Red</td></tr>\n<tr><td><strong class=\"score-high\">High</strong></td><td>&ge; 10</td><td>Orange</td></tr>\n<tr><td><strong class=\"score-medium\">Moderate</strong></td><td>&ge; 5</td><td>Yellow</td></tr>\n<tr><td><strong class=\"score-low\">Low</strong></td><td>&lt; 5</td><td>Green</td></tr>\n</tbody></table>\n<p>The 5&times;5 matrix is displayed on the dashboard to visualize risk distribution.</p>\n\n<h2>Residual Risk</h2>\n<p>Residual risk represents the risk level <strong>after applying</strong> mitigation measures:</p>\n<ul>\n<li><strong>Residual impact</strong>: impact after measures implementation (may be lower or equal to initial impact)</li>\n<li><strong>Residual likelihood</strong>: likelihood after measures implementation</li>\n<li><strong>Residual score</strong> = Residual impact &times; Residual likelihood</li>\n</ul>\n<p>Risk treatment options:</p>\n<table><thead><tr><th>Treatment</th><th>Description</th></tr></thead><tbody>\n<tr><td><strong>Mitigate</strong></td><td>Implement measures to reduce impact or likelihood</td></tr>\n<tr><td><strong>Transfer</strong></td><td>Transfer the risk (insurance, contractual clause)</td></tr>\n<tr><td><strong>Accept</strong></td><td>Accept the risk as-is (residual = initial)</td></tr>\n<tr><td><strong>Avoid</strong></td><td>Remove the risk source (change vendor)</td></tr>\n</tbody></table>\n<div class=\"help-tip\"><strong>Note</strong>: when a risk is treated as Accept or Avoid, residual fields are automatically locked to the initial value.</div>\n\n<h2>Documents</h2>\n<p>Document tracking allows you to trace vendor compliance evidence:</p>\n<ul>\n<li><strong>Types</strong>: certifications (ISO 27001, SOC 2...), DPA, security policy, pentest report, BCP/DRP, etc.</li>\n<li><strong>Expiry date</strong>: automatic tracking with alerts (Valid, Expiring soon, Expired)</li>\n<li><strong>Confidence level</strong>: from 0 (no confidence) to 4 (full confidence), used in threat calculation</li>\n</ul>\n<h3>URL Verification</h3>\n<p>When a document is added with a URL, the application attempts to verify its accessibility:</p>\n<ul>\n<li><strong>Initial probe</strong>: no-cors request to check the URL responds</li>\n<li><strong>AI collection</strong>: the assistant can suggest URLs of public vendor documentation (certifications, published policies)</li>\n<li><strong>HEAD verification</strong>: if a backend is available (client version), HTTP HEAD check for status code</li>\n</ul>\n\n<h2>Glossary</h2>\n<table><thead><tr><th>Term</th><th>Definition</th></tr></thead><tbody>\n<tr><td><strong>TPRM</strong></td><td>Third-Party Risk Management</td></tr>\n<tr><td><strong>Tier</strong></td><td>Vendor criticality level (Critical, High, Medium, Low)</td></tr>\n<tr><td><strong>DORA</strong></td><td>Digital Operational Resilience Act &mdash; EU regulation on digital resilience for financial entities</td></tr>\n<tr><td><strong>ICT</strong></td><td>Information and Communication Technologies</td></tr>\n<tr><td><strong>PP</strong></td><td>Stakeholder (Partie Prenante) &mdash; exchange format with the Risk app (EBIOS RM)</td></tr>\n<tr><td><strong>DPA</strong></td><td>Data Processing Agreement (GDPR)</td></tr>\n<tr><td><strong>4th party</strong></td><td>Vendor's subcontractor (your vendor's vendor)</td></tr>\n</tbody></table>",
+
     "tprm.help.usage": "<h1 class=\"heading-blue\">User Guide</h1>\n<p class=\"text-muted\">How to use the TPRM application</p>\n\n<h2>Overview</h2>\n<p>The application is organized in <strong>3 areas</strong>: the <strong>toolbar</strong> at the top (File menu, settings), the <strong>sidebar</strong> on the left (section navigation), and the <strong>main area</strong> in the center.</p>\n<div class=\"help-tip\">All data stays in your browser. No information is sent to a server (unless the AI assistant is active). Remember to save regularly as JSON.</div>\n\n<h2>Dashboard</h2>\n<p>The overview displays:</p>\n<ul>\n<li><strong>Indicators</strong>: vendor count, critical vendors, pending assessments, open risks, upcoming deadlines</li>\n<li><strong>Risk matrices</strong>: 5&times;5 matrix of current and residual risks, color-coded</li>\n<li><strong>Top 5 risks</strong>: the 5 highest-rated risks</li>\n<li><strong>Upcoming deadlines</strong>: measures and assessments nearing their due date</li>\n<li><strong>Risk evolution</strong>: timeline of events (assessments, measures, review dates)</li>\n</ul>\n\n<h2>Vendors</h2>\n<h3>Vendor List</h3>\n<p>The list displays all vendors with their tier, threat level, assessment score, and risk count. Use the <strong>search bar</strong> to filter by name, and the <strong>status filter</strong> to show a subset.</p>\n<h3>Adding a Vendor</h3>\n<p>Click <strong>+ Add vendor</strong>. A name is requested. The vendor is created with &ldquo;Considered&rdquo; status by default.</p>\n<div class=\"help-tip\"><strong>AI Collection</strong>: if AI is enabled, a &ldquo;Collect (AI)&rdquo; button pre-fills vendor information (website, sector, country, services) from the vendor name.</div>\n<h3>Vendor Detail</h3>\n<p>Clicking a vendor opens its detailed view with 4 tabs:</p>\n<table><thead><tr><th>Tab</th><th>Content</th></tr></thead><tbody>\n<tr><td><strong>Information</strong></td><td>Identity, contacts, contract, classification (6 sliders), computed threat level</td></tr>\n<tr><td><strong>Risks</strong></td><td>Risks linked to this vendor, associated measures, add/remove</td></tr>\n<tr><td><strong>Assessments</strong></td><td>Security assessment history, creation, questionnaire</td></tr>\n<tr><td><strong>Documents</strong></td><td>Document tracking, manual or AI-assisted add, URL verification</td></tr>\n</tbody></table>\n\n<h2>Classification</h2>\n<p>In the <strong>Information</strong> tab, the Classification section contains:</p>\n<ul>\n<li><strong>6 sliders</strong> (0-4) for classification axes</li>\n<li><strong>Cyber maturity</strong> (0-4): automatically updated by assessment score</li>\n<li><strong>Trust</strong> (0-4): updated via compliance documents</li>\n<li><strong>Result</strong>: threat level computed in real time, tier displayed, DORA badge if applicable</li>\n</ul>\n<p>Sliders are interactive: move them and the threat level recalculates instantly.</p>\n\n<h2>Questionnaire and audit templates</h2>\n<p>The <strong>Templates</strong> section in the sidebar lets you create reusable templates that serve as the basis for assessments.</p>\n<h3>Two template kinds</h3>\n<ul>\n<li><strong>Questionnaire</strong> &mdash; sent to the vendor (filled externally via the portal or by file)</li>\n<li><strong>Audit</strong> &mdash; filled in-house by the security team (the default audit template ships the 42 ANSSI hygiene rules)</li>\n</ul>\n<p>A default template is auto-created on first visit (TPL-001 for questionnaires, TPL-002 for the ANSSI 42 audit).</p>\n<h3>Creating a template</h3>\n<p>Three options on the Templates page:</p>\n<ul>\n<li><strong>+ Questionnaire</strong> / <strong>+ Audit</strong> &mdash; graphical editor: sections, questions (free text only), criticality (info/major/blocker), weight (0-100)</li>\n<li><strong>Import from Excel</strong> &mdash; load a .xlsx file with Section, Question, Expected answer, Criticality, Weight columns. Every row becomes a free-text question.</li>\n<li><strong>Download example</strong> &mdash; get a prefilled .xlsx with 8 sample questions and data validations</li>\n</ul>\n<div class=\"help-tip\"><strong>Free text only</strong>: questions only accept free-text answers. The coverage rating (Covered/Partial/Not covered/NA) is handled separately, which keeps Excel file structure simple.</div>\n\n<h2>Assessments</h2>\n<h3>Creating an assessment</h3>\n<p>From a vendor's <strong>Assessments</strong> tab, click <strong>New assessment</strong>. A modal lists available templates grouped by kind (Questionnaire / Audit). Pick one: a snapshot of the template is copied into the assessment (subsequent template edits do not affect assessments already created).</p>\n<h3>Responding to an assessment</h3>\n<p>For every question you must provide:</p>\n<ul>\n<li>A free-text <strong>answer</strong></li>\n<li>A <strong>coverage status</strong>: <code>Covered</code>, <code>Partial</code>, <code>Not covered</code>, or <code>Not applicable</code></li>\n<li>An optional free-form <strong>comment</strong></li>\n</ul>\n<p>When coverage is <strong>partial</strong> or <strong>not covered</strong>, you must provide either:</p>\n<ul>\n<li>One or more <strong>corrective actions</strong> (title, description, target date, owner)</li>\n<li>Or a <strong>justification</strong> explaining why no action is possible</li>\n</ul>\n<p>Each question block turns <strong>green</strong> as soon as it is complete, and the progress bar updates live.</p>\n<h3>Validation and approval</h3>\n<p>Once every question is handled, tick the <strong>validation</strong> checkbox at the bottom of the form (only enabled at 100% completion) and click <strong>Submit for approval</strong>. The assessment moves to &ldquo;Pending approval&rdquo;. The internal team can then approve or send it back for corrections.</p>\n<div class=\"help-tip\"><strong>AI suggestions</strong>: if AI is enabled, a button generates suggested answers based on known vendor information. Each suggestion can be accepted or ignored.</div>\n\n<h2>Weighted maturity score</h2>\n<p>When a vendor has several approved assessments, its overall <strong>maturity score</strong> is a weighted average that takes into account:</p>\n<ul>\n<li>Per-question <strong>criticality</strong> (blockers weigh more than info)</li>\n<li>Per-kind <strong>weight</strong> (questionnaire vs audit, configurable)</li>\n<li><strong>Temporal decay</strong>: older assessments have reduced weight</li>\n<li><strong>Manual overrides</strong>: you can exclude an assessment or tune its individual weight</li>\n</ul>\n<p>The Maturity panel appears on the vendor detail as soon as at least one assessment is approved, with the computation breakdown and the final 0-100% score.</p>\n\n<h2>Vendor Portal</h2>\n<p>A separate <strong>Vendor Portal</strong> app (vendor.cisotoolbox.org/portal/) lets vendors fill in your questionnaires with no account and no install, directly in their browser.</p>\n<h3>Sending a questionnaire</h3>\n<p>From the assessment, three sharing options:</p>\n<ul>\n<li><strong>Direct link</strong> &mdash; generates a URL that embeds the questionnaire (gzipped + AES-256 encrypted). The vendor clicks, enters the password shared out of band, and the questionnaire opens immediately. Ideal for small questionnaires (&lt; 2 MB).</li>\n<li><strong>JSON file</strong> &mdash; exports .json (plain) or .ctenc (encrypted) as an email attachment.</li>\n<li><strong>Excel file</strong> &mdash; exports an .xlsx with data validation and conditional formatting (red highlight on missing actions/justifications).</li>\n</ul>\n<p>A <strong>Copy email template</strong> button generates a ready-to-send HTML email with a hyperlinked URL and instructions for the vendor.</p>\n<h3>Vendor side</h3>\n<p>The vendor gets the link, opens the portal, enters the password and fills in the questionnaire. Their input is autosaved in their browser (localStorage). When done, they re-export as JSON (encrypted with the same password) or Excel, and send the file back by email. You then import it into the matching assessment.</p>\n<div class=\"help-tip\"><strong>Overdue due date</strong>: if the due date has passed when the vendor opens the questionnaire, a red &ldquo;Past due&rdquo; badge shows in the header to signal it.</div>\n\n<h2>Risks</h2>\n<h3>Adding a Risk</h3>\n<p>From a vendor's <strong>Risks</strong> tab or from the <strong>Risk Register</strong> (sidebar), click <strong>Add risk</strong>.</p>\n<h3>Assessing a Risk</h3>\n<ul>\n<li><strong>Category</strong>: Cybersecurity, Operational, Financial, Compliance, Strategic, Reputational, Geopolitical</li>\n<li><strong>Impact</strong> (1-5) and <strong>Likelihood</strong> (1-5): initial score computed automatically</li>\n<li><strong>Treatment</strong>: Mitigate, Transfer, Accept, Avoid</li>\n<li><strong>Measures</strong>: link existing measures or create new ones</li>\n<li><strong>Residual impact</strong> and <strong>Residual likelihood</strong>: to be assessed after measures are in place</li>\n</ul>\n<div class=\"help-tip\"><strong>AI Risks</strong>: the &ldquo;AI&rdquo; button analyzes the vendor profile and proposes relationship-specific risks with associated measures.</div>\n\n<h2>Measures</h2>\n<p>The <strong>Measures Registry</strong> (sidebar) centralizes all mitigation measures:</p>\n<ul>\n<li><strong>Status</strong>: Planned, In progress, Completed</li>\n<li><strong>Owner</strong> and <strong>Deadline</strong></li>\n<li><strong>Reference</strong>: associated standard (ISO 27001, ANSSI...)</li>\n<li><strong>Linking</strong>: each measure is linked to one or more risks</li>\n</ul>\n<p>Measures can be created from the registry or directly from a risk.</p>\n\n<h2>Documents</h2>\n<p>From a vendor's <strong>Documents</strong> tab:</p>\n<ul>\n<li><strong>Add manually</strong>: name, type, URL, expiry date</li>\n<li><strong>AI Collection</strong>: the assistant searches for public vendor documents (certifications, policies, reports) and suggests verified URLs</li>\n<li><strong>Confidence level</strong>: from 0 to 4, contributes to threat calculation</li>\n<li><strong>Expiry tracking</strong>: visual alerts for soon-expiring or expired documents</li>\n</ul>\n\n<h2>AI Assistant</h2>\n<p>The AI assistant is an optional module (disabled by default) that provides:</p>\n<ul>\n<li><strong>Information collection</strong>: pre-fills vendor profile from the vendor name</li>\n<li><strong>Risk suggestions</strong>: relationship-specific risks for the vendor</li>\n<li><strong>Measure suggestions</strong>: mitigation measures for each identified risk</li>\n<li><strong>Document collection</strong>: search for public documentation with URL verification</li>\n<li><strong>Answer suggestions</strong>: assistance filling the assessment questionnaire</li>\n</ul>\n<div class=\"help-tip\"><strong>Important</strong>: enabling the AI assistant means sending data to the chosen AI provider. Verify your privacy policy allows it. The API key is stored in the browser, never in saved files.</div>\n\n<h2>Settings</h2>\n<p>Click the <strong>gear icon</strong> (&#9881;) in the toolbar:</p>\n<ul>\n<li><strong>Language</strong>: switch between French and English</li>\n<li><strong>AI Assistant</strong>: enable/disable, choose provider (Anthropic/OpenAI), model, and API key</li>\n<li><strong>DORA</strong>: enable/disable DORA compliance, configure critical ICT provider detection thresholds</li>\n<li><strong>Demo data</strong>: load sample data (MedSecure)</li>\n</ul>\n\n<h2>Import / Export</h2>\n<table><thead><tr><th>Action</th><th>Format</th><th>Description</th></tr></thead><tbody>\n<tr><td><strong>Open</strong></td><td>.json</td><td>Load a JSON file from disk and replace all data</td></tr>\n<tr><td><strong>Save as</strong></td><td>.json</td><td>Save all data as a JSON file</td></tr>\n<tr><td><strong>Export assessment Excel</strong></td><td>.xlsx</td><td>On an assessment: prebuilt Excel export (questions, coverage, actions) to send to the vendor. Identity cells are locked; answer cells use conditional formatting.</td></tr>\n<tr><td><strong>Import assessment Excel</strong></td><td>.xlsx</td><td>On an assessment: re-import the file the vendor filled (answers and actions are merged into the existing assessment).</td></tr>\n<tr><td><strong>Assessment link</strong></td><td>URL</td><td>On an assessment: generate a direct gzipped/encrypted link for the vendor portal.</td></tr>\n<tr><td><strong>Import template Excel</strong></td><td>.xlsx</td><td>On the Templates page: create a new template from a structured .xlsx file (Section, Question, Criticality, Weight).</td></tr>\n</tbody></table>\n<h2>Data Security</h2>\n<ul>\n<li><strong>No server transmission</strong>: all data stays in your browser (unless AI assistant is active)</li>\n<li><strong>JSON encryption</strong>: AES-256-GCM with PBKDF2-derived key (250,000 iterations)</li>\n<li><strong>Import validation</strong>: each imported JSON file is validated before loading</li>\n<li><strong>CSP</strong>: strict Content Security Policy (no inline, no eval)</li>\n</ul>\n\n<h2>Keyboard Shortcuts</h2>\n<table><thead><tr><th>Shortcut</th><th>Action</th></tr></thead><tbody>\n<tr><td><strong>Ctrl+S</strong> / <strong>Cmd+S</strong></td><td>Save</td></tr>\n<tr><td><strong>Ctrl+Z</strong> / <strong>Cmd+Z</strong></td><td>Undo</td></tr>\n<tr><td><strong>Ctrl+Y</strong> / <strong>Cmd+Y</strong></td><td>Redo</td></tr>\n<tr><td><strong>Esc</strong></td><td>Close help panel or open selector</td></tr>\n</tbody></table>\n\n<h2>Best Practices</h2>\n<ul>\n<li><strong>Save often</strong>: use File &rarr; Save as regularly</li>\n<li><strong>Start with classification</strong>: assess the 6 axes before creating risks</li>\n<li><strong>Complete the security assessment</strong>: the questionnaire updates maturity, refining the threat level</li>\n<li><strong>Link measures to risks</strong>: each measure should be attached to a risk to appear in tracking</li>\n<li><strong>Track documents</strong>: expired certifications increase risk &mdash; monitor deadlines</li>\n<li><strong>Use the dashboard</strong>: matrices and indicators provide a synthetic view of third-party risk posture</li>\n<li><strong>Vendor sharing</strong>: to send an assessment, prefer the direct link (gzipped + encrypted) over the Excel file — simpler on the vendor side</li>\n</ul>",
-    "settings.custom_questionnaire": "Custom questionnaire (admin)",
+"settings.custom_questionnaire": "Custom questionnaire (admin)",
     "settings.custom_questionnaire_active": "Active questionnaire ({count} questions)",
     "settings.custom_questionnaire_clear": "Remove questionnaire",
     "settings.custom_questionnaire_cleared": "Custom questionnaire removed",
@@ -859,5 +893,4 @@ _registerTranslations("en", {
     "settings.custom_needs_endpoint": "Please provide the custom endpoint URL.",
     "settings.title": "Settings",
 });
-if (typeof _i18nLoaded !== "undefined")
-    _i18nLoaded["en"] = true;
+if (typeof _i18nLoaded !== "undefined") _i18nLoaded["en"] = true;
