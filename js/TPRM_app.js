@@ -80,7 +80,7 @@ var _vendorTab = "info";
 function selectPanel(id) {
     _panel = id;
     _selectedVendor = null;
-    document.querySelector(".sidebar").classList.remove("open");
+    document.querySelector(".ct-rail, .sidebar")?.classList.remove("open");
     _updateSidebarAccordion(id);
     renderPanel();
 }
@@ -277,23 +277,23 @@ function _renderRiskTimeline() {
     }
     // Matrix color lookup — same colors as the risk matrices
     var _matColors = [
-        ["#dcfce7", "#dcfce7", "#fef9c3", "#fed7aa", "#fecaca"],
-        ["#dcfce7", "#fef9c3", "#fed7aa", "#fecaca", "#fecaca"],
-        ["#fef9c3", "#fed7aa", "#fed7aa", "#fecaca", "#fca5a5"],
-        ["#fed7aa", "#fecaca", "#fecaca", "#fca5a5", "#fca5a5"],
-        ["#fecaca", "#fecaca", "#fca5a5", "#fca5a5", "#ef4444"]
+        ["var(--ct-low-fill)", "var(--ct-low-fill)", "var(--ct-medium-fill)", "var(--ct-high-fill)", "var(--ct-critical-fill)"],
+        ["var(--ct-low-fill)", "var(--ct-medium-fill)", "var(--ct-high-fill)", "var(--ct-critical-fill)", "var(--ct-critical-fill)"],
+        ["var(--ct-medium-fill)", "var(--ct-high-fill)", "var(--ct-high-fill)", "var(--ct-critical-fill)", "var(--ct-critical-fill)"],
+        ["var(--ct-high-fill)", "var(--ct-critical-fill)", "var(--ct-critical-fill)", "var(--ct-critical-fill)", "var(--ct-critical-fill)"],
+        ["var(--ct-critical-fill)", "var(--ct-critical-fill)", "var(--ct-critical-fill)", "var(--ct-critical-fill)", "var(--tprm-extreme)"]
     ];
     function _matColor(imp, lik) {
         return _matColors[Math.min(Math.max(lik, 1), 5) - 1][Math.min(Math.max(imp, 1), 5) - 1];
     }
     // Timeline levels = distinct matrix colors (ordered from critical to low)
     var levels = [
-        { label: t("vendor.exposure_critical"), color: "#ef4444" },
-        { label: t("vendor.exposure_high"), color: "#fca5a5" },
-        { label: t("vendor.exposure_moderate"), color: "#fecaca" },
-        { label: "", color: "#fed7aa" },
-        { label: "", color: "#fef9c3" },
-        { label: t("vendor.exposure_low"), color: "#dcfce7" }
+        { label: t("vendor.exposure_critical"), color: "var(--tprm-extreme)" },
+        { label: t("vendor.exposure_high"), color: "var(--ct-critical-fill)" },
+        { label: t("vendor.exposure_moderate"), color: "var(--ct-critical-fill)" },
+        { label: "", color: "var(--ct-high-fill)" },
+        { label: "", color: "var(--ct-medium-fill)" },
+        { label: t("vendor.exposure_low"), color: "var(--ct-low-fill)" }
     ];
     var series = levels.map(function () { return []; });
     points.forEach(function (dateStr) {
@@ -370,8 +370,8 @@ function _renderRiskTimeline() {
     // Invisible drag zone (wide hit area)
     svg += '<rect id="tl-drag-zone" x="' + ML + '" y="' + MT + '" width="' + cW + '" height="' + (H - MT - MB) + '" fill="transparent" style="cursor:col-resize"/>';
     // Draggable blue line
-    svg += '<line id="tl-dateline" x1="' + initTx + '" y1="' + MT + '" x2="' + initTx + '" y2="' + (H - MB) + '" stroke="#3b82f6" stroke-width="2" style="pointer-events:none"/>';
-    svg += '<text id="tl-dateline-label" x="' + initTx + '" y="' + (H - MB + 12) + '" text-anchor="middle" font-size="8" fill="#3b82f6" font-weight="600">' + t("dashboard.today") + '</text>';
+    svg += '<line id="tl-dateline" x1="' + initTx + '" y1="' + MT + '" x2="' + initTx + '" y2="' + (H - MB) + '" stroke="var(--ct-accent)" stroke-width="2" style="pointer-events:none"/>';
+    svg += '<text id="tl-dateline-label" x="' + initTx + '" y="' + (H - MB + 12) + '" text-anchor="middle" font-size="8" fill="var(--ct-accent)" font-weight="600">' + t("dashboard.today") + '</text>';
     // Smooth lines per risk level (cardinal spline)
     for (var li = 0; li < levels.length; li++) {
         var pts = [];
@@ -409,12 +409,12 @@ function _renderRiskTimeline() {
     svg += '</svg>';
     // Legend (same as matrices)
     svg += '<div class="matrix-legend" style="display:flex;gap:8px;justify-content:center;margin-top:6px;font-size:0.7em">';
-    svg += '<span style="display:flex;align-items:center;gap:3px"><span style="width:14px;height:3px;border-radius:1px;background:#dcfce7"></span>' + t("vendor.exposure_low") + '</span>';
-    svg += '<span style="display:flex;align-items:center;gap:3px"><span style="width:14px;height:3px;border-radius:1px;background:#fef9c3"></span>' + t("vendor.exposure_moderate") + '</span>';
-    svg += '<span style="display:flex;align-items:center;gap:3px"><span style="width:14px;height:3px;border-radius:1px;background:#fed7aa"></span>' + t("vendor.exposure_significant") + '</span>';
-    svg += '<span style="display:flex;align-items:center;gap:3px"><span style="width:14px;height:3px;border-radius:1px;background:#fecaca"></span>' + t("vendor.exposure_high") + '</span>';
-    svg += '<span style="display:flex;align-items:center;gap:3px"><span style="width:14px;height:3px;border-radius:1px;background:#fca5a5"></span>' + t("vendor.exposure_critical") + '</span>';
-    svg += '<span style="display:flex;align-items:center;gap:3px"><span style="width:14px;height:3px;border-radius:1px;background:#ef4444"></span>' + t("vendor.exposure_extreme") + '</span>';
+    svg += '<span style="display:flex;align-items:center;gap:3px"><span style="width:14px;height:3px;border-radius:1px;background:var(--ct-low-fill)"></span>' + t("vendor.exposure_low") + '</span>';
+    svg += '<span style="display:flex;align-items:center;gap:3px"><span style="width:14px;height:3px;border-radius:1px;background:var(--ct-medium-fill)"></span>' + t("vendor.exposure_moderate") + '</span>';
+    svg += '<span style="display:flex;align-items:center;gap:3px"><span style="width:14px;height:3px;border-radius:1px;background:var(--ct-high-fill)"></span>' + t("vendor.exposure_significant") + '</span>';
+    svg += '<span style="display:flex;align-items:center;gap:3px"><span style="width:14px;height:3px;border-radius:1px;background:var(--ct-critical-fill)"></span>' + t("vendor.exposure_high") + '</span>';
+    svg += '<span style="display:flex;align-items:center;gap:3px"><span style="width:14px;height:3px;border-radius:1px;background:var(--ct-critical-fill)"></span>' + t("vendor.exposure_critical") + '</span>';
+    svg += '<span style="display:flex;align-items:center;gap:3px"><span style="width:14px;height:3px;border-radius:1px;background:var(--tprm-extreme)"></span>' + t("vendor.exposure_extreme") + '</span>';
     svg += '</div>';
     return svg;
 }
@@ -505,6 +505,24 @@ function _renderResidualMatrix(atDate) {
         xLabel: t("risk.impact"),
         yLabel: t("risk.likelihood"),
         grid: grid,
+        // Token-based colors (theme-aware) instead of the hard-coded light
+        // pastels of CT_COLORS.matrix5 — same mapping as the dashboard
+        // timeline (_matColors): -tint per severity, solid critical for max.
+        colors: [
+            ["var(--ct-low-fill)", "var(--ct-low-fill)", "var(--ct-medium-fill)", "var(--ct-high-fill)", "var(--ct-critical-fill)"],
+            ["var(--ct-low-fill)", "var(--ct-medium-fill)", "var(--ct-high-fill)", "var(--ct-critical-fill)", "var(--ct-critical-fill)"],
+            ["var(--ct-medium-fill)", "var(--ct-high-fill)", "var(--ct-high-fill)", "var(--ct-critical-fill)", "var(--ct-critical-fill)"],
+            ["var(--ct-high-fill)", "var(--ct-critical-fill)", "var(--ct-critical-fill)", "var(--ct-critical-fill)", "var(--ct-critical-fill)"],
+            ["var(--ct-critical-fill)", "var(--ct-critical-fill)", "var(--ct-critical-fill)", "var(--ct-critical-fill)", "var(--tprm-extreme)"]
+        ],
+        legend: [
+            { label: t("matrix.low") || "Faible", color: "var(--ct-low-fill)" },
+            { label: t("matrix.moderate") || "Moyen", color: "var(--ct-medium-fill)" },
+            { label: t("matrix.significant") || "Significatif", color: "var(--ct-high-fill)" },
+            { label: t("matrix.high") || "Eleve", color: "var(--ct-critical-fill)" },
+            { label: t("matrix.critical") || "Critique", color: "var(--ct-critical-fill)" },
+            { label: t("matrix.extreme") || "Extreme", color: "var(--tprm-extreme)" }
+        ],
         // CtMatrixItem (decl shared) n'a pas d'index signature — les items
         // portent impact/likelihood/vendor_id en plus : annotation locale any[].
         tooltipFn: function (items) {
@@ -650,7 +668,7 @@ function renderSubcontractorList() {
         if (s.sector)
             h += '<span class="tier-badge" style="background:var(--bg-elev,#eef);color:var(--text-muted)">' + esc(s.sector) + '</span>';
         if (critN > 0)
-            h += '<span class="dora-badge" style="background:var(--orange)">★ ' + critN + ' CIF</span>';
+            h += '<span class="dora-badge" style="background:var(--ct-high-tint);color:var(--ct-high-ink)">★ ' + critN + ' CIF</span>';
         h += '</div>';
         h += '<div class="vendor-card-right">';
         if (subLinks.length === 0) {
@@ -809,7 +827,7 @@ function renderVendorDetail() {
         });
     }
     var h = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">';
-    h += '<button class="btn-add" data-click="backToVendors">&laquo; ' + t("nav.vendors") + '</button>';
+    h += '<button class="ct-btn" data-variant="ghost" data-size="sm" data-click="backToVendors">&laquo; ' + t("nav.vendors") + '</button>';
     h += '<h2 style="margin:0">' + esc(v.name) + '</h2>';
     h += '<span class="tier-badge tier-' + tier + '">' + t("vendor.tier_" + tier) + '</span>';
     if (_isDoraICTCritical(v.classification))
@@ -888,8 +906,8 @@ function _renderVendorDoraTab(v) {
     }
     var roi = (window.DoraData && window.DoraData.roiStatus(v)) || { complete: true, missing: [] };
     var statusBadge = roi.complete
-        ? '<span class="dora-badge" style="background:var(--green)">' + esc(t("dora.bridge.roi_complete")) + '</span>'
-        : '<span class="dora-badge" style="background:var(--orange)">⚠ ' + esc(t("dora.bridge.roi_incomplete")) + ' (' + roi.missing.length + ')</span>';
+        ? '<span class="dora-badge" style="background:var(--ct-low-tint);color:var(--ct-low-ink)">' + esc(t("dora.bridge.roi_complete")) + '</span>'
+        : '<span class="dora-badge" style="background:var(--ct-high-tint);color:var(--ct-high-ink)">⚠ ' + esc(t("dora.bridge.roi_incomplete")) + ' (' + roi.missing.length + ')</span>';
     var h = '<div class="tprm-form" style="max-width:900px">';
     h += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">';
     h += '<h3 style="margin:0">' + esc(t("dora.vtab.title")) + '</h3>' + statusBadge;
@@ -997,14 +1015,6 @@ window.patchVendorRoi = function (field, value) {
     if (_vroiRenderTimer)
         clearTimeout(_vroiRenderTimer);
     _vroiRenderTimer = setTimeout(function () { renderPanel(); }, 700);
-};
-window.goToDoraSection = function (section) {
-    _selectedVendor = null;
-    selectPanel("dora");
-    setTimeout(function () {
-        if (typeof window.doraSection === "function")
-            window.doraSection(section);
-    }, 50);
 };
 function _renderVendorForm(v) {
     var c = v.classification || {};
@@ -1477,24 +1487,6 @@ window.addMeasureForRisk = addMeasureForRisk;
 // ═══════════════════════════════════════════════════════════════
 // MEASURES (same format as Risk ecosystem measures)
 // ═══════════════════════════════════════════════════════════════
-function addVendorMeasure(vendorIdx) {
-    var v = D.vendors[vendorIdx];
-    if (!v)
-        return;
-    if (!v.measures)
-        v.measures = [];
-    var nextNum = v.measures.length + 1;
-    var newMeasure = {
-        id: v.id + "-M" + String(nextNum).padStart(2, "0"),
-        vendor_id: v.id,
-        mesure: "", details: "", type: "Contractuelle", statut: "planifie",
-        responsable: "", echeance: "", ref_socle: "", effet: ""
-    };
-    v.measures.push(newMeasure);
-    _persistCreate("measure", newMeasure);
-    renderPanel();
-}
-window.addVendorMeasure = addVendorMeasure;
 function updateVendorMeasure(vendorIdx, measureIdx, field, value) {
     var v = D.vendors[vendorIdx];
     if (!v || !v.measures || !v.measures[measureIdx])
@@ -1532,60 +1524,6 @@ function _aiLang() {
         + ". This overrides the language of any examples below — output in any "
         + "other language is invalid. ";
 }
-// ── AI: suggest measures for a vendor ──
-function suggestVendorMeasures(vendorIdx) {
-    var v = D.vendors[vendorIdx];
-    if (!v || typeof _aiCallAPI !== "function")
-        return;
-    var ex = v.exposure || {};
-    var risks = D.risks.filter(function (r) { return r.vendor_id === v.id; });
-    var existingMeasures = (v.measures || []).map(function (m) { return m.mesure; }).join(", ");
-    var systemPrompt = _aiLang() + "You are a third-party risk management expert. Propose measures to mitigate VENDOR-SPECIFIC risks. " +
-        "Vendor risks = risks inherent to the vendor relationship (data breach at vendor, compliance loss, vendor lock-in, subcontractor failure, SLA violation, data sovereignty). " +
-        "NOT generic IT risks (phishing, ransomware, insider threats — those belong in a risk assessment tool, not vendor management). " +
-        "IMPORTANT: always include the vendor name '" + (v.name || "") + "' in each measure name. " +
-        "Respond ONLY with valid JSON: " +
-        '[{"mesure":"SHORT name max 8 words — ' + (v.name || "Vendor") + '","details":"DETAILED implementation steps, procedures, tools, frequency, responsible teams (2-5 sentences)","type":"Contractuelle|Technique|Organisationnelle|Surveillance","responsable":"suggested owner"}]' +
-        " Respond in " + (_locale === "en" ? "English" : "French") + ". Propose 3-5 measures.";
-    var userPrompt = "Vendor: " + JSON.stringify({ name: v.name, sector: v.sector, services: (v.contract || {}).services }) +
-        "\nExposure: " + JSON.stringify(ex) +
-        "\nRisks: " + JSON.stringify(risks.map(function (r) { return { title: r.title, category: r.category, impact: r.impact, likelihood: r.likelihood }; })) +
-        "\nExisting measures: " + (existingMeasures || "none") +
-        "\nClassification: " + JSON.stringify(v.classification || {}) +
-        "\nTier: " + _getTier(v) +
-        (_isDoraICTCritical(v.classification) ? "\nDORA critical ICT provider: yes" : "") +
-        (v.classification && v.classification.gdpr_subprocessor ? "\nGDPR subprocessor: yes" : "");
-    showStatus(t("measure.ai_loading"));
-    _aiCallAPI(systemPrompt, userPrompt).then(function (raw) {
-        try {
-            var suggestions = _aiParseJSON(raw);
-            if (!Array.isArray(suggestions))
-                suggestions = [suggestions];
-            if (!v.measures)
-                v.measures = [];
-            var count = 0;
-            suggestions.forEach(function (s) {
-                var nextNum = v.measures.length + 1;
-                v.measures.push({
-                    id: v.id + "-M" + String(nextNum).padStart(2, "0"),
-                    mesure: s.mesure || s.measure || "", details: s.details || s.description || "",
-                    type: s.type || "Contractuelle", statut: "planifie",
-                    responsable: s.responsable || s.owner || "", echeance: "", ref_socle: "", effet: s.effet || ""
-                });
-                count++;
-            });
-            _persist("vendor", v.id, { measures: v.measures });
-            renderPanel();
-            showStatus(count + " " + t("measure.ai_added"));
-        }
-        catch (e) {
-            showStatus(t("measure.ai_error"));
-        }
-    }).catch(function (e) {
-        showStatus(t("measure.ai_error") + ": " + e.message);
-    });
-}
-window.suggestVendorMeasures = suggestVendorMeasures;
 // Store context for accept handler
 var _aiSuggestions = [];
 var _aiSuggestContext = {};
@@ -2145,47 +2083,13 @@ function goToRisk(vendorId) {
     _selectedVendor = idx;
     _vendorTab = "risks";
     _panel = "vendors";
-    // Update sidebar active state
-    document.querySelectorAll(".sidebar-item").forEach(function (el) {
-        var args = el.getAttribute("data-args");
-        if (args) {
-            try {
-                var a = JSON.parse(args);
-                el.classList.toggle("active", a[0] === "vendors");
-            }
-            catch (e) { }
-        }
-    });
+    _updateSidebarAccordion("vendors");
     renderPanel();
 }
 window.goToRisk = goToRisk;
 // ═══════════════════════════════════════════════════════════════
 // ASSESSMENT LIST + DETAIL
 // ═══════════════════════════════════════════════════════════════
-function renderAssessmentList() {
-    var h = '<h2>' + t("assessment.title") + '</h2>';
-    if (!D.assessments.length)
-        return h + '<div class="empty-state">' + t("assessment.empty") + '</div>';
-    h += colsButton("assessment-list-table");
-    h += '<table id="assessment-list-table"><thead><tr><th' + hd("id") + '>ID</th><th' + hd("vendor") + '>' + t("assessment.vendor") + '</th>';
-    h += '<th' + hd("type") + '>' + t("assessment.type") + '</th><th' + hd("date") + '>' + t("assessment.date") + '</th>';
-    h += '<th' + hd("completion") + '>' + t("assessment.completion") + '</th><th' + hd("score") + '>' + t("assessment.score") + '</th><th' + hd("status") + '>' + t("assessment.status") + '</th>';
-    h += '<th></th></tr></thead><tbody>';
-    D.assessments.forEach(function (a) {
-        var comp = a.completion_rate != null ? a.completion_rate : 0;
-        var compColor = comp === 100 ? "var(--green)" : comp > 50 ? "var(--orange)" : "var(--text-muted)";
-        h += '<tr><td' + hd("id") + '>' + esc(a.id) + '</td><td' + hd("vendor") + '>' + esc(_vendorName(a.vendor_id)) + '</td>';
-        h += '<td' + hd("type") + '>' + t("assessment.type_" + a.type) + '</td><td' + hd("date") + '>' + esc(a.date) + '</td>';
-        h += '<td' + hd("completion") + ' style="color:' + compColor + ';font-weight:600">' + comp + '%</td>';
-        h += '<td' + hd("score") + '>' + (a.score != null ? a.score + '%' : '-') + '</td>';
-        h += '<td' + hd("status") + '>' + t("assessment.status_" + a.status) + '</td>';
-        h += '<td><button class="btn-add" data-click="openAssessmentDispatch" data-args=\'' + _da(a.id) + '\'>' + t("vendor.edit") + '</button>';
-        h += ' <button class="btn-del" data-click="deleteAssessment" data-args=\'' + _da(a.id) + '\'>' + t("vendor.delete") + '</button></td>';
-        h += '</tr>';
-    });
-    h += '</tbody></table>';
-    return h;
-}
 function renderDocList() {
     var h = '<h2>' + t("doc.title") + '</h2>';
     if (!D.documents.length)
@@ -2430,9 +2334,9 @@ function newAssessment(vendorId) {
         '<div style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:12px;margin-bottom:10px">' +
         '<div style="font-size:0.78em;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--gray-dark);margin-bottom:8px">' + esc(t("assessment.from_template")) + '</div>' +
         '<label style="display:block;font-size:0.78em;font-weight:600;margin-bottom:3px">' + esc(t("assessment.choose_template")) + '</label>' +
-        '<select id="na-template" style="width:100%;padding:6px 10px;border:1px solid var(--gray-light);border-radius:4px;font-family:inherit;margin-bottom:8px">' + tplOptions + '</select>' +
+        '<select id="na-template" style="width:100%;padding:6px 10px;border:1px solid var(--ct-line);border-radius:4px;font-family:inherit;margin-bottom:8px">' + tplOptions + '</select>' +
         '<label style="display:block;font-size:0.78em;font-weight:600;margin-bottom:3px">' + esc(t("assessment.due_date")) + '</label>' +
-        '<input type="date" id="na-due-date" style="width:100%;padding:6px 10px;border:1px solid var(--gray-light);border-radius:4px;font-family:inherit;margin-bottom:10px">' +
+        '<input type="date" id="na-due-date" style="width:100%;padding:6px 10px;border:1px solid var(--ct-line);border-radius:4px;font-family:inherit;margin-bottom:10px">' +
         '<button class="btn-add" style="width:100%" data-click="_newAssessmentFromTemplate" data-args=\'' + _da(vendorId) + '\'>' + esc(t("assessment.start_assessment")) + '</button>' +
         '</div>' +
         // Option 2: import response
@@ -2809,7 +2713,7 @@ function renderTemplateList() {
         var qCount = (tpl.sections || []).reduce(function (acc, s) { return acc + (s.questions || []).length; }, 0);
         var sCount = (tpl.sections || []).length;
         var kindIcon = kind === "audit" ? _icon("shield") : _icon("clipboard");
-        h += '<div class="tpl-card">';
+        h += '<div class="tpl-card" data-click="editTemplate" data-args=\'' + _da(tpl.id) + '\' role="button" tabindex="0" aria-label="' + esc(t("common.edit")) + ' ' + esc(tpl.name || tpl.id) + '">';
         h += '<div class="tpl-card-icon tpl-icon-' + kind + '">' + kindIcon + '</div>';
         h += '<div class="tpl-card-body">';
         h += '<div class="tpl-card-name">' + esc(tpl.name || "") + '  <span class="tpl-kind-badge tpl-kind-' + kind + '">' + esc(t("template.kind_" + kind)) + '</span></div>';
@@ -2822,7 +2726,6 @@ function renderTemplateList() {
         h += '<span>v' + (tpl.version || 1) + '</span>';
         h += '</div>';
         h += '<div class="tpl-card-actions">';
-        h += '<button class="tpl-icon-btn" data-click="editTemplate" data-args=\'' + _da(tpl.id) + '\' title="' + esc(t("common.edit")) + '" data-tooltip="' + esc(t("common.edit")) + '" aria-label="' + esc(t("common.edit")) + '">' + _icon("pencil") + '</button>';
         h += '<button class="tpl-icon-btn" data-click="duplicateTemplate" data-args=\'' + _da(tpl.id) + '\' title="' + esc(t("common.duplicate")) + '" data-tooltip="' + esc(t("common.duplicate")) + '" aria-label="' + esc(t("common.duplicate")) + '">' + _icon("copy") + '</button>';
         h += '<button class="tpl-icon-btn danger" data-click="deleteTemplate" data-args=\'' + _da(tpl.id) + '\' title="' + esc(t("common.delete")) + '" data-tooltip="' + esc(t("common.delete")) + '" aria-label="' + esc(t("common.delete")) + '">' + _icon("trash") + '</button>';
         h += '</div>';
@@ -2964,7 +2867,7 @@ function _renderTemplateSection(tpl, section, si, total) {
     return h;
 }
 function _renderTemplateQuestion(tpl, section, q, qi, total) {
-    var h = '<div class="tpl-question">';
+    var h = '<div class="tpl-question crit-q-' + (q.criticality || "major") + '">';
     // Header row: id + criticality + weight + controls
     // Type dropdown removed — only free_text is supported now.
     h += '<div class="tpl-question-header">';
@@ -3050,8 +2953,9 @@ function _onQuestionFieldChange(tplId, sectionId, questionId, field, value) {
         q[field] = value;
     }
     _touchTemplate(tpl);
-    // Re-render only on type change (options editor appears/disappears)
-    if (field === "type")
+    // Re-render on type change (options editor appears/disappears) and on
+    // criticality change (select tone + question left-border follow the level)
+    if (field === "type" || field === "criticality")
         renderPanel();
 }
 window._onQuestionFieldChange = _onQuestionFieldChange;
@@ -3144,40 +3048,6 @@ function moveQuestion(tplId, sectionId, questionId, delta) {
     renderPanel();
 }
 window.moveQuestion = moveQuestion;
-function addOption(tplId, sectionId, questionId) {
-    var tpl = _findTemplate(tplId);
-    var section = _findSection(tpl, sectionId);
-    var q = _findQuestion(section, questionId);
-    if (!q)
-        return;
-    if (!q.options)
-        q.options = [];
-    q.options.push("");
-    _touchTemplate(tpl);
-    renderPanel();
-}
-window.addOption = addOption;
-function deleteOption(tplId, sectionId, questionId, optionIdx) {
-    var tpl = _findTemplate(tplId);
-    var section = _findSection(tpl, sectionId);
-    var q = _findQuestion(section, questionId);
-    if (!q || !q.options)
-        return;
-    q.options.splice(optionIdx, 1);
-    _touchTemplate(tpl);
-    renderPanel();
-}
-window.deleteOption = deleteOption;
-function _onOptionChange(tplId, sectionId, questionId, optionIdx, value) {
-    var tpl = _findTemplate(tplId);
-    var section = _findSection(tpl, sectionId);
-    var q = _findQuestion(section, questionId);
-    if (!q || !q.options)
-        return;
-    q.options[optionIdx] = value;
-    _touchTemplate(tpl);
-}
-window._onOptionChange = _onOptionChange;
 // ═══════════════════════════════════════════════════════════════
 // ASSESSMENTS V2 (template-driven)
 // ═══════════════════════════════════════════════════════════════
@@ -3335,7 +3205,7 @@ function openAssessmentV2(assessId) {
     // ── Header ──
     var kind = _assessmentKind(a);
     var h = '<div class="tpl-header">';
-    h += '<button class="btn-add" data-click="_backFromAssessmentV2">&laquo; ' + t("nav.assessments") + '</button>';
+    h += '<button class="ct-btn" data-variant="ghost" data-size="sm" data-click="_backFromAssessmentV2">&laquo; ' + t("nav.assessments") + '</button>';
     h += '<h2>' + esc(a.id) + ' — ' + esc(_vendorName(a.vendor_id)) + '</h2>';
     h += '<span class="tpl-kind-badge tpl-kind-' + kind + '">' + esc(t("template.kind_" + kind)) + '</span>';
     h += '<span class="tpl-meta">' + esc(tpl.name) + ' v' + (a.template_version || 1) + '</span>';
@@ -3372,7 +3242,7 @@ function openAssessmentV2(assessId) {
     h += '<button class="btn-add" data-click="_importAssessmentIntoExisting" data-args=\'' + _da(a.id) + '\'>' + esc(_tk(a, "assessment.import_response")) + '</button>';
     h += '<span style="flex:1"></span>';
     if (a.status === "pending_approval") {
-        h += '<button class="btn-add" style="background:var(--green)" data-click="_approveAssessment" data-args=\'' + _da(a.id) + '\'>' + esc(t("assessment.approve")) + '</button>';
+        h += '<button class="btn-add" data-click="_approveAssessment" data-args=\'' + _da(a.id) + '\'>' + esc(t("assessment.approve")) + '</button>';
         h += '<button class="btn-del" data-click="_rejectAssessment" data-args=\'' + _da(a.id) + '\'>' + esc(t("assessment.reject")) + '</button>';
     }
     h += '</div>';
@@ -3419,7 +3289,7 @@ function openAssessmentV2(assessId) {
     h += '</div>';
     // Footer: Save + Submit for approval
     h += '<div class="form-actions">';
-    h += '<button class="btn-add" data-click="_backFromAssessmentV2">' + esc(t("common.close")) + '</button>';
+    h += '<button class="ct-btn" data-variant="ghost" data-size="sm" data-click="_backFromAssessmentV2">' + esc(t("common.close")) + '</button>';
     h += '<span id="evalv2-submit-wrap">' + _renderSubmitButton(a, completion) + '</span>';
     h += '</div>';
     var c = document.getElementById("content");
@@ -3565,7 +3435,7 @@ function _migrateAllLegacyAssessments() {
     return n;
 }
 function _renderAssessmentQuestion(a, section, q, resp) {
-    var h = '<div class="tpl-question" style="background:white">';
+    var h = '<div class="tpl-question" style="background:var(--ct-surface)">';
     // Header
     h += '<div class="tpl-question-header">';
     h += '<span class="tpl-question-id">' + esc(q.id) + '</span>';
@@ -3604,15 +3474,15 @@ function _renderAssessmentQuestion(a, section, q, resp) {
         var hasJust = (resp.justification || "").trim().length > 0;
         var satisfied = hasAction || hasJust;
         var blockColor = satisfied ? "var(--green)" : "var(--orange)";
-        var blockBg = satisfied ? "#ecfdf5" : "#fff7ed";
+        var blockBg = satisfied ? "var(--ct-low-tint)" : "var(--ct-high-tint)";
         h += '<div id="actionblk-' + esc(a.id) + '-' + esc(q.id) + '" style="margin-top:10px;padding:12px;background:' + blockBg + ';border-radius:4px;border-left:4px solid ' + blockColor + '">';
         // Explicit banner
         if (!satisfied) {
             h += '<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:10px">';
             h += '<span style="color:var(--orange);font-size:1.1em;line-height:1">&#9888;</span>';
             h += '<div>';
-            h += '<div style="font-size:0.85em;font-weight:700;color:#7c2d12">' + esc(_tk(a, "assessment.action_required_title")) + '</div>';
-            h += '<div style="font-size:0.78em;color:#7c2d12;margin-top:2px">' + esc(resp.coverage === "partial" ? _tk(a, "assessment.action_required_partial") : _tk(a, "assessment.action_required_not_covered")) + '</div>';
+            h += '<div style="font-size:0.85em;font-weight:700;color:var(--ct-high-ink)">' + esc(_tk(a, "assessment.action_required_title")) + '</div>';
+            h += '<div style="font-size:0.78em;color:var(--ct-high-ink);margin-top:2px">' + esc(resp.coverage === "partial" ? _tk(a, "assessment.action_required_partial") : _tk(a, "assessment.action_required_not_covered")) + '</div>';
             h += '</div>';
             h += '</div>';
         }
@@ -3651,14 +3521,14 @@ function _renderAnswerInput(assessId, q, resp) {
 }
 function _renderActionPlanForm(a, qId, ap, api) {
     var assessId = a.id;
-    var h = '<div style="background:white;border:1px solid var(--border);border-radius:4px;padding:8px 10px;margin-bottom:6px">';
+    var h = '<div style="background:var(--ct-surface);border:1px solid var(--border);border-radius:4px;padding:8px 10px;margin-bottom:6px">';
     h += '<div style="display:flex;gap:6px;margin-bottom:6px">';
-    h += '<input type="text" value="' + esc(ap.title || "") + '" placeholder="' + esc(_tk(a, "assessment.ap_title")) + '" style="flex:1;padding:4px 8px;border:1px solid var(--gray-light);border-radius:4px;font-size:0.85em" data-input="_updateActionPlanField" data-args=\'' + _da(assessId, qId, api, "title") + '\' data-pass-value>';
-    h += '<input type="date" value="' + esc(ap.target_date || "") + '" style="padding:4px 8px;border:1px solid var(--gray-light);border-radius:4px;font-size:0.85em" data-input="_updateActionPlanField" data-args=\'' + _da(assessId, qId, api, "target_date") + '\' data-pass-value>';
-    h += '<input type="text" value="' + esc(ap.owner || "") + '" placeholder="' + esc(_tk(a, "assessment.ap_owner")) + '" style="width:120px;padding:4px 8px;border:1px solid var(--gray-light);border-radius:4px;font-size:0.85em" data-input="_updateActionPlanField" data-args=\'' + _da(assessId, qId, api, "owner") + '\' data-pass-value>';
+    h += '<input type="text" value="' + esc(ap.title || "") + '" placeholder="' + esc(_tk(a, "assessment.ap_title")) + '" style="flex:1;padding:4px 8px;border:1px solid var(--ct-line);border-radius:4px;font-size:0.85em" data-input="_updateActionPlanField" data-args=\'' + _da(assessId, qId, api, "title") + '\' data-pass-value>';
+    h += '<input type="date" value="' + esc(ap.target_date || "") + '" style="padding:4px 8px;border:1px solid var(--ct-line);border-radius:4px;font-size:0.85em" data-input="_updateActionPlanField" data-args=\'' + _da(assessId, qId, api, "target_date") + '\' data-pass-value>';
+    h += '<input type="text" value="' + esc(ap.owner || "") + '" placeholder="' + esc(_tk(a, "assessment.ap_owner")) + '" style="width:120px;padding:4px 8px;border:1px solid var(--ct-line);border-radius:4px;font-size:0.85em" data-input="_updateActionPlanField" data-args=\'' + _da(assessId, qId, api, "owner") + '\' data-pass-value>';
     h += '<button class="tpl-icon-btn danger" data-click="_removeActionPlan" data-args=\'' + _da(assessId, qId, api) + '\' title="' + esc(t("common.delete")) + '">&times;</button>';
     h += '</div>';
-    h += '<textarea rows="2" placeholder="' + esc(_tk(a, "assessment.ap_description")) + '" style="width:100%;padding:4px 8px;border:1px solid var(--gray-light);border-radius:4px;font-size:0.85em;font-family:inherit;box-sizing:border-box;resize:vertical" data-input="_updateActionPlanField" data-args=\'' + _da(assessId, qId, api, "description") + '\' data-pass-value>' + esc(ap.description || "") + '</textarea>';
+    h += '<textarea rows="2" placeholder="' + esc(_tk(a, "assessment.ap_description")) + '" style="width:100%;padding:4px 8px;border:1px solid var(--ct-line);border-radius:4px;font-size:0.85em;font-family:inherit;box-sizing:border-box;resize:vertical" data-input="_updateActionPlanField" data-args=\'' + _da(assessId, qId, api, "description") + '\' data-pass-value>' + esc(ap.description || "") + '</textarea>';
     h += '</div>';
     return h;
 }
@@ -3690,7 +3560,7 @@ function _renderSubmitButton(a, completion) {
 function _renderAssessmentHints(stats) {
     if (stats.missingCoverage === 0 && stats.missingActionPlan === 0)
         return "";
-    var h = '<div style="font-size:0.8em;margin-top:6px;padding:8px 12px;background:#fff7ed;border:1px solid #fed7aa;border-radius:4px;color:#7c2d12">';
+    var h = '<div style="font-size:0.8em;margin-top:6px;padding:8px 12px;background:var(--ct-high-tint);border:1px solid var(--ct-high);border-radius:4px;color:var(--ct-high-ink)">';
     if (stats.missingCoverage > 0) {
         h += '<div style="margin-bottom:' + (stats.missingActionPlan > 0 ? "4px" : "0") + '">';
         h += '<span style="font-weight:700">&#9888; ' + stats.missingCoverage + ' ' + esc(t("assessment.without_coverage")) + '</span>';
@@ -3790,16 +3660,6 @@ function _setCoverage(assessId, questionId, coverage) {
     openAssessmentV2(assessId);
 }
 window._setCoverage = _setCoverage;
-function _setAnswerV2(assessId, questionId, value) {
-    var a = _findAssessment(assessId);
-    var resp = _findAssessmentResp(a, questionId);
-    if (!resp)
-        return;
-    resp.answer = value;
-    _touchAssessment(a);
-    openAssessmentV2(assessId);
-}
-window._setAnswerV2 = _setAnswerV2;
 function _setAnswerV2Text(assessId, questionId, value) {
     var a = _findAssessment(assessId);
     var resp = _findAssessmentResp(a, questionId);
@@ -3809,63 +3669,6 @@ function _setAnswerV2Text(assessId, questionId, value) {
     _refreshAssessmentLiveState(assessId, questionId);
 }
 window._setAnswerV2Text = _setAnswerV2Text;
-function _toggleAnswerMulti(assessId, questionId, option) {
-    var a = _findAssessment(assessId);
-    var resp = _findAssessmentResp(a, questionId);
-    if (!resp)
-        return;
-    if (!Array.isArray(resp.answer))
-        resp.answer = [];
-    var idx = resp.answer.indexOf(option);
-    if (idx >= 0)
-        resp.answer.splice(idx, 1);
-    else
-        resp.answer.push(option);
-    _touchAssessment(a);
-    openAssessmentV2(assessId);
-}
-window._toggleAnswerMulti = _toggleAnswerMulti;
-function _uploadAnswerFile(assessId, questionId, el) {
-    var a = _findAssessment(assessId);
-    var resp = _findAssessmentResp(a, questionId);
-    if (!resp || !el.files || !el.files[0])
-        return;
-    var file = el.files[0];
-    if (file.size > 500 * 1024) {
-        alert(t("assessment.file_too_large"));
-        el.value = "";
-        return;
-    }
-    var reader = new FileReader();
-    reader.onload = function (e) {
-        var b64 = "";
-        try {
-            var bytes = new Uint8Array(e.target.result);
-            var binary = "";
-            for (var i = 0; i < bytes.length; i++)
-                binary += String.fromCharCode(bytes[i]);
-            b64 = btoa(binary);
-        }
-        catch (err) {
-            b64 = "";
-        }
-        resp.answer = { name: file.name, size: file.size, data: b64 };
-        _touchAssessment(a);
-        openAssessmentV2(assessId);
-    };
-    reader.readAsArrayBuffer(file);
-}
-window._uploadAnswerFile = _uploadAnswerFile;
-function _clearAnswerFile(assessId, questionId) {
-    var a = _findAssessment(assessId);
-    var resp = _findAssessmentResp(a, questionId);
-    if (!resp)
-        return;
-    resp.answer = null;
-    _touchAssessment(a);
-    openAssessmentV2(assessId);
-}
-window._clearAnswerFile = _clearAnswerFile;
 // Live-update the parts of the DOM that depend on completion without
 // re-rendering the whole panel (to preserve input focus while typing).
 function _refreshAssessmentLiveState(assessId, questionId) {
@@ -3898,7 +3701,7 @@ function _refreshAssessmentLiveState(assessId, questionId) {
                 resp.action_plans.some(function (ap) { return (ap.title || "").trim().length > 0; }));
             var hasJust = (resp.justification || "").trim().length > 0;
             var satisfied = hasAction || hasJust;
-            block.style.background = satisfied ? "#ecfdf5" : "#fff7ed";
+            block.style.background = satisfied ? "var(--ct-low-tint)" : "var(--ct-high-tint)";
             block.style.borderLeftColor = satisfied ? "var(--green)" : "var(--orange)";
             // Replace the banner (first child is always the banner div)
             var banner = block.firstElementChild;
@@ -3913,8 +3716,8 @@ function _refreshAssessmentLiveState(assessId, questionId) {
                     banner.innerHTML = '<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:10px">'
                         + '<span style="color:var(--orange);font-size:1.1em;line-height:1">&#9888;</span>'
                         + '<div>'
-                        + '<div style="font-size:0.85em;font-weight:700;color:#7c2d12">' + esc(_tk(a, "assessment.action_required_title")) + '</div>'
-                        + '<div style="font-size:0.78em;color:#7c2d12;margin-top:2px">' + esc(resp.coverage === "partial" ? _tk(a, "assessment.action_required_partial") : _tk(a, "assessment.action_required_not_covered")) + '</div>'
+                        + '<div style="font-size:0.85em;font-weight:700;color:var(--ct-high-ink)">' + esc(_tk(a, "assessment.action_required_title")) + '</div>'
+                        + '<div style="font-size:0.78em;color:var(--ct-high-ink);margin-top:2px">' + esc(resp.coverage === "partial" ? _tk(a, "assessment.action_required_partial") : _tk(a, "assessment.action_required_not_covered")) + '</div>'
                         + '</div>'
                         + '</div>';
                 }
@@ -4254,11 +4057,11 @@ function _renderVendorMaturityDetail(v) {
     h += '<div style="font-size:0.75em;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--gray-dark);margin-bottom:8px">' + esc(t("maturity.global_config")) + '</div>';
     h += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px">';
     h += '<div><label style="display:block;font-size:0.78em;font-weight:600;margin-bottom:3px">' + esc(t("maturity.weight_questionnaire")) + '</label>';
-    h += '<input type="number" step="0.1" min="0" value="' + (cfg.weight_by_kind.questionnaire || 1) + '" style="width:100%;padding:4px 8px;border:1px solid var(--gray-light);border-radius:4px" data-input="_updateMaturityConfig" data-args=\'["weight_by_kind.questionnaire"]\' data-pass-value></div>';
+    h += '<input type="number" step="0.1" min="0" value="' + (cfg.weight_by_kind.questionnaire || 1) + '" style="width:100%;padding:4px 8px;border:1px solid var(--ct-line);border-radius:4px" data-input="_updateMaturityConfig" data-args=\'["weight_by_kind.questionnaire"]\' data-pass-value></div>';
     h += '<div><label style="display:block;font-size:0.78em;font-weight:600;margin-bottom:3px">' + esc(t("maturity.weight_audit")) + '</label>';
-    h += '<input type="number" step="0.1" min="0" value="' + (cfg.weight_by_kind.audit || 1.5) + '" style="width:100%;padding:4px 8px;border:1px solid var(--gray-light);border-radius:4px" data-input="_updateMaturityConfig" data-args=\'["weight_by_kind.audit"]\' data-pass-value></div>';
+    h += '<input type="number" step="0.1" min="0" value="' + (cfg.weight_by_kind.audit || 1.5) + '" style="width:100%;padding:4px 8px;border:1px solid var(--ct-line);border-radius:4px" data-input="_updateMaturityConfig" data-args=\'["weight_by_kind.audit"]\' data-pass-value></div>';
     h += '<div><label style="display:block;font-size:0.78em;font-weight:600;margin-bottom:3px">' + esc(t("maturity.decay_per_quarter")) + '</label>';
-    h += '<input type="number" step="0.05" min="0" max="1" value="' + (cfg.decay_per_quarter || 0) + '" style="width:100%;padding:4px 8px;border:1px solid var(--gray-light);border-radius:4px" data-input="_updateMaturityConfig" data-args=\'["decay_per_quarter"]\' data-pass-value></div>';
+    h += '<input type="number" step="0.05" min="0" max="1" value="' + (cfg.decay_per_quarter || 0) + '" style="width:100%;padding:4px 8px;border:1px solid var(--ct-line);border-radius:4px" data-input="_updateMaturityConfig" data-args=\'["decay_per_quarter"]\' data-pass-value></div>';
     h += '</div>';
     h += '</div>';
     // Table of contributing assessments
@@ -4284,7 +4087,7 @@ function _renderVendorMaturityDetail(v) {
         h += '<td style="text-align:center;padding:6px 8px"><span class="tpl-kind-badge tpl-kind-' + row.kind + '">' + esc(kindLabel) + '</span></td>';
         h += '<td style="text-align:right;padding:6px 8px;font-weight:600">' + row.score + '%</td>';
         h += '<td style="text-align:right;padding:6px 8px">';
-        h += '<input type="number" step="0.1" min="0" value="' + row.base.toFixed(2) + '" style="width:70px;padding:2px 6px;border:1px solid var(--gray-light);border-radius:4px;text-align:right" data-input="_updateAssessmentWeightOverride" data-args=\'' + _da(a.id) + '\' data-pass-value>';
+        h += '<input type="number" step="0.1" min="0" value="' + row.base.toFixed(2) + '" style="width:70px;padding:2px 6px;border:1px solid var(--ct-line);border-radius:4px;text-align:right" data-input="_updateAssessmentWeightOverride" data-args=\'' + _da(a.id) + '\' data-pass-value>';
         h += '</td>';
         h += '<td style="text-align:right;padding:6px 8px;color:var(--gray-dark);font-size:0.78em">';
         if (row.quarters > 0 && cfg.decay_per_quarter > 0) {
@@ -4399,7 +4202,7 @@ function _exportAssessmentJSON(assessId) {
     _showModal('<h3>' + esc(t("assessment.export_json_title")) + '</h3>' +
         '<p style="font-size:0.85em;color:var(--gray-dark);margin-bottom:14px">' + esc(t("assessment.export_json_file_hint")) + '</p>' +
         '<label style="display:block;font-size:0.78em;font-weight:600;margin-bottom:3px">' + esc(t("assessment.encryption_password_label_optional")) + '</label>' +
-        '<input type="password" id="exp-password" placeholder="' + esc(t("assessment.encryption_password_optional")) + '" style="width:100%;padding:6px 10px;border:1px solid var(--gray-light);border-radius:4px;font-family:inherit;margin-bottom:14px">' +
+        '<input type="password" id="exp-password" placeholder="' + esc(t("assessment.encryption_password_optional")) + '" style="width:100%;padding:6px 10px;border:1px solid var(--ct-line);border-radius:4px;font-family:inherit;margin-bottom:14px">' +
         '<div style="display:flex;gap:8px;justify-content:flex-end">' +
         '<button class="btn-add" style="background:var(--gray-light);color:var(--text)" data-click="closeModal">' + esc(t("common.cancel")) + '</button>' +
         '<button class="btn-add" style="background:var(--light-blue)" data-click="_doExportJSONAuto" data-args=\'' + _da(assessId) + '\'>' + esc(t("assessment.export")) + '</button>' +
@@ -4420,7 +4223,7 @@ function _exportAssessmentLink(assessId) {
     _showModal('<h3>' + esc(t("assessment.export_link_title")) + '</h3>' +
         '<p style="font-size:0.85em;color:var(--gray-dark);margin-bottom:14px">' + esc(t("assessment.export_link_hint")) + '</p>' +
         '<label style="display:block;font-size:0.78em;font-weight:600;margin-bottom:3px">' + esc(t("assessment.encryption_password_label_required")) + '</label>' +
-        '<input type="password" id="exp-password" placeholder="' + esc(t("assessment.encryption_password_required")) + '" style="width:100%;padding:6px 10px;border:1px solid var(--gray-light);border-radius:4px;font-family:inherit;margin-bottom:10px">' +
+        '<input type="password" id="exp-password" placeholder="' + esc(t("assessment.encryption_password_required")) + '" style="width:100%;padding:6px 10px;border:1px solid var(--ct-line);border-radius:4px;font-family:inherit;margin-bottom:10px">' +
         '<button class="btn-add" style="width:100%;background:var(--violet)" data-click="_generatePortalLink" data-args=\'' + _da(assessId) + '\'>' + esc(t("assessment.generate_link")) + '</button>' +
         '<div id="exp-link-result" style="margin-top:12px;display:none"></div>');
 }
@@ -4529,18 +4332,18 @@ async function _generatePortalLink(assessId) {
         var statusKey, statusColor, statusBg;
         if (size <= LINK_SIZE_GREEN) {
             statusKey = "assessment.link_status_green";
-            statusColor = "#166534";
-            statusBg = "#ecfdf5";
+            statusColor = "var(--ct-low-ink)";
+            statusBg = "var(--ct-low-tint)";
         }
         else if (size <= LINK_SIZE_YELLOW) {
             statusKey = "assessment.link_status_yellow";
-            statusColor = "#7c2d12";
-            statusBg = "#fff7ed";
+            statusColor = "var(--ct-high-ink)";
+            statusBg = "var(--ct-high-tint)";
         }
         else {
             statusKey = "assessment.link_status_red";
-            statusColor = "#7f1d1d";
-            statusBg = "#fee2e2";
+            statusColor = "var(--ct-critical-ink)";
+            statusBg = "var(--ct-critical-tint)";
         }
         var resultEl = document.getElementById("exp-link-result");
         if (!resultEl)
@@ -4551,7 +4354,7 @@ async function _generatePortalLink(assessId) {
         h += '</div>';
         // Link + copy buttons
         h += '<div style="display:flex;gap:6px;margin-top:10px">';
-        h += '<input type="text" id="exp-link-url" readonly value="' + esc(url) + '" style="flex:1;padding:6px 10px;border:1px solid var(--gray-light);border-radius:4px;font-family:ui-monospace,monospace;font-size:0.78em">';
+        h += '<input type="text" id="exp-link-url" readonly value="' + esc(url) + '" style="flex:1;padding:6px 10px;border:1px solid var(--ct-line);border-radius:4px;font-family:ui-monospace,monospace;font-size:0.78em">';
         h += '<button class="btn-add" style="margin:0" data-click="_copyPortalLink">' + esc(t("assessment.copy_link")) + '</button>';
         h += '</div>';
         h += '<button class="btn-add" style="margin-top:8px;background:var(--light-blue)" data-click="_copyEmailTemplate" data-args=\'' + _da(assessId) + '\'>' + esc(t("assessment.copy_email_template")) + '</button>';
@@ -5388,9 +5191,9 @@ function _normalizeCoverage(raw) {
 var _editingMeasure = null; // kept for legacy paths (risks tab)
 function _vendorMeasureStatusBadge(statut) {
     var palette = {
-        planifie: "background:#dbeafe;color:#1e40af",
-        en_cours: "background:#fef3c7;color:#92400e",
-        termine: "background:#dcfce7;color:#166534"
+        planifie: "background:var(--ct-info-tint);color:var(--ct-info-ink)",
+        en_cours: "background:var(--ct-medium-tint);color:var(--ct-medium-ink)",
+        termine: "background:var(--ct-low-tint);color:var(--ct-low-ink)"
     };
     var style = palette[statut] || palette.planifie;
     var label = t("measure." + (statut || "planifie")) || statut || "";
@@ -5699,19 +5502,6 @@ function saveMeasureEdit() {
 }
 window.saveMeasureEdit = saveMeasureEdit;
 var _assessReturnToVendor = null;
-function backToAssessments() {
-    if (_assessReturnToVendor !== null) {
-        _selectedVendor = _assessReturnToVendor;
-        _vendorTab = "assessments";
-        _assessReturnToVendor = null;
-        _panel = "vendors";
-        renderPanel();
-    }
-    else {
-        selectPanel("assessments");
-    }
-}
-window.backToAssessments = backToAssessments;
 function setVendorTab(tab) { _vendorTab = tab; renderPanel(); }
 window.setVendorTab = setVendorTab;
 // ═══════════════════════════════════════════════════════════════
@@ -5721,10 +5511,13 @@ window.setVendorTab = setVendorTab;
 // EXCEL EXPORT
 // ═══════════════════════════════════════════════════════════════
 function _loadExcelJS() {
-    return _loadScript("https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js", {
-        integrity: "sha384-Pqp51FUN2/qzfxZxBCtF0stpc9ONI6MYZpVqmo8m20SoaQCzf+arZvACkLkirlPz",
-        crossOrigin: "anonymous"
-    });
+    // ExcelJS 4.4.0, vendored under js/vendor/ — served from our own origin, so the
+    // app CSP keeps script-src 'self' with no CDN entry, the export works with
+    // no Internet access (this is a local-first tool), and there is no
+    // third-party availability or tampering dependency at export time. SRI is
+    // not needed for a same-origin asset shipped with the app; the vendored
+    // file is byte-identical to the CDN build the integrity hash pinned.
+    return _loadScript("js/vendor/exceljs.min.js");
 }
 // ═══════════════════════════════════════════════════════════════
 // HELPERS
@@ -6354,31 +6147,6 @@ function aiCollectDocs() {
     });
 }
 window.aiCollectDocs = aiCollectDocs;
-function aiAddVendor() {
-    var input = prompt(t("ai.enter_vendor_name"));
-    if (!input || !input.trim())
-        return;
-    // Parse name and optional website: "AWS" or "AWS https://aws.amazon.com"
-    var parts = input.trim().split(/\s+(https?:\/\/)/);
-    var name = parts[0].trim();
-    var website = parts.length > 2 ? parts[1] + parts[2] : "";
-    var nextId = "PP-" + String(D.vendors.length + 1).padStart(3, "0");
-    D.vendors.push({
-        id: nextId, name: name, legal_entity: "", country: "", sector: "", website: website, siret: "",
-        contact: { name: "", email: "", phone: "" },
-        contract: { services: "", start_date: "", end_date: "", review_date: "" },
-        classification: { gdpr_subprocessor: false },
-        certifications: [], dpa_signed: false, sub_contractors: [],
-        status: "prospect", notes: ""
-    });
-    _selectedVendor = D.vendors.length - 1;
-    _vendorTab = "info";
-    _panel = "vendors";
-    _persistCreate("vendor", D.vendors[_selectedVendor]);
-    renderPanel();
-    setTimeout(aiCollectInfo, 100);
-}
-window.aiAddVendor = aiAddVendor;
 function _applyAiData(v, data) {
     // logo_url from AI is unreliable — we use favicon from website instead
     if (data.legal_entity && !v.legal_entity)

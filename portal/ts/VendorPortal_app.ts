@@ -82,7 +82,10 @@ function _loadExcelJS() {
     return new Promise<void>(function(resolve, reject) {
         if (typeof ExcelJS !== "undefined") return resolve();
         var s = document.createElement("script");
-        s.src = "https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js";
+        // The portal is served from vendor/app/portal/, one level below the module's
+// js/ directory — hence "../js/vendor/". Vendoring keeps the CSP at
+// script-src 'self' and lets the portal work with no Internet access.
+        s.src = "../js/vendor/exceljs.min.js";
         s.onload = function() { resolve(); };
         s.onerror = function() { reject(new Error("ExcelJS load error")); };
         document.head.appendChild(s);
