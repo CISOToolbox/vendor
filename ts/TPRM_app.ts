@@ -5465,10 +5465,13 @@ window.setVendorTab = setVendorTab;
 // ═══════════════════════════════════════════════════════════════
 
 function _loadExcelJS() {
-    return _loadScript("https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js", {
-        integrity: "sha384-Pqp51FUN2/qzfxZxBCtF0stpc9ONI6MYZpVqmo8m20SoaQCzf+arZvACkLkirlPz",
-        crossOrigin: "anonymous"
-    });
+    // ExcelJS 4.4.0, vendored under js/vendor/ — served from our own origin, so the
+// app CSP keeps script-src 'self' with no CDN entry, the export works with
+// no Internet access (this is a local-first tool), and there is no
+// third-party availability or tampering dependency at export time. SRI is
+// not needed for a same-origin asset shipped with the app; the vendored
+// file is byte-identical to the CDN build the integrity hash pinned.
+return _loadScript("js/vendor/exceljs.min.js");
 }
 
 

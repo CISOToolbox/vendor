@@ -63,17 +63,12 @@
         var next = maxN + 1;
         return prefix + "-" + ("0000" + next).slice(-4);
     }
-    function _esc(s) {
-        if (s === null || s === undefined)
-            return "";
-        return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-    }
     function _loadTree(host) {
         // Opensource: D.dora is the in-memory tree (single-doc browser app).
         // The codelists were loaded synchronously by index.html as window._doraCodelists.
         if (typeof D === "undefined" || !D || !D.dora) {
-            host.innerHTML = '<h2>' + _esc(_doraT("nav.dora", "DORA Register")) + '</h2>'
-                + '<p>' + _esc(_doraT("dora.no_project", "Open or create a project first.")) + '</p>';
+            host.innerHTML = '<h2>' + esc(_doraT("nav.dora", "DORA Register")) + '</h2>'
+                + '<p>' + esc(_doraT("dora.no_project", "Open or create a project first.")) + '</p>';
             return;
         }
         _doraTree = D.dora;
@@ -214,7 +209,7 @@
             var label = it.label !== undefined ? it.label : it;
             var display = _doraCodeI18n(key, String(code), String(label));
             var sel = (current === code) ? " selected" : "";
-            h += '<option value="' + _esc(code) + '"' + sel + '>' + _esc(display) + '</option>';
+            h += '<option value="' + esc(code) + '"' + sel + '>' + esc(display) + '</option>';
         });
         return h;
     }
@@ -229,7 +224,7 @@
             var code = it.code !== undefined ? it.code : it;
             var label = it.label !== undefined ? it.label : it;
             var sel = (String(code).toUpperCase() === cur) ? " selected" : "";
-            h += '<option value="' + _esc(code) + '"' + sel + '>' + _esc(code) + ' — ' + _esc(label) + '</option>';
+            h += '<option value="' + esc(code) + '"' + sel + '>' + esc(code) + ' — ' + esc(label) + '</option>';
         });
         return h;
     }
@@ -240,7 +235,7 @@
         var items = (_doraCodelists && _doraCodelists.nace_rev2) || [];
         var h = '<datalist id="nace-list">';
         items.forEach(function (it) {
-            h += '<option value="' + _esc(it.label) + '"></option>';
+            h += '<option value="' + esc(it.label) + '"></option>';
         });
         h += '</datalist>';
         return h;
@@ -279,23 +274,23 @@
         // toggles a hidden blue help paragraph. Hints are off by default to
         // keep the form lean.
         function _hint(key, s) {
-            return '<p class="panel-desc dora-hint" id="dora-hint-' + key + '" style="display:none;margin:0 0 10px">' + _esc(s) + '</p>';
+            return '<p class="panel-desc dora-hint" id="dora-hint-' + key + '" style="display:none;margin:0 0 10px">' + esc(s) + '</p>';
         }
         function _helpBtn(key) {
-            return '<button type="button" class="dora-help-btn" data-click="doraToggleHint" data-args=\'["' + key + '"]\' title="' + _esc(_doraT("dora.help.toggle", "Afficher / masquer l'aide")) + '" aria-label="' + _esc(_doraT("dora.help.toggle", "Afficher / masquer l'aide")) + '">?</button>';
+            return '<button type="button" class="dora-help-btn" data-click="doraToggleHint" data-args=\'["' + key + '"]\' title="' + esc(_doraT("dora.help.toggle", "Afficher / masquer l'aide")) + '" aria-label="' + esc(_doraT("dora.help.toggle", "Afficher / masquer l'aide")) + '">?</button>';
         }
         function _emptyBlock(s) {
-            return '<div class="dora-empty-block">' + _esc(s) + '</div>';
+            return '<div class="dora-empty-block">' + esc(s) + '</div>';
         }
         function _fld(label, controlHtml) {
-            return '<div class="form-row"><label>' + _esc(label) + '</label>' + controlHtml + '</div>';
+            return '<div class="form-row"><label>' + esc(label) + '</label>' + controlHtml + '</div>';
         }
         function _cardOpen(titleEscapedHtml, deleteClick, deleteArgs) {
             var h = '<article class="dora-overview-card">';
             h += '<header class="dora-overview-card-h">';
             h += '<div class="dora-overview-card-title">' + titleEscapedHtml + '</div>';
             if (deleteClick) {
-                h += '<button class="btn-del" data-click="' + deleteClick + '" data-args=\'' + deleteArgs + '\' title="' + _esc(_doraT("btn_delete", "Delete")) + '">' + _icon("trash", 13) + '</button>';
+                h += '<button class="btn-del" data-click="' + deleteClick + '" data-args=\'' + deleteArgs + '\' title="' + esc(_doraT("btn_delete", "Delete")) + '">' + _icon("trash", 13) + '</button>';
             }
             h += '</header>';
             return h;
@@ -304,13 +299,13 @@
             return '<div class="dora-overview-grid">' + inner + '</div></article>';
         }
         var h = '';
-        h += '<p class="panel-desc dora-hint" id="dora-hint-intro" style="display:none">' + _esc(_doraT("dora.overview.intro", "Saisie centralisée des informations générales de votre entité financière : entités déclarantes, succursales, périmètre de consolidation et fonctions opérationnelles. Les accords contractuels et sous-traitants se gèrent dans les fiches PSTI et sous-traitants.")) + '</p>';
+        h += '<p class="panel-desc dora-hint" id="dora-hint-intro" style="display:none">' + esc(_doraT("dora.overview.intro", "Saisie centralisée des informations générales de votre entité financière : entités déclarantes, succursales, périmètre de consolidation et fonctions opérationnelles. Les accords contractuels et sous-traitants se gèrent dans les fiches PSTI et sous-traitants.")) + '</p>';
         // ── B_01 — Identité de l'entité financière déclarante ──
         var b01Body = '';
         // RFE block
         b01Body += '<div style="display:flex;align-items:center;justify-content:space-between;margin:0 0 6px">'
-            + '<h4 style="margin:0;font-size:0.95em;display:flex;align-items:center;gap:6px">' + _esc(_doraT("dora.overview.subtitle_rfe", "Entités déclarantes")) + ' <span style="color:var(--text-muted);font-weight:400">(' + rfes.length + ')</span>' + _helpBtn("rfe") + '</h4>'
-            + '<button class="btn-add" data-click="doraAddEntity" style="margin:0">+ ' + _esc(_doraT("dora.overview.add_rfe", "Ajouter une entité")) + '</button>'
+            + '<h4 style="margin:0;font-size:0.95em;display:flex;align-items:center;gap:6px">' + esc(_doraT("dora.overview.subtitle_rfe", "Entités déclarantes")) + ' <span style="color:var(--text-muted);font-weight:400">(' + rfes.length + ')</span>' + _helpBtn("rfe") + '</h4>'
+            + '<button class="btn-add" data-click="doraAddEntity" style="margin:0">+ ' + esc(_doraT("dora.overview.add_rfe", "Ajouter une entité")) + '</button>'
             + '</div>'
             + _hint("rfe", _doraT("dora.overview.hint_rfe", "Entités juridiques de votre groupe soumises à DORA (au moins une). La période de reporting est demandée au moment de l'export."));
         if (rfes.length === 0) {
@@ -318,15 +313,15 @@
         }
         else {
             rfes.forEach(function (r) {
-                var titleH = _esc(r.name || r.id) + ' <code class="dora-overview-id">' + _esc(r.id) + '</code>';
-                b01Body += _cardOpen(titleH, "doraDelEntity", '["' + _esc(r.id) + '"]');
+                var titleH = esc(r.name || r.id) + ' <code class="dora-overview-id">' + esc(r.id) + '</code>';
+                b01Body += _cardOpen(titleH, "doraDelEntity", '["' + esc(r.id) + '"]');
                 // R11: parent_lei only meaningful when hierarchy === "subsidiary"
                 // (a "parent" / "sole_entity" RFE has no parent LEI to declare).
                 // For "branch" we also expose it because branches inherit a
                 // parent. Otherwise the field is hidden to keep the form lean.
                 var needsParent = (r.hierarchy === "subsidiary" || r.hierarchy === "branch");
                 var parentField = needsParent
-                    ? _fld(_doraT("dora.overview.f.parent_lei", "LEI de la maison-mère (B_01.02.0060)"), '<div style="display:flex;gap:2px;align-items:center"><input id="rfe-plei-' + _esc(r.id) + '" value="' + _esc(r.parent_lei || "") + '" maxlength="20" data-input="doraPatchEntity" data-args=\'["' + _esc(r.id) + '","parent_lei"]\' data-pass-value style="flex:1;font-family:monospace;text-transform:uppercase">' + _gleifTriggerHtml("rfe-plei-" + r.id) + '</div>')
+                    ? _fld(_doraT("dora.overview.f.parent_lei", "LEI de la maison-mère (B_01.02.0060)"), '<div style="display:flex;gap:2px;align-items:center"><input id="rfe-plei-' + esc(r.id) + '" value="' + esc(r.parent_lei || "") + '" maxlength="20" data-input="doraPatchEntity" data-args=\'["' + esc(r.id) + '","parent_lei"]\' data-pass-value style="flex:1;font-family:monospace;text-transform:uppercase">' + _gleifTriggerHtml("rfe-plei-" + r.id) + '</div>')
                     : '';
                 // B_01.02.0100 / 0110 — currency + total assets. EBA RoI requires
                 // both at the RFE level for the consolidated balance-sheet view.
@@ -334,18 +329,18 @@
                 var _curSelRfe = r.total_assets_currency || "EUR";
                 var _curOpts = _curCodes.map(function (c) {
                     var code = c && c.code !== undefined ? c.code : c;
-                    return '<option value="' + _esc(code) + '"' + (_curSelRfe === code ? " selected" : "") + '>' + _esc(code) + '</option>';
+                    return '<option value="' + esc(code) + '"' + (_curSelRfe === code ? " selected" : "") + '>' + esc(code) + '</option>';
                 }).join("");
                 b01Body += _grid(''
-                    + _fld(_doraT("dora.overview.f.legal_name", "Nom légal (B_01.02.0020)"), '<input value="' + _esc(r.name || "") + '" data-input="doraPatchEntity" data-args=\'["' + _esc(r.id) + '","name"]\' data-pass-value>')
-                    + _fld(_doraT("dora.overview.f.lei", "LEI (B_01.02.0010)"), '<div style="display:flex;gap:2px;align-items:center"><input id="rfe-lei-' + _esc(r.id) + '" value="' + _esc(r.lei || "") + '" maxlength="20" data-input="doraPatchEntity" data-args=\'["' + _esc(r.id) + '","lei"]\' data-pass-value style="flex:1;font-family:monospace;text-transform:uppercase">' + _gleifTriggerHtml("rfe-lei-" + r.id) + '</div>')
-                    + _fld(_doraT("dora.overview.f.country_rfe", "Pays (B_01.02.0030)"), '<select data-change="doraPatchEntity" data-args=\'["' + _esc(r.id) + '","country_iso2"]\' data-pass-value>' + _countryOptions(r.country_iso2) + '</select>')
-                    + _fld(_doraT("dora.overview.f.entity_type", "Type d'entité (B_01.02.0040)"), '<select data-change="doraPatchEntity" data-args=\'["' + _esc(r.id) + '","entity_type"]\' data-pass-value>' + _codelistOptions("entity_type", r.entity_type) + '</select>')
-                    + _fld(_doraT("dora.overview.f.competent_authority", "Autorité compétente (B_01.01.0050)"), '<input value="' + _esc(r.competent_authority || "") + '" data-input="doraPatchEntity" data-args=\'["' + _esc(r.id) + '","competent_authority"]\' data-pass-value placeholder="' + _esc(_doraT("dora.overview.ph.competent_authority", "ex. ACPR, AMF, BaFin, ECB, FCA…")) + '">')
-                    + _fld(_doraT("dora.overview.f.hierarchy", "Hiérarchie (B_01.02.0050)"), '<select data-change="doraPatchEntity" data-args=\'["' + _esc(r.id) + '","hierarchy"]\' data-pass-value>' + _codelistOptions("hierarchy", r.hierarchy) + '</select>')
+                    + _fld(_doraT("dora.overview.f.legal_name", "Nom légal (B_01.02.0020)"), '<input value="' + esc(r.name || "") + '" data-input="doraPatchEntity" data-args=\'["' + esc(r.id) + '","name"]\' data-pass-value>')
+                    + _fld(_doraT("dora.overview.f.lei", "LEI (B_01.02.0010)"), '<div style="display:flex;gap:2px;align-items:center"><input id="rfe-lei-' + esc(r.id) + '" value="' + esc(r.lei || "") + '" maxlength="20" data-input="doraPatchEntity" data-args=\'["' + esc(r.id) + '","lei"]\' data-pass-value style="flex:1;font-family:monospace;text-transform:uppercase">' + _gleifTriggerHtml("rfe-lei-" + r.id) + '</div>')
+                    + _fld(_doraT("dora.overview.f.country_rfe", "Pays (B_01.02.0030)"), '<select data-change="doraPatchEntity" data-args=\'["' + esc(r.id) + '","country_iso2"]\' data-pass-value>' + _countryOptions(r.country_iso2) + '</select>')
+                    + _fld(_doraT("dora.overview.f.entity_type", "Type d'entité (B_01.02.0040)"), '<select data-change="doraPatchEntity" data-args=\'["' + esc(r.id) + '","entity_type"]\' data-pass-value>' + _codelistOptions("entity_type", r.entity_type) + '</select>')
+                    + _fld(_doraT("dora.overview.f.competent_authority", "Autorité compétente (B_01.01.0050)"), '<input value="' + esc(r.competent_authority || "") + '" data-input="doraPatchEntity" data-args=\'["' + esc(r.id) + '","competent_authority"]\' data-pass-value placeholder="' + esc(_doraT("dora.overview.ph.competent_authority", "ex. ACPR, AMF, BaFin, ECB, FCA…")) + '">')
+                    + _fld(_doraT("dora.overview.f.hierarchy", "Hiérarchie (B_01.02.0050)"), '<select data-change="doraPatchEntity" data-args=\'["' + esc(r.id) + '","hierarchy"]\' data-pass-value>' + _codelistOptions("hierarchy", r.hierarchy) + '</select>')
                     + parentField
-                    + _fld(_doraT("dora.overview.f.total_assets_currency", "Devise (B_01.02.0100)"), '<select data-change="doraPatchEntity" data-args=\'["' + _esc(r.id) + '","total_assets_currency"]\' data-pass-value>' + _curOpts + '</select>')
-                    + _fld(_doraT("dora.overview.f.total_assets", "Total bilan (B_01.02.0110)"), '<input type="number" step="0.01" value="' + _esc(r.total_assets != null ? r.total_assets : "") + '" data-input="doraPatchEntityNum" data-args=\'["' + _esc(r.id) + '","total_assets"]\' data-pass-value placeholder="' + _esc(_doraT("dora.overview.ph.total_assets", "Montant en devise comptable")) + '">'));
+                    + _fld(_doraT("dora.overview.f.total_assets_currency", "Devise (B_01.02.0100)"), '<select data-change="doraPatchEntity" data-args=\'["' + esc(r.id) + '","total_assets_currency"]\' data-pass-value>' + _curOpts + '</select>')
+                    + _fld(_doraT("dora.overview.f.total_assets", "Total bilan (B_01.02.0110)"), '<input type="number" step="0.01" value="' + esc(r.total_assets != null ? r.total_assets : "") + '" data-input="doraPatchEntityNum" data-args=\'["' + esc(r.id) + '","total_assets"]\' data-pass-value placeholder="' + esc(_doraT("dora.overview.ph.total_assets", "Montant en devise comptable")) + '">'));
             });
         }
         // Branches block — build the RFE-select options once per row so the
@@ -354,15 +349,15 @@
             var out = '<option value=""></option>';
             rfes.forEach(function (e) {
                 var sel = (e.id === currentRfeId) ? " selected" : "";
-                out += '<option value="' + _esc(e.id) + '"' + sel + '>' + _esc((e.name || e.id) + (e.country_iso2 ? " — " + e.country_iso2 : "")) + '</option>';
+                out += '<option value="' + esc(e.id) + '"' + sel + '>' + esc((e.name || e.id) + (e.country_iso2 ? " — " + e.country_iso2 : "")) + '</option>';
             });
             return out;
         }
         var rfeNameById = {};
         rfes.forEach(function (e) { rfeNameById[e.id] = e.name || e.id; });
         b01Body += '<div style="display:flex;align-items:center;justify-content:space-between;margin:14px 0 6px">'
-            + '<h4 style="margin:0;font-size:0.95em;display:flex;align-items:center;gap:6px">' + _esc(_doraT("dora.overview.subtitle_branches", "Succursales")) + ' <span style="color:var(--text-muted);font-weight:400">(' + branches.length + ')</span>' + _helpBtn("branches") + '</h4>'
-            + '<button class="btn-add" data-click="doraAddBranch" style="margin:0"' + (rfes.length === 0 ? " disabled" : "") + '>+ ' + _esc(_doraT("dora.overview.add_branch", "Ajouter une succursale")) + '</button>'
+            + '<h4 style="margin:0;font-size:0.95em;display:flex;align-items:center;gap:6px">' + esc(_doraT("dora.overview.subtitle_branches", "Succursales")) + ' <span style="color:var(--text-muted);font-weight:400">(' + branches.length + ')</span>' + _helpBtn("branches") + '</h4>'
+            + '<button class="btn-add" data-click="doraAddBranch" style="margin:0"' + (rfes.length === 0 ? " disabled" : "") + '>+ ' + esc(_doraT("dora.overview.add_branch", "Ajouter une succursale")) + '</button>'
             + '</div>'
             + _hint("branches", _doraT("dora.overview.hint_branches", "Succursales (filiales sans personnalité juridique propre) rattachées à une entité déclarante. À déclarer uniquement si elles consomment des services PSTI distincts."));
         if (rfes.length === 0) {
@@ -374,21 +369,21 @@
         else {
             branches.forEach(function (r) {
                 var rfeName = rfeNameById[r.rfe_id] || r.rfe_id || "—";
-                var titleH = _esc(r.name || r.id) + ' <span class="dora-overview-parent">↳ ' + _esc(rfeName) + '</span> <code class="dora-overview-id">' + _esc(r.id) + '</code>';
-                b01Body += _cardOpen(titleH, "doraDelBranch", '["' + _esc(r.id) + '"]');
+                var titleH = esc(r.name || r.id) + ' <span class="dora-overview-parent">↳ ' + esc(rfeName) + '</span> <code class="dora-overview-id">' + esc(r.id) + '</code>';
+                b01Body += _cardOpen(titleH, "doraDelBranch", '["' + esc(r.id) + '"]');
                 b01Body += _grid(''
-                    + _fld(_doraT("dora.overview.f.branch_parent_rfe", "Entité déclarante de rattachement (B_01.03.0020)"), '<select data-change="doraPatchBranch" data-args=\'["' + _esc(r.id) + '","rfe_id"]\' data-pass-value>' + _rfeOptsForBranch(r.rfe_id) + '</select>')
-                    + _fld(_doraT("dora.overview.f.branch_name", "Nom de la succursale (B_01.03.0030)"), '<input value="' + _esc(r.name || "") + '" data-input="doraPatchBranch" data-args=\'["' + _esc(r.id) + '","name"]\' data-pass-value>')
-                    + _fld(_doraT("dora.overview.f.country_branch", "Pays (B_01.03.0040)"), '<select data-change="doraPatchBranch" data-args=\'["' + _esc(r.id) + '","country_iso2"]\' data-pass-value>' + _countryOptions(r.country_iso2) + '</select>')
-                    + _fld(_doraT("dora.overview.f.branch_code", "Code interne (B_01.03.0010)"), '<input value="' + _esc(r.branch_code || "") + '" data-input="doraPatchBranch" data-args=\'["' + _esc(r.id) + '","branch_code"]\' data-pass-value>'));
+                    + _fld(_doraT("dora.overview.f.branch_parent_rfe", "Entité déclarante de rattachement (B_01.03.0020)"), '<select data-change="doraPatchBranch" data-args=\'["' + esc(r.id) + '","rfe_id"]\' data-pass-value>' + _rfeOptsForBranch(r.rfe_id) + '</select>')
+                    + _fld(_doraT("dora.overview.f.branch_name", "Nom de la succursale (B_01.03.0030)"), '<input value="' + esc(r.name || "") + '" data-input="doraPatchBranch" data-args=\'["' + esc(r.id) + '","name"]\' data-pass-value>')
+                    + _fld(_doraT("dora.overview.f.country_branch", "Pays (B_01.03.0040)"), '<select data-change="doraPatchBranch" data-args=\'["' + esc(r.id) + '","country_iso2"]\' data-pass-value>' + _countryOptions(r.country_iso2) + '</select>')
+                    + _fld(_doraT("dora.overview.f.branch_code", "Code interne (B_01.03.0010)"), '<input value="' + esc(r.branch_code || "") + '" data-input="doraPatchBranch" data-args=\'["' + esc(r.id) + '","branch_code"]\' data-pass-value>'));
             });
         }
-        h += _section(_esc(_doraT("dora.overview.title_b01", "Identité de l'entité financière déclarante")), b01Body);
+        h += _section(esc(_doraT("dora.overview.title_b01", "Identité de l'entité financière déclarante")), b01Body);
         // ── B_03 — Fonctions opérationnelles ──
         var b03Body = '';
         b03Body += '<div style="display:flex;align-items:center;justify-content:space-between;margin:0 0 6px">'
-            + '<span style="color:var(--text-muted)">' + fns.length + ' ' + _esc(fns.length > 1 ? _doraT("dora.overview.functions_pl", "fonctions") : _doraT("dora.overview.functions_sg", "fonction")) + '</span>'
-            + '<button class="btn-add" data-click="doraOpenFunctionModal" data-args=\'[null]\' style="margin:0">+ ' + _esc(_doraT("dora.overview.add_function", "Nouvelle fonction")) + '</button>'
+            + '<span style="color:var(--text-muted)">' + fns.length + ' ' + esc(fns.length > 1 ? _doraT("dora.overview.functions_pl", "fonctions") : _doraT("dora.overview.functions_sg", "fonction")) + '</span>'
+            + '<button class="btn-add" data-click="doraOpenFunctionModal" data-args=\'[null]\' style="margin:0">+ ' + esc(_doraT("dora.overview.add_function", "Nouvelle fonction")) + '</button>'
             + '</div>'
             + _hint("functions", _doraT("dora.overview.hint_functions", "Fonctions opérationnelles (services ou processus métier) susceptibles d'être supportées par un PSTI. Les fonctions critiques ou importantes (★) déclenchent un reporting renforcé. Cliquez une carte pour éditer tous les champs ITS (RTO, RPO, ligne métier, code LoU…)."));
         if (fns.length === 0) {
@@ -399,36 +394,36 @@
             fns.forEach(function (f) {
                 var usage = fnUsage[f.id] || 0;
                 var critBadge = f.is_critical_or_important
-                    ? '<span style="background:var(--orange);color:#fff;font-size:0.74em;padding:1px 6px;border-radius:3px;margin-left:6px">★ ' + _esc(_doraT("dora.byvendor.critical", "critique")) + '</span>'
+                    ? '<span style="background:var(--orange);color:#fff;font-size:0.74em;padding:1px 6px;border-radius:3px;margin-left:6px">★ ' + esc(_doraT("dora.byvendor.critical", "critique")) + '</span>'
                     : '';
-                b03Body += '<div class="dora-card-hover" data-click="doraOpenFunctionModal" data-args=\'["' + _esc(f.id) + '"]\' style="border:1px solid var(--border);border-radius:6px;padding:10px 12px;background:var(--bg,#fff);cursor:pointer;transition:background 0.15s,border-color 0.15s">';
+                b03Body += '<div class="dora-card-hover" data-click="doraOpenFunctionModal" data-args=\'["' + esc(f.id) + '"]\' style="border:1px solid var(--border);border-radius:6px;padding:10px 12px;background:var(--bg,#fff);cursor:pointer;transition:background 0.15s,border-color 0.15s">';
                 b03Body += '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">'
-                    + '<strong>' + _esc(f.name || f.id) + '</strong>' + critBadge
+                    + '<strong>' + esc(f.name || f.id) + '</strong>' + critBadge
                     + '<span style="flex:1"></span>'
-                    + '<code style="font-size:0.74em;color:var(--text-muted)">' + _esc(f.id) + '</code>'
+                    + '<code style="font-size:0.74em;color:var(--text-muted)">' + esc(f.id) + '</code>'
                     + '</div>';
                 var meta = [];
                 if (f.business_line)
-                    meta.push('<span>' + _esc(_doraT("dora.fn.business_line", "Ligne métier")) + ': ' + _esc(_doraCodeLabel("licenced_activity", f.business_line)) + '</span>');
+                    meta.push('<span>' + esc(_doraT("dora.fn.business_line", "Ligne métier")) + ': ' + esc(_doraCodeLabel("licenced_activity", f.business_line)) + '</span>');
                 if (f.recovery_time_objective_h != null)
-                    meta.push('<span>RTO ' + _esc(f.recovery_time_objective_h) + 'h</span>');
+                    meta.push('<span>RTO ' + esc(f.recovery_time_objective_h) + 'h</span>');
                 if (f.recovery_point_objective_h != null)
-                    meta.push('<span>RPO ' + _esc(f.recovery_point_objective_h) + 'h</span>');
-                meta.push('<span style="color:var(--text-muted)">' + _esc(_doraT("dora.overview.fn_used_by", "Utilisée par")) + ' ' + usage + ' ' + _esc(usage > 1 ? _doraT("dora.overview.arrangements_pl", "accords") : _doraT("dora.overview.arrangements_sg", "accord")) + '</span>');
+                    meta.push('<span>RPO ' + esc(f.recovery_point_objective_h) + 'h</span>');
+                meta.push('<span style="color:var(--text-muted)">' + esc(_doraT("dora.overview.fn_used_by", "Utilisée par")) + ' ' + usage + ' ' + esc(usage > 1 ? _doraT("dora.overview.arrangements_pl", "accords") : _doraT("dora.overview.arrangements_sg", "accord")) + '</span>');
                 b03Body += '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;font-size:0.85em">' + meta.join("") + '</div>';
                 b03Body += '</div>';
             });
             b03Body += '</div>';
         }
-        h += _section(_esc(_doraT("dora.overview.title_b03", "Fonctions opérationnelles")) + ' ' + _helpBtn("functions"), b03Body);
+        h += _section(esc(_doraT("dora.overview.title_b03", "Fonctions opérationnelles")) + ' ' + _helpBtn("functions"), b03Body);
         // ── B_01.02 — Périmètre de consolidation ──
         // Reported INSIDE the B_01.02 sheet at export time (relationship_to_rfe
         // column on each row), but kept as a distinct UI block here so the
         // user can edit consolidation entities separately from the RFEs.
         var b05Body = '';
         b05Body += '<div style="display:flex;align-items:center;justify-content:space-between;margin:0 0 6px">'
-            + '<span style="color:var(--text-muted)">' + conso.length + ' ' + _esc(conso.length > 1 ? _doraT("dora.overview.entities_pl", "entités") : _doraT("dora.overview.entities_sg", "entité")) + '</span>'
-            + '<button class="btn-add" data-click="doraAddCs" style="margin:0">+ ' + _esc(_doraT("dora.overview.add_consolidation", "Ajouter une entité")) + '</button>'
+            + '<span style="color:var(--text-muted)">' + conso.length + ' ' + esc(conso.length > 1 ? _doraT("dora.overview.entities_pl", "entités") : _doraT("dora.overview.entities_sg", "entité")) + '</span>'
+            + '<button class="btn-add" data-click="doraAddCs" style="margin:0">+ ' + esc(_doraT("dora.overview.add_consolidation", "Ajouter une entité")) + '</button>'
             + '</div>'
             + _hint("consolidation", _doraT("dora.overview.hint_consolidation", "Entités juridiques composant le groupe consolidant des entités déclarantes (au sens IFRS 10 / CRR). Cette liste permet à l'autorité de recouper le RoI avec les comptes consolidés du groupe."));
         if (conso.length === 0) {
@@ -436,22 +431,22 @@
         }
         else {
             conso.forEach(function (r) {
-                var titleH = _esc(r.entity_name || r.id) + ' <code class="dora-overview-id">' + _esc(r.id) + '</code>';
-                b05Body += _cardOpen(titleH, "doraDelCs", '["' + _esc(r.id) + '"]');
+                var titleH = esc(r.entity_name || r.id) + ' <code class="dora-overview-id">' + esc(r.id) + '</code>';
+                b05Body += _cardOpen(titleH, "doraDelCs", '["' + esc(r.id) + '"]');
                 b05Body += _grid(''
-                    + _fld(_doraT("dora.overview.f.cs_name", "Nom de l'entité (B_01.02.0020)"), '<input value="' + _esc(r.entity_name || "") + '" data-input="doraPatchCs" data-args=\'["' + _esc(r.id) + '","entity_name"]\' data-pass-value>')
-                    + _fld(_doraT("dora.overview.f.lei", "LEI (B_01.02.0010)"), '<input value="' + _esc(r.entity_lei || "") + '" maxlength="20" data-input="doraPatchCs" data-args=\'["' + _esc(r.id) + '","entity_lei"]\' data-pass-value style="font-family:monospace;text-transform:uppercase">')
-                    + _fld(_doraT("dora.overview.f.country_cs", "Pays (B_01.02.0030)"), '<select data-change="doraPatchCs" data-args=\'["' + _esc(r.id) + '","country_iso2"]\' data-pass-value>' + _countryOptions(r.country_iso2) + '</select>'));
+                    + _fld(_doraT("dora.overview.f.cs_name", "Nom de l'entité (B_01.02.0020)"), '<input value="' + esc(r.entity_name || "") + '" data-input="doraPatchCs" data-args=\'["' + esc(r.id) + '","entity_name"]\' data-pass-value>')
+                    + _fld(_doraT("dora.overview.f.lei", "LEI (B_01.02.0010)"), '<input value="' + esc(r.entity_lei || "") + '" maxlength="20" data-input="doraPatchCs" data-args=\'["' + esc(r.id) + '","entity_lei"]\' data-pass-value style="font-family:monospace;text-transform:uppercase">')
+                    + _fld(_doraT("dora.overview.f.country_cs", "Pays (B_01.02.0030)"), '<select data-change="doraPatchCs" data-args=\'["' + esc(r.id) + '","country_iso2"]\' data-pass-value>' + _countryOptions(r.country_iso2) + '</select>'));
             });
         }
-        h += _section(_esc(_doraT("dora.overview.title_b05", "Périmètre de consolidation")) + ' ' + _helpBtn("consolidation"), b05Body);
+        h += _section(esc(_doraT("dora.overview.title_b05", "Périmètre de consolidation")) + ' ' + _helpBtn("consolidation"), b05Body);
         return h;
     }
     function _render(host) {
-        var helpTitle = _esc(_doraT("dora.help.toggle", "Afficher / masquer l'aide"));
+        var helpTitle = esc(_doraT("dora.help.toggle", "Afficher / masquer l'aide"));
         var h = '<div class="dora-overview-header">';
         h += '<h2 style="margin:0;display:flex;align-items:center;gap:8px">'
-            + _esc(_doraT("nav.dora", "DORA Register of Information"))
+            + esc(_doraT("nav.dora", "DORA Register of Information"))
             + '<button type="button" class="dora-help-btn" data-click="doraToggleHint" data-args=\'["intro"]\' title="' + helpTitle + '" aria-label="' + helpTitle + '">?</button>'
             + '</h2>';
         h += '</div>';
@@ -498,27 +493,27 @@
         // Header (skipped when embedded — vendor edit modal already shows name + RoI badge)
         if (!embedded) {
             h += '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">';
-            h += '<strong style="font-size:1.05em">' + _esc(v.name || v.id) + '</strong>';
+            h += '<strong style="font-size:1.05em">' + esc(v.name || v.id) + '</strong>';
             if (v.lei)
-                h += '<code style="font-size:0.78em;color:var(--text-muted)">' + _esc(v.lei) + '</code>';
+                h += '<code style="font-size:0.78em;color:var(--text-muted)">' + esc(v.lei) + '</code>';
             if (v.country_iso2)
-                h += '<span style="font-size:0.85em;color:var(--text-muted)">' + _esc(v.country_iso2) + '</span>';
+                h += '<span style="font-size:0.85em;color:var(--text-muted)">' + esc(v.country_iso2) + '</span>';
             if (roi.complete) {
-                h += '<span class="dora-badge" style="background:var(--ct-low-tint);color:var(--ct-low-ink)">' + _esc(_doraT("dora.bridge.roi_complete", "RoI complete")) + '</span>';
+                h += '<span class="dora-badge" style="background:var(--ct-low-tint);color:var(--ct-low-ink)">' + esc(_doraT("dora.bridge.roi_complete", "RoI complete")) + '</span>';
             }
             else {
-                h += '<a href="javascript:void(0)" data-click="doraOpenVendorRoi" data-args=\'["' + _esc(v.id) + '"]\' class="dora-badge" style="background:var(--ct-high-tint);color:var(--ct-high-ink);text-decoration:none" title="' + _esc(roi.missing.join(", ")) + '">⚠ ' + _esc(_doraT("dora.bridge.roi_incomplete", "RoI incomplete")) + '</a>';
+                h += '<a href="javascript:void(0)" data-click="doraOpenVendorRoi" data-args=\'["' + esc(v.id) + '"]\' class="dora-badge" style="background:var(--ct-high-tint);color:var(--ct-high-ink);text-decoration:none" title="' + esc(roi.missing.join(", ")) + '">⚠ ' + esc(_doraT("dora.bridge.roi_incomplete", "RoI incomplete")) + '</a>';
             }
             h += '<span style="flex:1"></span>';
-            h += '<button class="btn btn-secondary" data-click="doraOpenArrangementModal" data-args=\'[null,"' + _esc(v.id) + '",true]\' style="font-size:0.85em;padding:2px 8px">+ ' + _esc(_doraT("dora.byvendor.add_arrangement", "Add arrangement")) + '</button>';
-            h += '<a href="javascript:void(0)" data-click="doraOpenVendorRoi" data-args=\'["' + _esc(v.id) + '"]\' style="font-size:0.85em">' + _esc(_doraT("dora.byvendor.open_vendor", "Open vendor file")) + ' →</a>';
+            h += '<button class="btn btn-secondary" data-click="doraOpenArrangementModal" data-args=\'[null,"' + esc(v.id) + '",true]\' style="font-size:0.85em;padding:2px 8px">+ ' + esc(_doraT("dora.byvendor.add_arrangement", "Add arrangement")) + '</button>';
+            h += '<a href="javascript:void(0)" data-click="doraOpenVendorRoi" data-args=\'["' + esc(v.id) + '"]\' style="font-size:0.85em">' + esc(_doraT("dora.byvendor.open_vendor", "Open vendor file")) + ' →</a>';
             h += '</div>';
         }
         else {
             // Embedded: green add-arrangement button matching the app's
             // standard button style (.btn-add).
             h += '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">';
-            h += '<button class="btn-add" data-click="doraOpenArrangementModal" data-args=\'[null,"' + _esc(v.id) + '",true]\' style="margin-top:0">+ ' + _esc(_doraT("dora.byvendor.add_arrangement", "Add arrangement")) + '</button>';
+            h += '<button class="btn-add" data-click="doraOpenArrangementModal" data-args=\'[null,"' + esc(v.id) + '",true]\' style="margin-top:0">+ ' + esc(_doraT("dora.byvendor.add_arrangement", "Add arrangement")) + '</button>';
             h += '</div>';
         }
         // ── Arrangements section ───────────────────────────────────
@@ -527,9 +522,9 @@
         // bubble up to open the arrangement modal.
         var subsByArr = {};
         subs.forEach(function (s) { (subsByArr[s.arrangement_id] = subsByArr[s.arrangement_id] || []).push(s); });
-        h += '<div style="font-weight:600;font-size:0.95em;margin:6px 0 6px 0">' + _esc(_doraT("dora.byvendor.arrangements", "Arrangements")) + ' <span style="color:var(--text-muted);font-weight:400">(' + vArrs.length + (critN ? ', ' + critN + '★' : '') + ')</span></div>';
+        h += '<div style="font-weight:600;font-size:0.95em;margin:6px 0 6px 0">' + esc(_doraT("dora.byvendor.arrangements", "Arrangements")) + ' <span style="color:var(--text-muted);font-weight:400">(' + vArrs.length + (critN ? ', ' + critN + '★' : '') + ')</span></div>';
         if (vArrs.length === 0) {
-            h += '<div style="padding:12px;border:1px dashed var(--border);border-radius:6px;color:var(--text-muted);text-align:center;font-size:0.9em">' + _esc(_doraT("dora.byvendor.no_arrangements", "No arrangements yet — add one to track contractual ICT services for this vendor.")) + '</div>';
+            h += '<div style="padding:12px;border:1px dashed var(--border);border-radius:6px;color:var(--text-muted);text-align:center;font-size:0.9em">' + esc(_doraT("dora.byvendor.no_arrangements", "No arrangements yet — add one to track contractual ICT services for this vendor.")) + '</div>';
         }
         else {
             h += '<div style="display:flex;flex-direction:column;gap:8px">';
@@ -543,35 +538,35 @@
                 // delegate. Inner anchors/buttons use data-stop to keep their
                 // own behavior (sub modal, +Subcontractor) without triggering
                 // the parent arrangement edit.
-                h += '<div class="dora-arrangement-card dora-card-hover" data-click="doraOpenArrangementModal" data-args=\'["' + _esc(a.id) + '",null,true]\' style="border:1px solid var(--border);border-radius:6px;padding:8px 10px;background:var(--bg,#fff);cursor:pointer;transition:background 0.15s,border-color 0.15s">';
+                h += '<div class="dora-arrangement-card dora-card-hover" data-click="doraOpenArrangementModal" data-args=\'["' + esc(a.id) + '",null,true]\' style="border:1px solid var(--border);border-radius:6px;padding:8px 10px;background:var(--bg,#fff);cursor:pointer;transition:background 0.15s,border-color 0.15s">';
                 // Header row: reference + badges + sub action
                 h += '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">';
-                h += '<span style="font-weight:600">' + _esc(a.arrangement_reference || a.id) + '</span>';
+                h += '<span style="font-weight:600">' + esc(a.arrangement_reference || a.id) + '</span>';
                 if (a.arrangement_type)
-                    h += '<span style="font-size:0.78em;color:var(--text-muted);background:var(--bg-elev,#f3f3f5);padding:1px 6px;border-radius:3px">' + _esc(_doraCodeLabel("arrangement_type", a.arrangement_type)) + '</span>';
+                    h += '<span style="font-size:0.78em;color:var(--text-muted);background:var(--bg-elev,#f3f3f5);padding:1px 6px;border-radius:3px">' + esc(_doraCodeLabel("arrangement_type", a.arrangement_type)) + '</span>';
                 if (a.is_critical_function_support)
-                    h += '<span style="font-size:0.78em;background:var(--orange);color:#fff;padding:1px 6px;border-radius:3px">★ ' + _esc(_doraT("dora.byvendor.critical", "critical")) + '</span>';
+                    h += '<span style="font-size:0.78em;background:var(--orange);color:#fff;padding:1px 6px;border-radius:3px">★ ' + esc(_doraT("dora.byvendor.critical", "critical")) + '</span>';
                 h += '<span style="flex:1"></span>';
-                h += '<button class="btn-add" data-click="doraOpenSubcontractorModal" data-args=\'["' + _esc(a.id) + '",null]\' data-stop style="font-size:0.78em;padding:3px 10px;margin:0" title="' + _esc(_doraT("dora.byvendor.add_subcontractor", "Add subcontractor")) + '">+ ' + _esc(_doraT("dora.byvendor.subcontractor_short", "Subcontractor")) + '</button>';
+                h += '<button class="btn-add" data-click="doraOpenSubcontractorModal" data-args=\'["' + esc(a.id) + '",null]\' data-stop style="font-size:0.78em;padding:3px 10px;margin:0" title="' + esc(_doraT("dora.byvendor.add_subcontractor", "Add subcontractor")) + '">+ ' + esc(_doraT("dora.byvendor.subcontractor_short", "Subcontractor")) + '</button>';
                 h += '</div>';
                 // Body: functions + subcontractors
                 if (aFns.length || aSubs.length) {
                     h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px;font-size:0.85em">';
                     // Functions
-                    h += '<div><span style="color:var(--text-muted)">' + _esc(_doraT("dora.byvendor.functions", "Functions")) + ':</span> ';
+                    h += '<div><span style="color:var(--text-muted)">' + esc(_doraT("dora.byvendor.functions", "Functions")) + ':</span> ';
                     if (aFns.length === 0)
                         h += '<span style="color:var(--text-muted);font-style:italic">—</span>';
                     else
-                        h += aFns.map(function (name) { return '<span style="display:inline-block;padding:1px 6px;margin:1px;background:var(--bg-elev,#eef);border-radius:3px;font-size:0.95em">' + _esc(name) + '</span>'; }).join("");
+                        h += aFns.map(function (name) { return '<span style="display:inline-block;padding:1px 6px;margin:1px;background:var(--bg-elev,#eef);border-radius:3px;font-size:0.95em">' + esc(name) + '</span>'; }).join("");
                     h += '</div>';
                     // Subcontractors (each link stops propagation so it opens
                     // its own modal instead of the parent arrangement edit).
-                    h += '<div><span style="color:var(--text-muted)">' + _esc(_doraT("dora.byvendor.subcontractors", "Subcontractors")) + ' (' + aSubs.length + '):</span> ';
+                    h += '<div><span style="color:var(--text-muted)">' + esc(_doraT("dora.byvendor.subcontractors", "Subcontractors")) + ' (' + aSubs.length + '):</span> ';
                     if (aSubs.length === 0)
                         h += '<span style="color:var(--text-muted);font-style:italic">—</span>';
                     else {
                         h += aSubs.map(function (s) {
-                            return '<a href="javascript:void(0)" data-click="doraOpenSubcontractorModal" data-args=\'["' + _esc(s.arrangement_id) + '","' + _esc(s.id) + '"]\' data-stop style="margin-right:6px">' + _esc(s.name || s.id) + '<sub style="color:var(--text-muted);font-size:0.75em"> t' + (s.tier || 1) + '</sub></a>';
+                            return '<a href="javascript:void(0)" data-click="doraOpenSubcontractorModal" data-args=\'["' + esc(s.arrangement_id) + '","' + esc(s.id) + '"]\' data-stop style="margin-right:6px">' + esc(s.name || s.id) + '<sub style="color:var(--text-muted);font-size:0.75em"> t' + (s.tier || 1) + '</sub></a>';
                         }).join("");
                     }
                     h += '</div>';
@@ -583,15 +578,15 @@
         }
         // ── Sidebar summary: functions/signers across all arrangements ──
         h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;font-size:0.85em">';
-        h += '<div><div style="font-weight:600;color:var(--text-muted);margin-bottom:2px">' + _esc(_doraT("dora.byvendor.functions_supported", "Supported functions")) + ' (' + fnList.length + ')</div>';
+        h += '<div><div style="font-weight:600;color:var(--text-muted);margin-bottom:2px">' + esc(_doraT("dora.byvendor.functions_supported", "Supported functions")) + ' (' + fnList.length + ')</div>';
         if (fnList.length)
-            h += fnList.map(function (name) { return '<span style="display:inline-block;padding:1px 6px;margin:1px;background:var(--bg-elev,#eef);border-radius:3px">' + _esc(name) + '</span>'; }).join("");
+            h += fnList.map(function (name) { return '<span style="display:inline-block;padding:1px 6px;margin:1px;background:var(--bg-elev,#eef);border-radius:3px">' + esc(name) + '</span>'; }).join("");
         else
             h += '<span style="color:var(--text-muted)">—</span>';
         h += '</div>';
-        h += '<div><div style="font-weight:600;color:var(--text-muted);margin-bottom:2px">' + _esc(_doraT("dora.byvendor.signers", "Signers")) + ' (' + signers.length + ')</div>';
+        h += '<div><div style="font-weight:600;color:var(--text-muted);margin-bottom:2px">' + esc(_doraT("dora.byvendor.signers", "Signers")) + ' (' + signers.length + ')</div>';
         if (signers.length) {
-            h += signers.map(function (s) { return _esc(s.signer_name || "") + (s.signer_role ? ' <span style="color:var(--text-muted)">(' + _esc(s.signer_role) + ')</span>' : ''); }).join('<br>');
+            h += signers.map(function (s) { return esc(s.signer_name || "") + (s.signer_role ? ' <span style="color:var(--text-muted)">(' + esc(s.signer_role) + ')</span>' : ''); }).join('<br>');
         }
         else
             h += '<span style="color:var(--text-muted)">—</span>';
@@ -604,20 +599,20 @@
         var informal = Array.isArray(v.sub_contractors) ? v.sub_contractors.filter(function (x) { return x && String(x).trim() !== ""; }) : [];
         h += '<div style="margin-top:14px">';
         h += '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">';
-        h += '<div style="font-weight:600;font-size:0.95em">' + _esc(_doraT("dora.byvendor.informal_subs_title", "Informal subcontractors")) + ' <span style="color:var(--text-muted);font-weight:400">(' + informal.length + ')</span></div>';
+        h += '<div style="font-weight:600;font-size:0.95em">' + esc(_doraT("dora.byvendor.informal_subs_title", "Informal subcontractors")) + ' <span style="color:var(--text-muted);font-weight:400">(' + informal.length + ')</span></div>';
         h += '<span style="flex:1"></span>';
-        h += '<button class="btn-add" data-click="vendorOpenInformalSubModal" data-args=\'["' + _esc(v.id) + '"]\' style="margin-top:0">+ ' + _esc(_doraT("dora.byvendor.informal_subs_add", "Associate a subcontractor")) + '</button>';
+        h += '<button class="btn-add" data-click="vendorOpenInformalSubModal" data-args=\'["' + esc(v.id) + '"]\' style="margin-top:0">+ ' + esc(_doraT("dora.byvendor.informal_subs_add", "Associate a subcontractor")) + '</button>';
         h += '</div>';
-        h += '<p style="margin:0 0 6px;font-size:0.8em;color:var(--text-muted)">' + _esc(_doraT("dora.byvendor.informal_subs_hint", "Subcontractors declared outside the formal DORA arrangements (legacy free-text field).")) + '</p>';
+        h += '<p style="margin:0 0 6px;font-size:0.8em;color:var(--text-muted)">' + esc(_doraT("dora.byvendor.informal_subs_hint", "Subcontractors declared outside the formal DORA arrangements (legacy free-text field).")) + '</p>';
         if (informal.length === 0) {
-            h += '<div style="padding:10px;border:1px dashed var(--border);border-radius:6px;color:var(--text-muted);text-align:center;font-size:0.85em">' + _esc(_doraT("dora.byvendor.informal_subs_empty", "No informal subcontractor associated.")) + '</div>';
+            h += '<div style="padding:10px;border:1px dashed var(--border);border-radius:6px;color:var(--text-muted);text-align:center;font-size:0.85em">' + esc(_doraT("dora.byvendor.informal_subs_empty", "No informal subcontractor associated.")) + '</div>';
         }
         else {
             h += '<div style="display:flex;flex-wrap:wrap;gap:6px">';
             informal.forEach(function (name, idx) {
                 h += '<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 4px 3px 10px;background:var(--bg-elev,#eef);border-radius:14px;font-size:0.85em">';
-                h += _esc(String(name));
-                h += '<button class="btn-del" data-click="vendorRemoveInformalSub" data-args=\'["' + _esc(v.id) + '",' + idx + ']\' title="' + _esc(_doraT("dora.byvendor.informal_subs_remove", "Remove")) + '">' + _icon("trash", 13) + '</button>';
+                h += esc(String(name));
+                h += '<button class="btn-del" data-click="vendorRemoveInformalSub" data-args=\'["' + esc(v.id) + '",' + idx + ']\' title="' + esc(_doraT("dora.byvendor.informal_subs_remove", "Remove")) + '">' + _icon("trash", 13) + '</button>';
                 h += '</span>';
             });
             h += '</div>';
@@ -987,10 +982,10 @@
             var label = vendor ? (vendor.legal_name_latin || vendor.name || vendor.id) : "—";
             var leiTxt = (vendor && vendor.lei) ? vendor.lei : "";
             return '<div style="padding:8px 10px;background:var(--bg-elev,#f3f3f5);border:1px solid var(--border);border-radius:4px;font-size:0.9em">'
-                + '<strong>' + _esc(label) + '</strong>'
-                + (leiTxt ? ' <span style="color:var(--text-muted);font-family:monospace;margin-left:6px">' + _esc(leiTxt) + '</span>' : '')
+                + '<strong>' + esc(label) + '</strong>'
+                + (leiTxt ? ' <span style="color:var(--text-muted);font-family:monospace;margin-left:6px">' + esc(leiTxt) + '</span>' : '')
                 + '<div style="color:var(--text-muted);margin-top:4px;font-size:0.85em">'
-                + _esc(_doraT("dora.modal.signer_self_hint", "On save, every other signer attached to this arrangement will be removed and replaced by a single signer mirroring this vendor."))
+                + esc(_doraT("dora.modal.signer_self_hint", "On save, every other signer attached to this arrangement will be removed and replaced by a single signer mirroring this vendor."))
                 + '</div></div>';
         }
         // mode === "other"
@@ -998,28 +993,28 @@
         var h = '';
         if (!arrangementId || !arr) {
             h += '<div style="color:var(--text-muted);font-size:0.85em;padding:6px 0">'
-                + _esc(_doraT("dora.modal.signer_save_first", "Save the arrangement first to attach signers."))
+                + esc(_doraT("dora.modal.signer_save_first", "Save the arrangement first to attach signers."))
                 + '</div>';
             return h;
         }
         if (rows.length === 0) {
             h += '<div style="color:var(--text-muted);font-size:0.85em;padding:4px 0 8px">'
-                + _esc(_doraT("dora.modal.signer_none", "No signer attached yet."))
+                + esc(_doraT("dora.modal.signer_none", "No signer attached yet."))
                 + '</div>';
         }
         else {
             h += '<table class="ct-table" style="width:100%;font-size:0.9em;margin-bottom:8px"><thead><tr>'
-                + '<th style="width:170px">' + _esc(_doraT("dora.signer.lei", "LEI (B_03.03.0020)")) + '</th>'
-                + '<th>' + _esc(_doraT("dora.signer.name", "Name")) + '</th>'
-                + '<th style="width:170px">' + _esc(_doraT("dora.signer.role", "Role")) + '</th>'
+                + '<th style="width:170px">' + esc(_doraT("dora.signer.lei", "LEI (B_03.03.0020)")) + '</th>'
+                + '<th>' + esc(_doraT("dora.signer.name", "Name")) + '</th>'
+                + '<th style="width:170px">' + esc(_doraT("dora.signer.role", "Role")) + '</th>'
                 + '<th style="width:36px"></th></tr></thead><tbody>';
             rows.forEach(function (r) {
                 var cid = r.arrangement_id + "/" + r.id;
                 h += '<tr>'
-                    + '<td><input value="' + _esc(r.signer_lei || "") + '" data-input="doraPatchArrSigner" data-args=\'["' + _esc(cid) + '","signer_lei"]\' data-pass-value style="width:100%;font-family:monospace"></td>'
-                    + '<td><input value="' + _esc(r.signer_name || "") + '" data-input="doraPatchArrSigner" data-args=\'["' + _esc(cid) + '","signer_name"]\' data-pass-value style="width:100%"></td>'
-                    + '<td><select data-change="doraPatchArrSigner" data-args=\'["' + _esc(cid) + '","signer_role"]\' data-pass-value style="width:100%">' + _codelistOptions("signer_role", r.signer_role) + '</select></td>'
-                    + '<td><button type="button" class="btn-del" data-click="doraRemoveSignerFromArr" data-args=\'["' + _esc(cid) + '"]\' title="' + _esc(_doraT("btn_delete", "Delete")) + '">' + _icon("trash", 13) + '</button></td>'
+                    + '<td><input value="' + esc(r.signer_lei || "") + '" data-input="doraPatchArrSigner" data-args=\'["' + esc(cid) + '","signer_lei"]\' data-pass-value style="width:100%;font-family:monospace"></td>'
+                    + '<td><input value="' + esc(r.signer_name || "") + '" data-input="doraPatchArrSigner" data-args=\'["' + esc(cid) + '","signer_name"]\' data-pass-value style="width:100%"></td>'
+                    + '<td><select data-change="doraPatchArrSigner" data-args=\'["' + esc(cid) + '","signer_role"]\' data-pass-value style="width:100%">' + _codelistOptions("signer_role", r.signer_role) + '</select></td>'
+                    + '<td><button type="button" class="btn-del" data-click="doraRemoveSignerFromArr" data-args=\'["' + esc(cid) + '"]\' title="' + esc(_doraT("btn_delete", "Delete")) + '">' + _icon("trash", 13) + '</button></td>'
                     + '</tr>';
             });
             h += '</tbody></table>';
@@ -1028,16 +1023,16 @@
         var distinct = vendorId ? _doraDistinctSignersForVendor(vendorId, arrangementId) : [];
         h += '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">';
         if (distinct.length > 0) {
-            var opts = '<option value="">' + _esc(_doraT("dora.modal.signer_pick_ph", "Pick from this vendor's other signers…")) + '</option>';
+            var opts = '<option value="">' + esc(_doraT("dora.modal.signer_pick_ph", "Pick from this vendor's other signers…")) + '</option>';
             distinct.forEach(function (d) {
                 var key = ((d.signer_lei || "").trim().toUpperCase()) + "|" + ((d.signer_name || "").trim().toLowerCase());
                 var label = d.signer_name + (d.signer_lei ? " — " + d.signer_lei : "");
-                opts += '<option value="' + _esc(key) + '">' + _esc(label) + '</option>';
+                opts += '<option value="' + esc(key) + '">' + esc(label) + '</option>';
             });
             h += '<select id="arr-signer-pick" style="flex:1;min-width:220px">' + opts + '</select>';
-            h += '<button type="button" class="btn btn-secondary" data-click="doraAddSignerByExisting" data-args=\'["' + _esc(arrangementId) + '"]\'>+ ' + _esc(_doraT("dora.modal.signer_pick_add", "Add picked")) + '</button>';
+            h += '<button type="button" class="btn btn-secondary" data-click="doraAddSignerByExisting" data-args=\'["' + esc(arrangementId) + '"]\'>+ ' + esc(_doraT("dora.modal.signer_pick_add", "Add picked")) + '</button>';
         }
-        h += '<button type="button" class="btn-add" data-click="doraOpenSignerModalForArr" data-args=\'["' + _esc(arrangementId) + '"]\'>+ ' + _esc(_doraT("dora.modal.signer_new", "New signer")) + '</button>';
+        h += '<button type="button" class="btn-add" data-click="doraOpenSignerModalForArr" data-args=\'["' + esc(arrangementId) + '"]\'>+ ' + esc(_doraT("dora.modal.signer_new", "New signer")) + '</button>';
         h += '</div>';
         return h;
     }
@@ -1091,9 +1086,9 @@
             return null;
         var bodyHtml = ''
             + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;font-size:0.9em">'
-            + '  <label style="grid-column:span 2">' + _esc(_doraT("dora.signer.name", "Name")) + ' *<input id="sig-name" required style="width:100%"></label>'
-            + '  <label>' + _esc(_doraT("dora.signer.lei", "LEI (B_03.03.0020)")) + '<div style="display:flex;align-items:center;gap:2px"><input id="sig-lei" maxlength="20" style="flex:1;font-family:monospace;text-transform:uppercase">' + _gleifTriggerHtml("sig-lei") + '</div></label>'
-            + '  <label>' + _esc(_doraT("dora.signer.role", "Role")) + '<select id="sig-role" style="width:100%">' + _codelistOptions("signer_role", "") + '</select></label>'
+            + '  <label style="grid-column:span 2">' + esc(_doraT("dora.signer.name", "Name")) + ' *<input id="sig-name" required style="width:100%"></label>'
+            + '  <label>' + esc(_doraT("dora.signer.lei", "LEI (B_03.03.0020)")) + '<div style="display:flex;align-items:center;gap:2px"><input id="sig-lei" maxlength="20" style="flex:1;font-family:monospace;text-transform:uppercase">' + _gleifTriggerHtml("sig-lei") + '</div></label>'
+            + '  <label>' + esc(_doraT("dora.signer.role", "Role")) + '<select id="sig-role" style="width:100%">' + _codelistOptions("signer_role", "") + '</select></label>'
             + '</div>';
         var buttons = [
             { id: "cancel", label: _doraT("btn_cancel", "Cancel") },
@@ -1157,14 +1152,14 @@
         subs.forEach(function (s) {
             var subLinks = linksBySub[s.id] || [];
             h += '<tr>';
-            h += '<td>' + _esc(s.id) + '</td>';
-            h += '<td><input value="' + _esc(s.name || "") + '" data-input="doraPatchSub" data-args=\'["' + _esc(s.id) + '","name"]\' data-pass-value></td>';
-            h += '<td><input value="' + _esc(s.lei || "") + '" data-input="doraPatchSub" data-args=\'["' + _esc(s.id) + '","lei"]\' data-pass-value style="width:160px"> '
+            h += '<td>' + esc(s.id) + '</td>';
+            h += '<td><input value="' + esc(s.name || "") + '" data-input="doraPatchSub" data-args=\'["' + esc(s.id) + '","name"]\' data-pass-value></td>';
+            h += '<td><input value="' + esc(s.lei || "") + '" data-input="doraPatchSub" data-args=\'["' + esc(s.id) + '","lei"]\' data-pass-value style="width:160px"> '
                 + (window.DoraData.gleifTriggerHtml ? window.DoraData.gleifTriggerHtml("sub-row-lei-" + s.id, function (rec) {
                     // GLEIF picker callback: updates the input via data-click handler.
                 }) : '')
                 + '</td>';
-            h += '<td><input value="' + _esc(s.country_iso2 || "") + '" data-input="doraPatchSub" data-args=\'["' + _esc(s.id) + '","country_iso2"]\' data-pass-value style="width:50px;text-transform:uppercase"></td>';
+            h += '<td><input value="' + esc(s.country_iso2 || "") + '" data-input="doraPatchSub" data-args=\'["' + esc(s.id) + '","country_iso2"]\' data-pass-value style="width:50px;text-transform:uppercase"></td>';
             h += '<td>';
             if (subLinks.length === 0) {
                 h += '<span style="color:var(--text-muted)">' + _doraT("dora.subs.no_links", "—") + '</span>';
@@ -1174,14 +1169,14 @@
                     var a = arrById[l.arrangement_id];
                     var v = a ? vById[a.vendor_id] : null;
                     var label = (a && a.arrangement_reference) ? a.arrangement_reference : l.arrangement_id;
-                    var vendorBadge = v ? (' <span style="color:var(--text-muted);font-size:0.85em">(' + _esc(v.name) + ')</span>') : '';
-                    h += '<a href="javascript:void(0)" data-click="doraOpenArrangementModal" data-args=\'["' + _esc(l.arrangement_id) + '"]\' style="margin-right:8px;display:inline-block">'
-                        + _esc(label) + '<sub style="color:var(--text-muted);font-size:0.75em"> t' + (l.tier || 1) + '</sub>' + vendorBadge + '</a>';
+                    var vendorBadge = v ? (' <span style="color:var(--text-muted);font-size:0.85em">(' + esc(v.name) + ')</span>') : '';
+                    h += '<a href="javascript:void(0)" data-click="doraOpenArrangementModal" data-args=\'["' + esc(l.arrangement_id) + '"]\' style="margin-right:8px;display:inline-block">'
+                        + esc(label) + '<sub style="color:var(--text-muted);font-size:0.75em"> t' + (l.tier || 1) + '</sub>' + vendorBadge + '</a>';
                 });
             }
             h += '</td>';
-            h += '<td><button class="btn btn-secondary" data-click="doraOpenSubIdentityModal" data-args=\'["' + _esc(s.id) + '"]\' title="' + _esc(_doraT("dora.byvendor.edit", "Edit")) + '">✎</button></td>';
-            h += '<td><button class="btn-del" data-click="doraDelSub" data-args=\'["' + _esc(s.id) + '"]\' title="' + _esc(_doraT("dora.subs.delete_warn", "Delete subcontractor (also unlinks from all arrangements)")) + '">' + _icon("trash", 13) + '</button></td>';
+            h += '<td><button class="btn btn-secondary" data-click="doraOpenSubIdentityModal" data-args=\'["' + esc(s.id) + '"]\' title="' + esc(_doraT("dora.byvendor.edit", "Edit")) + '">✎</button></td>';
+            h += '<td><button class="btn-del" data-click="doraDelSub" data-args=\'["' + esc(s.id) + '"]\' title="' + esc(_doraT("dora.subs.delete_warn", "Delete subcontractor (also unlinks from all arrangements)")) + '">' + _icon("trash", 13) + '</button></td>';
             h += '</tr>';
         });
         h += '</tbody></table>';
@@ -1329,22 +1324,22 @@
             var currencies = (_doraCodelists && _doraCodelists.currency_iso4217) || ["EUR", "USD", "GBP"];
             var rp = _doraDefaultReportingPeriod();
             var body = '<p class="panel-desc" style="margin:0 0 12px">'
-                + _esc(_doraT("dora.export.modal_intro", "Génère un classeur XLSX au format EBA RoI ITS (un onglet par table B_xx). La période de reporting est enregistrée sur chaque entité déclarante avant export."))
+                + esc(_doraT("dora.export.modal_intro", "Génère un classeur XLSX au format EBA RoI ITS (un onglet par table B_xx). La période de reporting est enregistrée sur chaque entité déclarante avant export."))
                 + '</p>';
             body += '<div class="form-row">'
-                + '<label>' + _esc(_doraT("dora.export.reporting_period", "Période de reporting")) + '</label>'
-                + '<input id="dora-export-rp" value="' + _esc(rp) + '" placeholder="' + new Date().getFullYear() + '-12-31" maxlength="10" style="width:140px;font-family:monospace">'
+                + '<label>' + esc(_doraT("dora.export.reporting_period", "Période de reporting")) + '</label>'
+                + '<input id="dora-export-rp" value="' + esc(rp) + '" placeholder="' + new Date().getFullYear() + '-12-31" maxlength="10" style="width:140px;font-family:monospace">'
                 + '</div>';
             body += '<div class="form-row">'
-                + '<label>' + _esc(_doraT("dora.export.target_currency", "Devise cible")) + '</label>'
+                + '<label>' + esc(_doraT("dora.export.target_currency", "Devise cible")) + '</label>'
                 + '<select id="dora-export-cur" style="width:120px">';
             currencies.forEach(function (c) {
                 var code = c && c.code !== undefined ? c.code : c;
-                body += '<option value="' + _esc(code) + '"' + (_doraExportCurrency === code ? " selected" : "") + '>' + _esc(code) + '</option>';
+                body += '<option value="' + esc(code) + '"' + (_doraExportCurrency === code ? " selected" : "") + '>' + esc(code) + '</option>';
             });
             body += '</select></div>';
             body += '<p style="margin-top:10px;font-size:0.85em;color:var(--text-muted)">'
-                + _esc(_doraT("dora.export.note", "Les accords contractuels en devises étrangères sont conservés dans leur devise d'origine — une colonne normalisée fournit la conversion vers la devise cible."))
+                + esc(_doraT("dora.export.note", "Les accords contractuels en devises étrangères sont conservés dans leur devise d'origine — une colonne normalisée fournit la conversion vers la devise cible."))
                 + '</p>';
             window.ct_modal.open({
                 title: _doraT("dora.export.modal_title", "Export RoI DORA"),
@@ -1491,13 +1486,13 @@
         var ids = [];
         dd.querySelectorAll("input:checked").forEach(function (c) { ids.push(c.value); });
         if (ids.length === 0) {
-            tagsEl.innerHTML = '<span class="text-muted fs-xs">' + _esc(emptyText || "—") + '</span>';
+            tagsEl.innerHTML = '<span class="text-muted fs-xs">' + esc(emptyText || "—") + '</span>';
             return;
         }
         var html = "";
         ids.forEach(function (id) {
             var m = items.find(function (x) { return x.id === id; });
-            var disp = m ? _esc(id + " - " + m.label) : _esc(id);
+            var disp = m ? esc(id + " - " + m.label) : esc(id);
             html += '<span class="ref-tag">' + disp + '<span class="ref-tag-x" data-click="ctRefRemove" data-args=\'' + _da(uid, id) + '\' data-stop>x</span></span>';
         });
         tagsEl.innerHTML = html;
@@ -1509,13 +1504,13 @@
         opts = opts || {};
         if (typeof window.ctRefRegister !== "function" || typeof window.ctRefSelect !== "function") {
             // Fallback: native <select> (degraded mode if ct_refselect not loaded).
-            var html = '<select id="' + _esc(uid) + (opts.multi ? '" multiple' : '"') + '>';
+            var html = '<select id="' + esc(uid) + (opts.multi ? '" multiple' : '"') + '>';
             if (!opts.multi)
                 html += '<option value=""></option>';
             var picks = (current || "").split(",").map(function (s) { return s.trim(); });
             items.forEach(function (it) {
                 var sel = (opts.multi ? picks.indexOf(it.id) >= 0 : current === it.id) ? " selected" : "";
-                html += '<option value="' + _esc(it.id) + '"' + sel + '>' + _esc(it.label) + '</option>';
+                html += '<option value="' + esc(it.id) + '"' + sel + '>' + esc(it.label) + '</option>';
             });
             html += '</select>';
             return html;
@@ -1585,16 +1580,16 @@
         }
         var bodyHtml = ''
             + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;font-size:0.9em">'
-            + _fld(_doraT("dora.fn.code", "Function identifier (B_06.01.0010)"), '<input id="fn-code" value="' + _esc(f.code || "") + '" maxlength="50" pattern="[A-Za-z0-9_\\-]{1,50}" placeholder="' + _esc(_doraT("dora.fn.code_placeholder", "Free identifier, e.g. F-PAY-001")) + '" style="width:100%">', 2)
-            + _fld(_doraT("dora.fn.name", "Function name (B_06.01.0030)"), '<input id="fn-name" value="' + _esc(f.name || "") + '" required style="width:100%">', 2)
-            + _fld(_doraT("dora.fn.description", "Description"), '<textarea id="fn-desc" rows="2" style="width:100%">' + _esc(f.description || "") + '</textarea>', 2)
+            + _fld(_doraT("dora.fn.code", "Function identifier (B_06.01.0010)"), '<input id="fn-code" value="' + esc(f.code || "") + '" maxlength="50" pattern="[A-Za-z0-9_\\-]{1,50}" placeholder="' + esc(_doraT("dora.fn.code_placeholder", "Free identifier, e.g. F-PAY-001")) + '" style="width:100%">', 2)
+            + _fld(_doraT("dora.fn.name", "Function name (B_06.01.0030)"), '<input id="fn-name" value="' + esc(f.name || "") + '" required style="width:100%">', 2)
+            + _fld(_doraT("dora.fn.description", "Description"), '<textarea id="fn-desc" rows="2" style="width:100%">' + esc(f.description || "") + '</textarea>', 2)
             + '<label style="grid-column:span 2;display:inline-flex;align-items:center;gap:6px"><input type="checkbox" id="fn-crit"' + (f.is_critical_or_important ? " checked" : "") + '> ' + _doraT("dora.fn.critical", "Critical or important function (B_06.01.0050)") + '</label>'
-            + _fld(_doraT("dora.fn.crit_rationale", "Reasons for criticality or importance (B_06.01.0060)"), '<textarea id="fn-crit-rat" rows="2" style="width:100%">' + _esc(f.criticality_rationale || "") + '</textarea>', 2)
+            + _fld(_doraT("dora.fn.crit_rationale", "Reasons for criticality or importance (B_06.01.0060)"), '<textarea id="fn-crit-rat" rows="2" style="width:100%">' + esc(f.criticality_rationale || "") + '</textarea>', 2)
             + _fld(_doraT("dora.fn.business_line", "Licenced activity / Business line (B_06.01.0020)"), _doraRefSelect("fn-bl", f.business_line, _doraCodeItems("licenced_activity")))
-            + _fld(_doraT("dora.fn.rto", "RTO hours (B_06.01.0080)"), '<input id="fn-rto" type="number" step="0.5" value="' + _esc(f.recovery_time_objective_h != null ? f.recovery_time_objective_h : "") + '" style="width:100%">')
-            + _fld(_doraT("dora.fn.rpo", "RPO hours (B_06.01.0090)"), '<input id="fn-rpo" type="number" step="0.5" value="' + _esc(f.recovery_point_objective_h != null ? f.recovery_point_objective_h : "") + '" style="width:100%">')
+            + _fld(_doraT("dora.fn.rto", "RTO hours (B_06.01.0080)"), '<input id="fn-rto" type="number" step="0.5" value="' + esc(f.recovery_time_objective_h != null ? f.recovery_time_objective_h : "") + '" style="width:100%">')
+            + _fld(_doraT("dora.fn.rpo", "RPO hours (B_06.01.0090)"), '<input id="fn-rpo" type="number" step="0.5" value="' + esc(f.recovery_point_objective_h != null ? f.recovery_point_objective_h : "") + '" style="width:100%">')
             + _fld(_doraT("dora.fn.impact_tolerance", "Impact of discontinuing the function (B_06.01.0100)"), _doraRefSelect("fn-impact", f.impact_tolerance_description, _doraCodeItems("impact_level")), 2)
-            + _fld(_doraT("dora.fn.last_assessment", "Date of last assessment (B_06.01.0070)"), '<input id="fn-last-assess" type="date" value="' + _esc(f.last_assessment_date || "") + '" style="width:100%">')
+            + _fld(_doraT("dora.fn.last_assessment", "Date of last assessment (B_06.01.0070)"), '<input id="fn-last-assess" type="date" value="' + esc(f.last_assessment_date || "") + '" style="width:100%">')
             + '</div>';
         function _v(id) { var el = document.getElementById(id); return el ? el.value : ""; }
         function _b(id) { var el = document.getElementById(id); return el ? !!el.checked : false; }
@@ -1795,7 +1790,7 @@
         var rfeIdsCsv = (a.rfe_ids || []).join(",");
         function _section(titleKey, fallback, gridHtml) {
             return '<fieldset style="border:1px solid var(--border);border-radius:6px;padding:8px 12px 12px;margin:0 0 12px">'
-                + '<legend style="padding:0 6px;font-weight:600;font-size:0.9em;color:var(--text-muted)">' + _esc(_doraT(titleKey, fallback)) + '</legend>'
+                + '<legend style="padding:0 6px;font-weight:600;font-size:0.9em;color:var(--text-muted)">' + esc(_doraT(titleKey, fallback)) + '</legend>'
                 + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;font-size:0.9em">'
                 + gridHtml
                 + '</div></fieldset>';
@@ -1805,18 +1800,18 @@
         // require it (R: only kept for not_substitutable / highly_complex).
         // ── Section 1: Identification ──
         var sectionIdentity = ''
-            + '<div><div style="margin-bottom:2px">' + _doraT("dora.modal.arr_ref", "Reference (B_02.01.0010)") + '</div><input id="arr-ref" value="' + _esc(a.arrangement_reference || "") + '" required style="width:100%"></div>'
+            + '<div><div style="margin-bottom:2px">' + _doraT("dora.modal.arr_ref", "Reference (B_02.01.0010)") + '</div><input id="arr-ref" value="' + esc(a.arrangement_reference || "") + '" required style="width:100%"></div>'
             + _fld(_doraT("dora.modal.arr_vendor", "Vendor / TPSP (B_02.02.0030)"), vendorLocked
-                ? '<input type="hidden" id="arr-vendor-locked" value="' + _esc(a.vendor_id) + '"><div style="padding:6px 8px;background:var(--bg-elev,#f3f3f5);border:1px solid var(--border);border-radius:4px;color:var(--text-muted)" title="' + _esc(_doraT("dora.modal.vendor_locked", "Vendor cannot be changed from a vendor context")) + '">' + _esc((vendorObjLocked && vendorObjLocked.name) || a.vendor_id) + '</div>'
+                ? '<input type="hidden" id="arr-vendor-locked" value="' + esc(a.vendor_id) + '"><div style="padding:6px 8px;background:var(--bg-elev,#f3f3f5);border:1px solid var(--border);border-radius:4px;color:var(--text-muted)" title="' + esc(_doraT("dora.modal.vendor_locked", "Vendor cannot be changed from a vendor context")) + '">' + esc((vendorObjLocked && vendorObjLocked.name) || a.vendor_id) + '</div>'
                 : _doraRefSelect("arr-vendor", a.vendor_id, _doraVendorItems()))
             + _fld(_doraT("dora.modal.arr_type", "Type of contractual arrangement (B_02.01.0020)"), _doraRefSelect("arr-type", a.arrangement_type, _doraCodeItems("arrangement_type")), 2);
         // ── Section 2: Scope (functions + nature) ──
         var sectionScope = ''
             + _fld(_doraT("dora.modal.arr_function", "Supported functions (B_02.02.0050)")
-                + ' <button type="button" class="btn-add" data-click="doraOpenFunctionModalForArr" data-args=\'[null]\' style="font-size:0.8em;padding:1px 8px;margin-left:6px">+ ' + _esc(_doraT("dora.modal.arr_function_create", "New function")) + '</button>', '<div id="arr-fn-slot">' + _doraRefSelect("arr-fn", (a.function_ids || []).join(","), _doraFunctionItems(), { multi: true }) + '</div>'
-                + '<div style="margin-top:4px;font-size:0.8em;color:var(--text-muted)">' + _esc(_doraT("dora.modal.arr_function_hint", "Pick existing functions or click + New function to declare one with full ITS fields (RTO, RPO, business line…).")) + '</div>', 2)
+                + ' <button type="button" class="btn-add" data-click="doraOpenFunctionModalForArr" data-args=\'[null]\' style="font-size:0.8em;padding:1px 8px;margin-left:6px">+ ' + esc(_doraT("dora.modal.arr_function_create", "New function")) + '</button>', '<div id="arr-fn-slot">' + _doraRefSelect("arr-fn", (a.function_ids || []).join(","), _doraFunctionItems(), { multi: true }) + '</div>'
+                + '<div style="margin-top:4px;font-size:0.8em;color:var(--text-muted)">' + esc(_doraT("dora.modal.arr_function_hint", "Pick existing functions or click + New function to declare one with full ITS fields (RTO, RPO, business line…).")) + '</div>', 2)
             + _fld(_doraT("dora.modal.arr_services", "Type of ICT services (B_02.02.0060)"), _doraRefSelect("arr-services", (a.service_codes || []).join(","), _doraCodeItems("ict_service_type"), { multi: true })
-                + '<div style="margin-top:4px;font-size:0.8em;color:var(--text-muted)">' + _esc(_doraT("dora.modal.arr_services_hint", "Pick one or more ICT service types — one B_02.02 row will be emitted per service.")) + '</div>', 2)
+                + '<div style="margin-top:4px;font-size:0.8em;color:var(--text-muted)">' + esc(_doraT("dora.modal.arr_services_hint", "Pick one or more ICT service types — one B_02.02 row will be emitted per service.")) + '</div>', 2)
             + _fld(_doraT("dora.modal.arr_rfes", "Reporting financial entities (B_02.02.0020)"), _doraRefSelect("arr-rfes", rfeIdsCsv, _doraRfeItems(), { multi: true, hideId: true }), 2);
         // ── Section 3: Lifecycle ──
         // B_02.01.0030 parent arrangement picker — only meaningful when this
@@ -1826,21 +1821,21 @@
         var _parentOpts = '<option value="">—</option>' + _otherArrs.map(function (p) {
             var sel = (a.parent_arrangement_id === p.id) ? " selected" : "";
             var lab = (p.arrangement_reference || p.id);
-            return '<option value="' + _esc(p.id) + '"' + sel + '>' + _esc(lab) + '</option>';
+            return '<option value="' + esc(p.id) + '"' + sel + '>' + esc(lab) + '</option>';
         }).join("");
         var sectionLifecycle = ''
-            + '<div><div style="margin-bottom:2px">' + _doraT("dora.modal.arr_start", "Start date (B_02.02.0070)") + '</div><input id="arr-start" type="date" value="' + _esc(a.start_date || "") + '" style="width:100%"></div>'
-            + '<div><div style="margin-bottom:2px">' + _doraT("dora.modal.arr_end", "End date (B_02.02.0080)") + '</div><input id="arr-end" type="date" value="' + _esc(a.end_date || "") + '" style="width:100%"></div>'
-            + '<div><div style="margin-bottom:2px">' + _doraT("dora.modal.arr_notice", "FE notice period in days (B_02.02.0100)") + '</div><input id="arr-notice" type="number" value="' + _esc(a.notice_period_days != null ? a.notice_period_days : "") + '" style="width:100%"></div>'
-            + '<div><div style="margin-bottom:2px">' + _doraT("dora.modal.arr_notice_tpsp", "TPSP notice period in days (B_02.02.0110)") + '</div><input id="arr-notice-tpsp" type="number" value="' + _esc(a.notice_period_tpsp_days != null ? a.notice_period_tpsp_days : "") + '" style="width:100%"></div>'
-            + '<div><div style="margin-bottom:2px">' + _doraT("dora.modal.arr_last_audit", "Last audit (B_07.01.0070)") + '</div><input id="arr-audit" type="date" value="' + _esc(a.last_audit_date || "") + '" style="width:100%"></div>'
+            + '<div><div style="margin-bottom:2px">' + _doraT("dora.modal.arr_start", "Start date (B_02.02.0070)") + '</div><input id="arr-start" type="date" value="' + esc(a.start_date || "") + '" style="width:100%"></div>'
+            + '<div><div style="margin-bottom:2px">' + _doraT("dora.modal.arr_end", "End date (B_02.02.0080)") + '</div><input id="arr-end" type="date" value="' + esc(a.end_date || "") + '" style="width:100%"></div>'
+            + '<div><div style="margin-bottom:2px">' + _doraT("dora.modal.arr_notice", "FE notice period in days (B_02.02.0100)") + '</div><input id="arr-notice" type="number" value="' + esc(a.notice_period_days != null ? a.notice_period_days : "") + '" style="width:100%"></div>'
+            + '<div><div style="margin-bottom:2px">' + _doraT("dora.modal.arr_notice_tpsp", "TPSP notice period in days (B_02.02.0110)") + '</div><input id="arr-notice-tpsp" type="number" value="' + esc(a.notice_period_tpsp_days != null ? a.notice_period_tpsp_days : "") + '" style="width:100%"></div>'
+            + '<div><div style="margin-bottom:2px">' + _doraT("dora.modal.arr_last_audit", "Last audit (B_07.01.0070)") + '</div><input id="arr-audit" type="date" value="' + esc(a.last_audit_date || "") + '" style="width:100%"></div>'
             + _fld(_doraT("dora.modal.arr_termination", "Termination reason (B_02.02.0090)"), _doraRefSelect("arr-term", a.termination_reason, _doraCodeItems("termination_reason")))
             + _fld(_doraT("dora.modal.arr_parent", "Overarching arrangement (B_02.01.0030)"), '<select id="arr-parent" style="width:100%">' + _parentOpts + '</select>', 2)
             + _fld(_doraT("dora.modal.arr_gov", "Governing law country (B_02.02.0120)"), _doraRefSelect("arr-gov", a.governing_law_country, _doraCodeItems("country_iso3166_1")))
             + _fld(_doraT("dora.modal.arr_juris", "Country of provision of the ICT services (B_02.02.0130)"), _doraRefSelect("arr-juris", a.jurisdiction_country, _doraCodeItems("country_iso3166_1")));
         // ── Section 4: Cost & data ──
         var sectionCostData = ''
-            + '<div><div style="margin-bottom:2px">' + _doraT("dora.modal.arr_cost", "Annual cost (B_02.01.0050)") + '</div><input id="arr-cost" type="number" step="0.01" value="' + _esc(a.annual_cost_amount != null ? a.annual_cost_amount : "") + '" style="width:100%"></div>'
+            + '<div><div style="margin-bottom:2px">' + _doraT("dora.modal.arr_cost", "Annual cost (B_02.01.0050)") + '</div><input id="arr-cost" type="number" step="0.01" value="' + esc(a.annual_cost_amount != null ? a.annual_cost_amount : "") + '" style="width:100%"></div>'
             + _fld(_doraT("dora.modal.arr_currency", "Currency (B_02.01.0040)"), _doraRefSelect("arr-currency", a.currency || "EUR", _doraCurrencyItems()))
             + _fld(_doraT("dora.modal.arr_reliance", "Level of reliance (B_02.02.0180)"), _doraRefSelect("arr-reliance", a.reliance_level, _doraCodeItems("reliance_level")))
             + _fld(_doraT("dora.modal.arr_sensitivity", "Data sensitivity (B_02.02.0170)"), _doraRefSelect("arr-sens", a.data_sensitivity, _doraCodeItems("data_sensitivity")))
@@ -1853,10 +1848,10 @@
             + '<div id="arr-sub-rsn-slot" style="grid-column:span 2">'
             + '<div style="margin-bottom:2px">' + _doraT("dora.modal.arr_substitutability_reason", "Reason if non/hard substitutable (B_07.01.0060)") + '</div>'
             + _doraRefSelect("arr-sub-rsn", a.substitutability_reason, _doraCodeItems("substitutability_reason"))
-            + '<div style="margin-top:4px;font-size:0.8em;color:var(--text-muted)">' + _esc(_doraT("dora.modal.arr_substitutability_reason_hint", "Exporté uniquement si le niveau ci-dessus est « non substituable » ou « hautement complexe ».")) + '</div>'
+            + '<div style="margin-top:4px;font-size:0.8em;color:var(--text-muted)">' + esc(_doraT("dora.modal.arr_substitutability_reason_hint", "Exporté uniquement si le niveau ci-dessus est « non substituable » ou « hautement complexe ».")) + '</div>'
             + '</div>'
             + _fld(_doraT("dora.modal.arr_impact", "Impact of discontinuing (B_07.01.0100)"), _doraRefSelect("arr-impact", a.impact_discontinuing_level, _doraCodeItems("impact_level")))
-            + _fld(_doraT("dora.modal.arr_alt_tpp", "Identification of alternative ICT TPP (B_07.01.0110/0120)"), '<input id="arr-alt-tpp" value="' + _esc(a.alternative_tpp_id || "") + '" placeholder="' + _esc(_doraT("dora.modal.arr_alt_tpp_ph", "LEI or name — leave empty if none identified")) + '" style="width:100%">')
+            + _fld(_doraT("dora.modal.arr_alt_tpp", "Identification of alternative ICT TPP (B_07.01.0110/0120)"), '<input id="arr-alt-tpp" value="' + esc(a.alternative_tpp_id || "") + '" placeholder="' + esc(_doraT("dora.modal.arr_alt_tpp_ph", "LEI or name — leave empty if none identified")) + '" style="width:100%">')
             + '<label style="grid-column:span 2;display:inline-flex;align-items:center;gap:6px"><input type="checkbox" id="arr-exit"' + (a.exit_strategy_documented ? " checked" : "") + '> ' + _doraT("dora.modal.arr_exit", "Exit plan documented (B_07.01.0080)") + '</label>';
         // ── Section 1bis: Signers (B_03.03) ──
         // Determine the initial mode from the existing signer rows attached
@@ -1875,18 +1870,18 @@
             + '<label style="display:inline-flex;align-items:center;gap:6px;margin-right:18px">'
             + '<input type="radio" name="arr-signer-mode" value="vendor_self"'
             + (initialMode === "vendor_self" ? " checked" : "")
-            + ' data-change="doraOnSignerModeChange" data-args=\'["' + _esc(a.id) + '"]\'>'
-            + _esc(_doraT("dora.modal.signer_mode_self", "PSTI signs in its own name")) + '</label>'
+            + ' data-change="doraOnSignerModeChange" data-args=\'["' + esc(a.id) + '"]\'>'
+            + esc(_doraT("dora.modal.signer_mode_self", "PSTI signs in its own name")) + '</label>'
             + '<label style="display:inline-flex;align-items:center;gap:6px">'
             + '<input type="radio" name="arr-signer-mode" value="other"'
             + (initialMode === "other" ? " checked" : "")
-            + ' data-change="doraOnSignerModeChange" data-args=\'["' + _esc(a.id) + '"]\'>'
-            + _esc(_doraT("dora.modal.signer_mode_other", "Another entity signs")) + '</label>';
+            + ' data-change="doraOnSignerModeChange" data-args=\'["' + esc(a.id) + '"]\'>'
+            + esc(_doraT("dora.modal.signer_mode_other", "Another entity signs")) + '</label>';
         var sectionSignersBody = '<div style="grid-column:span 2">'
             + '<div style="margin-bottom:8px">' + modeRadios + '</div>'
             + '<div id="arr-signer-slot">' + (isNew && initialMode !== "vendor_self"
             ? '<div style="color:var(--text-muted);font-size:0.85em;padding:6px 0">'
-                + _esc(_doraT("dora.modal.signer_save_first", "Save the arrangement first to attach signers."))
+                + esc(_doraT("dora.modal.signer_save_first", "Save the arrangement first to attach signers."))
                 + '</div>'
             : _doraRenderArrSignerSlot(a.id, initialMode))
             + '</div></div>';
@@ -1917,11 +1912,11 @@
                 arrLinks.forEach(function (lk) {
                     var sId = subByIdLocal[lk.subcontractor_id] || { name: lk.subcontractor_id };
                     linksTbl += '<tr>'
-                        + '<td>' + _esc(sId.name || lk.subcontractor_id) + '</td>'
-                        + '<td>' + _esc(lk.tier || 1) + '</td>'
-                        + '<td>' + _esc(_doraCodeLabel("ict_service_type", lk.service_provided) || lk.service_provided || "") + '</td>'
+                        + '<td>' + esc(sId.name || lk.subcontractor_id) + '</td>'
+                        + '<td>' + esc(lk.tier || 1) + '</td>'
+                        + '<td>' + esc(_doraCodeLabel("ict_service_type", lk.service_provided) || lk.service_provided || "") + '</td>'
                         + '<td>' + (lk.is_critical_function_support ? "✓" : "") + '</td>'
-                        + '<td><button class="btn btn-secondary" data-click="doraOpenSubcontractorModal" data-args=\'["' + _esc(a.id) + '","' + _esc(lk.subcontractor_id) + '"]\' title="' + _esc(_doraT("dora.byvendor.edit", "Edit")) + '">✎</button></td>'
+                        + '<td><button class="btn btn-secondary" data-click="doraOpenSubcontractorModal" data-args=\'["' + esc(a.id) + '","' + esc(lk.subcontractor_id) + '"]\' title="' + esc(_doraT("dora.byvendor.edit", "Edit")) + '">✎</button></td>'
                         + '</tr>';
                 });
                 linksTbl += '</tbody></table>';
@@ -1929,7 +1924,7 @@
             bodyHtml += '<hr style="margin:14px 0;border:none;border-top:1px solid var(--border)">'
                 + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
                 + '  <strong>' + _doraT("dora.modal.arr_linked_subs", "Linked subcontractors") + '</strong>'
-                + '  <button type="button" class="btn-add" data-click="doraOpenSubcontractorModal" data-args=\'["' + _esc(a.id) + '",null]\'>+ ' + _doraT("dora.modal.arr_link_sub", "Link a subcontractor") + '</button>'
+                + '  <button type="button" class="btn-add" data-click="doraOpenSubcontractorModal" data-args=\'["' + esc(a.id) + '",null]\'>+ ' + _doraT("dora.modal.arr_link_sub", "Link a subcontractor") + '</button>'
                 + '</div>'
                 + linksTbl;
         }
@@ -2113,18 +2108,18 @@
                 var a = arrById[l.arrangement_id];
                 var v = a ? vById[a.vendor_id] : null;
                 linksHtml += '<tr>'
-                    + '<td>' + _esc(v ? v.name : "—") + '</td>'
-                    + '<td><a href="javascript:void(0)" data-click="doraOpenArrangementModal" data-args=\'["' + _esc(l.arrangement_id) + '"]\'>' + _esc((a && a.arrangement_reference) || l.arrangement_id) + '</a></td>'
-                    + '<td>' + _esc(l.tier || 1) + '</td>'
-                    + '<td>' + _esc(_doraCodeLabel("ict_service_type", l.service_provided) || l.service_provided || "") + '</td>'
+                    + '<td>' + esc(v ? v.name : "—") + '</td>'
+                    + '<td><a href="javascript:void(0)" data-click="doraOpenArrangementModal" data-args=\'["' + esc(l.arrangement_id) + '"]\'>' + esc((a && a.arrangement_reference) || l.arrangement_id) + '</a></td>'
+                    + '<td>' + esc(l.tier || 1) + '</td>'
+                    + '<td>' + esc(_doraCodeLabel("ict_service_type", l.service_provided) || l.service_provided || "") + '</td>'
                     + '</tr>';
             });
             linksHtml += '</tbody></table>';
         }
         var bodyHtml = ''
             + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;font-size:0.9em">'
-            + '  <label style="grid-column:span 2">' + _doraT("dora.modal.sub_name", "Name") + '<input id="sub-id-name" value="' + _esc(s.name || "") + '" required></label>'
-            + '  <label>' + _doraT("dora.modal.sub_lei", "LEI") + '<div style="display:flex;align-items:center;gap:2px"><input id="sub-id-lei" value="' + _esc(s.lei || "") + '" style="flex:1">' + _gleifTriggerHtml("sub-id-lei") + '</div></label>'
+            + '  <label style="grid-column:span 2">' + _doraT("dora.modal.sub_name", "Name") + '<input id="sub-id-name" value="' + esc(s.name || "") + '" required></label>'
+            + '  <label>' + _doraT("dora.modal.sub_lei", "LEI") + '<div style="display:flex;align-items:center;gap:2px"><input id="sub-id-lei" value="' + esc(s.lei || "") + '" style="flex:1">' + _gleifTriggerHtml("sub-id-lei") + '</div></label>'
             + _fld(_doraT("dora.modal.sub_country", "Country"), _doraRefSelect("sub-id-country", s.country_iso2, _doraCodeItems("country_iso3166_1")))
             + '</div>'
             + '<hr style="margin:14px 0;border:none;border-top:1px solid var(--border)">'
@@ -2209,12 +2204,12 @@
                 + '<div style="grid-column:span 2"><div style="margin-bottom:2px">' + _doraT("dora.modal.link_pick_sub", "Subcontractor") + '</div>'
                 + '  <div style="display:flex;gap:8px;align-items:flex-start">'
                 + '    <div style="flex:1">' + _doraRefSelect("link-sub-pick", preselect || "", pickerItems) + '</div>'
-                + '    <button type="button" class="btn btn-secondary" data-click="doraNewSubFromLink" data-args=\'["' + _esc(arrangementId) + '"]\' style="white-space:nowrap">+ ' + _doraT("dora.modal.link_new_sub", "New subcontractor") + '</button>'
+                + '    <button type="button" class="btn btn-secondary" data-click="doraNewSubFromLink" data-args=\'["' + esc(arrangementId) + '"]\' style="white-space:nowrap">+ ' + _doraT("dora.modal.link_new_sub", "New subcontractor") + '</button>'
                 + '  </div>'
                 + '</div>';
         }
         else {
-            subHeader = '<div style="grid-column:span 2;padding:6px 8px;background:var(--bg-elev,#f3f3f5);border:1px solid var(--border);border-radius:4px"><strong>' + _esc((subById[l.subcontractor_id] && subById[l.subcontractor_id].name) || l.subcontractor_id) + '</strong> <span style="color:var(--text-muted);font-size:0.85em">' + _esc(l.subcontractor_id) + '</span> <a href="javascript:void(0)" data-click="doraOpenSubIdentityModal" data-args=\'["' + _esc(l.subcontractor_id) + '"]\' style="margin-left:10px;font-size:0.85em">' + _doraT("dora.modal.link_edit_identity", "Edit identity") + ' →</a></div>';
+            subHeader = '<div style="grid-column:span 2;padding:6px 8px;background:var(--bg-elev,#f3f3f5);border:1px solid var(--border);border-radius:4px"><strong>' + esc((subById[l.subcontractor_id] && subById[l.subcontractor_id].name) || l.subcontractor_id) + '</strong> <span style="color:var(--text-muted);font-size:0.85em">' + esc(l.subcontractor_id) + '</span> <a href="javascript:void(0)" data-click="doraOpenSubIdentityModal" data-args=\'["' + esc(l.subcontractor_id) + '"]\' style="margin-left:10px;font-size:0.85em">' + _doraT("dora.modal.link_edit_identity", "Edit identity") + ' →</a></div>';
         }
         var initTier = Number(l.tier) || 1;
         var parentDisplay = (initTier > 1) ? "block" : "none";
@@ -2227,7 +2222,7 @@
         }
         var bodyHtml = ''
             + _section("dora.modal.link_section_identity", "Subcontractor", subHeader)
-            + _section("dora.modal.link_section_position", "Position in chain", '  <label>' + _doraT("dora.modal.sub_tier", "Tier (1 = direct)") + '<input id="link-tier" type="number" min="1" max="20" value="' + _esc(initTier) + '" data-input="doraOnLinkTierChange"></label>'
+            + _section("dora.modal.link_section_position", "Position in chain", '  <label>' + _doraT("dora.modal.sub_tier", "Tier (1 = direct)") + '<input id="link-tier" type="number" min="1" max="20" value="' + esc(initTier) + '" data-input="doraOnLinkTierChange"></label>'
                 + '<div id="link-parent-slot" style="display:' + parentDisplay + '">'
                 + '<div style="margin-bottom:2px">' + _doraT("dora.modal.sub_parent", "Parent subcontractor") + '</div>'
                 + _doraRefSelect("link-parent", l.parent_subcontractor_id || "", parentItems)
@@ -2314,7 +2309,7 @@
     }
     function _gleifRenderResults(records) {
         if (!records || records.length === 0) {
-            return '<div style="padding:10px;color:var(--text-muted);font-size:0.85em">' + _esc(_doraT("gleif.no_results", "No matching LEI found.")) + '</div>';
+            return '<div style="padding:10px;color:var(--text-muted);font-size:0.85em">' + esc(_doraT("gleif.no_results", "No matching LEI found.")) + '</div>';
         }
         var h = '';
         records.forEach(function (rec) {
@@ -2324,9 +2319,9 @@
             var country = (ent.legalAddress && ent.legalAddress.country) || "";
             var status = ent.status || "";
             var lei = attrs.lei || rec.id || "";
-            h += '<div class="gleif-row" data-lei="' + _esc(lei) + '" data-name="' + _esc(legalName) + '" data-country="' + _esc(country) + '" style="padding:6px 8px;border-bottom:1px solid var(--border);cursor:pointer">'
-                + '<div style="font-weight:600">' + _esc(legalName || "—") + '</div>'
-                + '<div style="font-size:0.8em;color:var(--text-muted)"><code>' + _esc(lei) + '</code> · ' + _esc(country) + (status ? ' · ' + _esc(status) : '') + '</div>'
+            h += '<div class="gleif-row" data-lei="' + esc(lei) + '" data-name="' + esc(legalName) + '" data-country="' + esc(country) + '" style="padding:6px 8px;border-bottom:1px solid var(--border);cursor:pointer">'
+                + '<div style="font-weight:600">' + esc(legalName || "—") + '</div>'
+                + '<div style="font-size:0.8em;color:var(--text-muted)"><code>' + esc(lei) + '</code> · ' + esc(country) + (status ? ' · ' + esc(status) : '') + '</div>'
                 + '</div>';
         });
         return h;
@@ -2342,10 +2337,10 @@
         pop.style.cssText = "position:fixed;z-index:9999;top:" + (rect.bottom + 4) + "px;left:" + Math.max(8, rect.right - 380) + "px;width:380px;max-height:340px;overflow:auto;background:var(--bg,#fff);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 14px rgba(0,0,0,0.18);font-size:0.9em";
         pop.innerHTML = ''
             + '<div style="padding:8px;border-bottom:1px solid var(--border);background:var(--bg-elev,#f7f7f8)">'
-            + '  <input class="gleif-q" placeholder="' + _esc(_doraT("gleif.search_ph", "Search by legal name or LEI…")) + '" style="width:100%;padding:5px 7px">'
+            + '  <input class="gleif-q" placeholder="' + esc(_doraT("gleif.search_ph", "Search by legal name or LEI…")) + '" style="width:100%;padding:5px 7px">'
             + '</div>'
-            + '<div class="gleif-results"><div style="padding:10px;color:var(--text-muted);font-size:0.85em">' + _esc(_doraT("gleif.tip", "Type at least 2 characters.")) + '</div></div>'
-            + '<div style="padding:5px 8px;font-size:0.72em;color:var(--text-muted);border-top:1px solid var(--border)">' + _esc(_doraT("gleif.attribution", "Source: GLEIF (api.gleif.org)")) + '</div>';
+            + '<div class="gleif-results"><div style="padding:10px;color:var(--text-muted);font-size:0.85em">' + esc(_doraT("gleif.tip", "Type at least 2 characters.")) + '</div></div>'
+            + '<div style="padding:5px 8px;font-size:0.72em;color:var(--text-muted);border-top:1px solid var(--border)">' + esc(_doraT("gleif.attribution", "Source: GLEIF (api.gleif.org)")) + '</div>';
         document.body.appendChild(pop);
         _gleifPopoverEl = pop;
         var input = pop.querySelector(".gleif-q");
@@ -2362,7 +2357,7 @@
         function search() {
             var q = (input.value || "").trim();
             if (q.length < 2) {
-                results.innerHTML = '<div style="padding:10px;color:var(--text-muted);font-size:0.85em">' + _esc(_doraT("gleif.tip", "Type at least 2 characters.")) + '</div>';
+                results.innerHTML = '<div style="padding:10px;color:var(--text-muted);font-size:0.85em">' + esc(_doraT("gleif.tip", "Type at least 2 characters.")) + '</div>';
                 return;
             }
             // Heuristic: 20-char alphanumeric → exact LEI lookup; else search by name.
@@ -2374,7 +2369,7 @@
             else {
                 url = "https://api.gleif.org/api/v1/lei-records?filter%5Bentity.legalName%5D=" + encodeURIComponent(q) + "&page%5Bsize%5D=10";
             }
-            results.innerHTML = '<div style="padding:10px;color:var(--text-muted);font-size:0.85em">' + _esc(_doraT("gleif.searching", "Searching…")) + '</div>';
+            results.innerHTML = '<div style="padding:10px;color:var(--text-muted);font-size:0.85em">' + esc(_doraT("gleif.searching", "Searching…")) + '</div>';
             fetch(url, { headers: { "Accept": "application/vnd.api+json" } })
                 .then(function (r) {
                 if (!r.ok)
@@ -2389,7 +2384,7 @@
                 results.__gleifRecords = arr;
             })
                 .catch(function (e) {
-                results.innerHTML = '<div style="padding:10px;color:var(--red,#c33);font-size:0.85em">' + _esc(_doraT("gleif.error", "Lookup failed:")) + ' ' + _esc(String(e.message || e)) + '</div>';
+                results.innerHTML = '<div style="padding:10px;color:var(--red,#c33);font-size:0.85em">' + esc(_doraT("gleif.error", "Lookup failed:")) + ' ' + esc(String(e.message || e)) + '</div>';
             });
         }
         input.addEventListener("input", function () {
@@ -2444,7 +2439,7 @@
     function _gleifTriggerHtml(targetInputId, opts) {
         opts = opts || {};
         var title = opts.title || _doraT("gleif.lookup", "Lookup LEI on GLEIF");
-        return '<button type="button" class="btn btn-secondary" data-gleif-trigger="' + _esc(targetInputId) + '" data-click="gleifOpenLookup" data-args=\'["' + _esc(targetInputId) + '"]\' title="' + _esc(title) + '" style="padding:2px 8px;font-size:0.85em;margin-left:4px">' + _icon("search", 13) + '</button>';
+        return '<button type="button" class="btn btn-secondary" data-gleif-trigger="' + esc(targetInputId) + '" data-click="gleifOpenLookup" data-args=\'["' + esc(targetInputId) + '"]\' title="' + esc(title) + '" style="padding:2px 8px;font-size:0.85em;margin-left:4px">' + _icon("search", 13) + '</button>';
     }
     // Public hook so TPRM_app.js can render the trigger and trigger lookups.
     window.DoraData = window.DoraData || {};
