@@ -10,12 +10,14 @@
 </head>
 <body class="ct-app-shell">
 
-<div class="toolbar">
+<div class="ct-app">
+<header class="ct-appbar">
     <button class="btn-hamburger" data-click="_toggleSidebarMobile">&#9776;</button>
-    <span class="app-title" data-i18n="toolbar.subtitle">Vendor</span>
-    <span class="flex-spacer"></span>
+    <span class="ct-modulepicker" role="img" aria-label="Vendor"><span data-i18n="module.vendor">Vendor</span></span>
+    <span class="ct-appbar-sep"></span>
+    <nav class="ct-appbar-context" aria-label="Contexte"><span class="ct-muted" id="header-subtitle"></span></nav>
     <div class="toolbar-menu">
-        <button class="btn-menu" data-click="toggleMenu" data-i18n="menu_file">Fichier</button>
+        <button class="ct-btn" data-size="sm" data-click="toggleMenu"><span data-i18n="menu_file">Fichier</span></button>
         <div class="toolbar-dropdown" id="io-menu">
             <div class="toolbar-dropdown-item" data-click="_menuAction" data-args='["newAnalysis"]' data-i18n="menu_new">Nouvelle analyse</div>
             <div class="toolbar-dropdown-sep"></div>
@@ -25,39 +27,60 @@
             <div class="toolbar-dropdown-item" data-click="_menuAction" data-args='["doraOpenExportModal"]' data-i18n="menu_dora_export">Export RoI DORA</div>
         </div>
     </div>
-    <span class="status" id="status-msg"></span>
-    <span class="toolbar-right" id="toolbar-right"></span>
-</div>
+    <span class="ct-spacer"></span>
+    <span class="ct-appbar-saved" id="status-msg"></span>
+    <div class="ct-appbar-actions">
+        <button class="ct-iconaction" data-click="ct_toggleLang" data-icon="globe" aria-label="Langue" title="Langue FR / EN"></button>
+        <button class="ct-iconaction" data-click="ct_toggleTheme" data-icon="moon" aria-label="Thème" title="Thème clair / sombre"></button>
+        <span class="toolbar-right" id="toolbar-right"></span>
+    </div>
+</header>
 
-<div class="app-layout">
-<nav class="sidebar" id="sidebar">
-    <div class="sidebar-collapse" data-click="toggleSidebar" title="Masquer le menu">&#10005;</div>
-    <div class="sidebar-section">TPRM</div>
-    <div class="sidebar-item active" data-click="selectPanel" data-args='["dashboard"]' data-i18n="nav.dashboard">Tableau de bord</div>
-    <div class="sidebar-item" data-click="selectPanel" data-args='["vendors"]' data-i18n="nav.vendors">Fournisseurs</div>
-    <div class="sidebar-item" data-click="selectPanel" data-args='["risks"]' data-i18n="nav.risks">Risques</div>
-    <div class="sidebar-item" data-click="selectPanel" data-args='["measures"]' data-i18n="nav.measures">Mesures</div>
-    <div class="sidebar-item" data-click="selectPanel" data-args='["documents"]' data-i18n="nav.documents">Documents</div>
-    <div class="sidebar-item" data-click="selectPanel" data-args='["templates"]' data-i18n="nav.templates">Modèles d'évaluation</div>
-    <div class="sidebar-item" data-click="selectPanel" data-args='["dora"]' data-i18n="nav.dora">DORA Register</div>
-    <div class="flex-spacer"></div>
-    <div class="sidebar-section" data-i18n="tprm.sidebar.section_aide">Aide</div>
-    <div class="sidebar-item" data-click="toggleHelp" data-args='["methodo"]' data-i18n="tprm.sidebar.methodo">Methodologie</div>
-    <div class="sidebar-item" data-click="toggleHelp" data-args='["usage"]' data-i18n="tprm.sidebar.usage">Utilisation</div>
-    <div class="sidebar-section" data-i18n="tprm.sidebar.section_historique">Historique</div>
-    <div class="sidebar-item" data-click="selectPanel" data-args='["history"]' data-i18n="tprm.sidebar.snapshots">Snapshots</div>
-    <div class="btn-group-sm">
-        <button id="btn-undo" class="btn-undo opacity-low" data-click="undo" data-i18n-title="btn_undo_title" title="Annuler (Ctrl+Z)">&#8630;</button>
-        <button id="btn-redo" class="btn-redo opacity-low" data-click="redo" data-i18n-title="btn_redo_title" title="Retablir (Ctrl+Y)">&#8631;</button>
+<div class="ct-body">
+
+<nav class="ct-rail" id="sidebar" aria-label="Navigation du module">
+  <div class="ct-rail-scroll">
+    <div class="ct-rail-section">
+      <button class="ct-rail-group" aria-expanded="true" data-click="ct_toggleRailGroup" data-pass-el>
+        <span class="ct-icon-btn-slot" data-icon="chevron-right"></span><span>TPRM</span>
+      </button>
+      <button class="ct-rail-item" aria-current="page" data-click="selectPanel" data-args='["dashboard"]'><span class="ct-rail-item-label" data-i18n="nav.dashboard">Tableau de bord</span></button>
+      <button class="ct-rail-item" data-click="selectPanel" data-args='["vendors"]'><span class="ct-rail-item-label" data-i18n="nav.vendors">Fournisseurs</span></button>
+      <button class="ct-rail-item" data-click="selectPanel" data-args='["risks"]'><span class="ct-rail-item-label" data-i18n="nav.risks">Risques</span></button>
+      <button class="ct-rail-item" data-click="selectPanel" data-args='["measures"]'><span class="ct-rail-item-label" data-i18n="nav.measures">Mesures</span></button>
+      <button class="ct-rail-item" data-click="selectPanel" data-args='["documents"]'><span class="ct-rail-item-label" data-i18n="nav.documents">Documents</span></button>
+      <button class="ct-rail-item" data-click="selectPanel" data-args='["templates"]'><span class="ct-rail-item-label" data-i18n="nav.templates">Modèles d'évaluation</span></button>
+      <button class="ct-rail-item" data-click="selectPanel" data-args='["dora"]'><span class="ct-rail-item-label" data-i18n="nav.dora">DORA Register</span></button>
+    </div>
+
+    <div class="ct-rail-section">
+      <button class="ct-rail-group" aria-expanded="true" data-click="ct_toggleRailGroup" data-pass-el>
+        <span class="ct-icon-btn-slot" data-icon="chevron-right"></span><span data-i18n="tprm.sidebar.section_aide">Aide</span>
+      </button>
+      <button class="ct-rail-item" data-click="toggleHelp" data-args='["methodo"]'><span class="ct-rail-item-label" data-i18n="tprm.sidebar.methodo">Methodologie</span></button>
+      <button class="ct-rail-item" data-click="toggleHelp" data-args='["usage"]'><span class="ct-rail-item-label" data-i18n="tprm.sidebar.usage">Utilisation</span></button>
+    </div>
+
+    <div class="ct-rail-section">
+      <button class="ct-rail-group" aria-expanded="true" data-click="ct_toggleRailGroup" data-pass-el>
+        <span class="ct-icon-btn-slot" data-icon="chevron-right"></span><span data-i18n="tprm.sidebar.section_historique">Historique</span>
+      </button>
+      <button class="ct-rail-item" data-click="selectPanel" data-args='["history"]'><span class="ct-rail-item-label" data-i18n="tprm.sidebar.snapshots">Snapshots</span></button>
+    </div>
+  </div>
+
+  <div class="ct-rail-foot">
+    <div class="ct-btngroup">
+      <button id="btn-undo" class="btn-undo opacity-low" data-click="undo" data-i18n-title="btn_undo_title" title="Annuler (Ctrl+Z)">&#8630;</button>
+      <button id="btn-redo" class="btn-redo opacity-low" data-click="redo" data-i18n-title="btn_redo_title" title="Retablir (Ctrl+Y)">&#8631;</button>
     </div>
     <a href="https://www.cisotoolbox.org" target="_blank" rel="noopener noreferrer" class="sidebar-brand">cisotoolbox.org</a>
+  </div>
 </nav>
 
-<div class="sidebar-expand" id="sidebar-expand" data-click="toggleSidebar" title="Afficher le menu">&#8250;</div>
-<main class="main-content">
-<div class="container" id="content"></div>
-</main>
-</div>
+<main class="ct-content" id="content"></main>
+</div><!-- ct-body -->
+</div><!-- ct-app -->
 
 <input type="file" id="file-input" accept=".json" style="display:none">
 
