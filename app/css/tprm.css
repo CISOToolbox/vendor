@@ -1,0 +1,309 @@
+/* ── TPRM — App-specific styles ─────────────────────────── */
+:root {
+  /* Cellule "Extrême" des matrices : un cran au-dessus de critical-tint sans
+     sauter au critical plein (écart trop brutal parmi les teintes). Suit le
+     thème via ses deux composantes. Écran uniquement (pas d'export SVG ici). */
+  --tprm-extreme: var(--ct-critical);
+}
+.panel-desc { font-size: 0.85em; color: var(--ct-ink-2); margin-bottom: 16px; }
+
+/* ── Vendor list ──────────────────────────────────────── */
+.vendor-card { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--ct-surface); border: 1px solid var(--ct-line); border-radius: 6px; margin-bottom: 6px; cursor: pointer; transition: all 0.15s; font-size: 0.85em; }
+.vendor-card:hover { border-color: var(--ct-accent); }
+.vendor-card-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; flex: 1; min-width: 0; }
+.vendor-card-right { display: flex; align-items: center; gap: 6px; font-size: 0.72em; flex-wrap: wrap; color: var(--ct-ink-2); white-space: nowrap; }
+.vendor-card-sep { color: var(--ct-ink-2); }
+.vendor-name { font-weight: 700; }
+.vendor-logo-img { width: 24px; height: 24px; border-radius: 4px; object-fit: contain; flex-shrink: 0; }
+.vendor-initials { width: 24px; height: 24px; border-radius: 4px; background: var(--ct-accent); color: var(--ct-onaccent); font-size: 0.65em; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; letter-spacing: 0.5px; }
+
+/* ── Tier badges ──────────────────────────────────────── */
+
+/* ── DORA badge ───────────────────────────────────────── */
+details.dora-arrangement { border: 1px solid var(--ct-line); border-radius: 6px; padding: 8px 12px; margin-bottom: 8px; }
+details.dora-arrangement summary { cursor: pointer; font-size: 0.88em; padding: 4px 0; }
+details.dora-arrangement[open] summary { border-bottom: 1px solid var(--ct-line); margin-bottom: 6px; padding-bottom: 8px; }
+
+/* ── Vendor detail tabs ───────────────────────────────── */
+.vendor-tabs { display: flex; gap: 4px; margin-bottom: 12px; }
+.vendor-tab { flex: 1; padding: 8px; border: none; background: var(--ct-canvas); cursor: pointer; border-radius: 6px; font-weight: 600; font-size: 0.82em; color: var(--ct-ink-2); transition: all 0.15s; }
+.vendor-tab.active { background: var(--ct-surface); color: var(--ct-ink); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+/* ── Risk matrix (SVG) ────────────────────────────────── */
+.risk-matrix-container { background: var(--ct-surface); border: 1px solid var(--ct-line); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+.dash-risk-row { display: flex; gap: 12px; margin-bottom: 12px; max-width: 784px; margin-left: auto; margin-right: auto; }
+.dash-matrix { flex: 1 1 0; max-width: 380px; min-width: 240px; margin-bottom: 0; padding: 12px; }
+.dash-timeline { max-width: 784px; margin-left: auto; margin-right: auto; }
+
+/* ── Assessment questionnaire ─────────────────────────── */
+.question-card { background: var(--ct-surface); border: 1px solid var(--ct-line); border-radius: 8px; padding: 12px; margin-bottom: 8px; }
+.question-id { font-size: 0.72em; font-weight: 700; color: var(--ct-ink-2); min-width: 35px; }
+
+.question-text { font-weight: 600; font-size: 0.9em; margin: 6px 0; }
+
+.answer-pills { display: flex; gap: 4px; margin: 8px 0; }
+.answer-pill { padding: 4px 12px; border: 2px solid var(--ct-line); border-radius: 6px; cursor: pointer; font-size: 0.78em; font-weight: 600; color: var(--ct-ink-2); transition: all 0.15s; background: var(--ct-surface); }
+.answer-pill.selected { border-color: var(--ct-accent); color: var(--ct-accent); background: var(--ct-accent-tint); }
+.answer-pill.compliant.selected { border-color: var(--ct-low); color: var(--ct-low-ink); background: var(--ct-low-tint); }
+.answer-pill.partial.selected { border-color: var(--ct-high); color: var(--ct-high-ink); background: var(--ct-high-tint); }
+.answer-pill.non_compliant.selected { border-color: var(--ct-critical); color: var(--ct-critical-ink); background: var(--ct-critical-tint); }
+
+/* ── Score gauge ──────────────────────────────────────── */
+.score-gauge { display: inline-flex; align-items: center; gap: 6px; }
+.score-gauge .score-val { font-size: 1.6em; font-weight: 800; }
+
+/* ── Document tracking ────────────────────────────────── */
+.doc-status-valid { color: var(--ct-low); font-weight: 600; }
+.doc-status-expiring { color: var(--ct-high); font-weight: 600; }
+.doc-status-expired { color: var(--ct-critical); font-weight: 600; }
+
+/* ── Forms ─────────────────────────────────────────────── */
+.form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--ct-line); }
+
+/* Table inline editors and .ct-icon are defined in shared/css/cisotoolbox.css */
+
+/* ── Questionnaire templates ──────────────────────────── */
+/* Accessibility: all text colors target WCAG AA (4.5:1) or AAA (7:1).
+   --gray-dark (#475569) provides 7:1 on white and ~6.8:1 on --bg.
+   --text-muted (#64748b) is only used for purely decorative context. */
+.tpl-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; flex-wrap: wrap; }
+.tpl-header h2 { margin: 0; flex: 1; }
+.tpl-meta { font-size: 0.78em; color: var(--ct-ink-1); font-weight: 600; }
+
+/* .ct-icon is defined in shared/css/cisotoolbox.css (1em square, inherits currentColor) */
+
+/* Harmonized template-list header action buttons: identical size and
+   height, SVG icon + label. Only the background color varies per action. */
+.tpl-header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.tpl-header-btn .ct-icon { width: 16px; height: 16px; }
+
+.tpl-card { background: var(--ct-surface); border: 1px solid var(--ct-line); border-radius: 8px; padding: 14px 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 14px; transition: all 0.15s; cursor: pointer; }
+.tpl-card:hover { border-color: var(--ct-accent); box-shadow: 0 0 0 1px var(--ct-accent); }
+.tpl-card-icon { width: 40px; height: 40px; border-radius: 8px; background: var(--ct-accent-tint); color: var(--ct-info); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.tpl-card-icon .ct-icon { width: 22px; height: 22px; }
+.tpl-card-body { flex: 1; min-width: 0; }
+.tpl-card-name { font-weight: 700; font-size: 0.95em; color: var(--ct-ink); }
+.tpl-card-desc { font-size: 0.82em; color: var(--ct-ink-1); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tpl-card-stats { display: flex; gap: 14px; font-size: 0.78em; color: var(--ct-ink-1); flex-shrink: 0; }
+.tpl-card-stats strong { color: var(--ct-ink); font-weight: 700; }
+.tpl-card-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+/* Template kind badges */
+.tpl-card-icon.tpl-icon-questionnaire { background: var(--ct-info-tint); color: var(--ct-info-ink); }
+.tpl-card-icon.tpl-icon-audit { background: var(--ct-accent-tint); color: var(--ct-accent-ink); }
+
+/* Equalized square action buttons in the template list cards */
+.tpl-card-actions .tpl-icon-btn { width: 36px; height: 36px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
+.tpl-card-actions .tpl-icon-btn .ct-icon { width: 18px; height: 18px; }
+
+/* Accessible CSS tooltip — uses data-tooltip="…" on any element.
+   Shows on :hover and :focus-visible. Respects prefers-reduced-motion.
+   Works alongside native title="" for screen readers. */
+[data-tooltip] { position: relative; }
+[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--ct-accent);
+    color: var(--ct-onaccent);
+    font-size: 0.72em;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.12s ease-in 0.25s;
+    z-index: 200;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+[data-tooltip]::before {
+    content: "";
+    position: absolute;
+    bottom: calc(100% + 2px);
+    left: 50%;
+    transform: translateX(-50%);
+    border: 4px solid transparent;
+    border-top-color: var(--ct-ink);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.12s ease-in 0.25s;
+    z-index: 200;
+}
+[data-tooltip]:hover::after,
+[data-tooltip]:hover::before,
+[data-tooltip]:focus-visible::after,
+[data-tooltip]:focus-visible::before {
+    opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+    [data-tooltip]::after, [data-tooltip]::before { transition: none; }
+}
+
+.tpl-editor-meta { margin-bottom: 14px; }
+.tpl-section-count { font-size: 0.78em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--ct-ink-1); }
+
+.tpl-section { background: var(--ct-surface); border: 1px solid var(--ct-line); border-radius: 8px; padding: 14px 16px; margin-bottom: 12px; }
+.tpl-section-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.tpl-section-id { font-size: 0.72em; font-weight: 700; color: var(--ct-ink-1); background: var(--ct-surface-2); padding: 3px 8px; border-radius: 4px; letter-spacing: 0.5px; }
+.tpl-section-title { flex: 1; font-size: 1em; font-weight: 700; border: none; background: transparent; padding: 4px 0; color: var(--ct-ink); border-bottom: 1px dashed transparent; }
+.tpl-section-title:focus { border-bottom-color: var(--ct-accent); outline: none; }
+.tpl-section-desc { width: 100%; font-size: 0.85em; color: var(--ct-ink); border: 1px solid var(--ct-line); background: var(--ct-surface); padding: 6px 10px; border-radius: 4px; margin-bottom: 12px; resize: vertical; min-height: 32px; font-family: inherit; box-sizing: border-box; }
+.tpl-section-desc::placeholder { color: var(--ct-ink-1); }
+.tpl-section-desc:focus { outline: none; border-color: var(--ct-accent); box-shadow: 0 0 0 2px var(--ct-accent-tint); }
+.tpl-section-questions-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding-top: 8px; border-top: 1px dashed var(--ct-line); }
+.tpl-section-questions-label { font-size: 0.74em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--ct-ink-1); }
+
+.tpl-question { background: var(--ct-canvas); border: 1px solid var(--ct-line); border-radius: 6px; padding: 10px 12px; margin-bottom: 6px; }
+/* Liseré par niveau d'importance (grade solid : liseré) — repère visuel rapide. */
+.tpl-question.crit-q-info    { border-left: 3px solid var(--ct-info); }
+.tpl-question.crit-q-major   { border-left: 3px solid var(--ct-high); }
+.tpl-question.crit-q-blocker { border-left: 3px solid var(--ct-critical); }
+.tpl-question-header { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; flex-wrap: wrap; }
+.tpl-question-id { font-size: 0.72em; font-weight: 700; color: var(--ct-ink-1); background: var(--ct-surface); padding: 3px 8px; border-radius: 3px; min-width: 42px; text-align: center; border: 1px solid var(--ct-line); }
+.tpl-question-header select { font-size: 0.78em; padding: 4px 8px; border: 1px solid var(--ct-line-strong); border-radius: 4px; background: var(--ct-surface); font-family: inherit; color: var(--ct-ink); }
+.tpl-question-weight { display: inline-flex; align-items: center; gap: 4px; font-size: 0.76em; font-weight: 600; color: var(--ct-ink-1); }
+.tpl-question-weight input { width: 54px; font-size: 0.82em; padding: 4px 6px; border: 1px solid var(--ct-line-strong); border-radius: 4px; background: var(--ct-surface); color: var(--ct-ink); }
+.tpl-question-text { width: 100%; border: 1px solid var(--ct-line-strong); border-radius: 4px; padding: 8px 10px; font-size: 0.9em; font-family: inherit; background: var(--ct-surface); box-sizing: border-box; margin-bottom: 6px; resize: vertical; min-height: 40px; color: var(--ct-ink); }
+.tpl-question-text:focus { outline: none; border-color: var(--ct-accent); box-shadow: 0 0 0 2px var(--ct-accent-tint); }
+.tpl-question-expected { width: 100%; border: 1px solid var(--ct-line-strong); border-radius: 4px; padding: 6px 10px; font-size: 0.82em; font-family: inherit; background: var(--ct-surface); box-sizing: border-box; color: var(--ct-ink-1); resize: vertical; min-height: 30px; }
+.tpl-question-expected::placeholder { color: var(--ct-ink-1); }
+.tpl-question-expected:focus { outline: none; border-color: var(--ct-accent); color: var(--ct-ink); box-shadow: 0 0 0 2px var(--ct-accent-tint); }
+
+.tpl-icon-btn.danger:hover:not(:disabled) { background: var(--ct-critical-tint); color: var(--ct-critical-ink); border-color: var(--ct-critical); }
+
+/* Badge variant used inside the assessment question headers */
+
+/* Assessment V2 status badges */
+.evalv2-status { padding: 2px 8px; border-radius: 10px; font-size: 0.78em; font-weight: 700; }
+.evalv2-status-draft { background: var(--ct-neutral-tint); color: var(--ct-neutral-ink); }
+.evalv2-status-in_progress { background: var(--ct-info-tint); color: var(--ct-info-ink); }
+.evalv2-status-pending_approval { background: var(--ct-high-tint); color: var(--ct-high-ink); }
+.evalv2-status-validated { background: var(--ct-low-tint); color: var(--ct-low-ink); }
+.evalv2-status-rejected { background: var(--ct-critical-tint); color: var(--ct-critical-ink); }
+/* Controle de formulaire, pas un badge : il garde sa classe et recoit le ton par
+   attribut. Les trois niveaux (info / major / blocker) se projettent sur les
+   tons info / high / critical via _vendorTone. */
+select.tpl-criticality { font-weight: 700; border-width: 1px; border-color: currentColor; }
+select.tpl-criticality[data-tone="info"]     { background: var(--ct-info-tint);     color: var(--ct-info-ink); }
+select.tpl-criticality[data-tone="high"]     { background: var(--ct-high-tint);     color: var(--ct-high-ink); }
+select.tpl-criticality[data-tone="critical"] { background: var(--ct-critical-tint); color: var(--ct-critical-ink); }
+
+/* ── Risk score colors ────────────────────────────────── */
+.score-low { color: var(--ct-low-ink); }
+.score-medium { color: var(--ct-medium-ink); }
+.score-high { color: var(--ct-high-ink); }
+.score-critical { color: var(--ct-critical-ink); }
+
+/* ── Dark theme fixes ─────────────────────────────────── */
+/* Risk matrices (SVG generated by shared ctRenderMatrix): the cell
+   separators, count dots and legend swatch borders are hard-coded for
+   light mode in cisotoolbox.js — repaint them with tokens in dark. */
+
+/* Solid green/violet action buttons: dark convention is dark ink on a
+   saturated fill (same as .ct-btn[data-variant="primary"] in the DS). */
+
+/* ── Responsive ───────────────────────────────────────── */
+@media (max-width: 768px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .cls-columns { grid-template-columns: 1fr; }
+
+    .vendor-tabs { flex-direction: column; }
+    .vendor-tab { padding: 10px; font-size: 0.85em; }
+    .dash-risk-row { flex-direction: column; }
+    /* flex:1 1 0 (règle de base) répartit les matrices en colonnes égales tant
+       que .dash-risk-row est en ligne. En colonne, ce flex-basis:0 s'applique à
+       la HAUTEUR : sans espace libre à distribuer dans un conteneur en hauteur
+       auto, le bloc s'écrase à ~2px de contenu et le SVG — qui, lui, se
+       dimensionne correctement — déborde d'une boîte que overflow-x:auto rend
+       défilante. D'où des matrices absentes sur mobile, intactes sur bureau.
+       Rétablir une hauteur pilotée par le contenu. */
+    .dash-matrix { flex: 0 0 auto; width: auto; max-width: 100%; min-width: 0; }
+    .dash-timeline { padding: 8px; }
+    .dash-grid-2col { grid-template-columns: 1fr !important; }
+    .risk-matrix-container { padding: 10px; overflow-x: auto; }
+    .matrix-legend { flex-wrap: wrap; gap: 4px 8px; }
+    .vendor-card { padding: 8px 10px; gap: 3px; flex-direction: column; align-items: flex-start; }
+    .vendor-card-left { gap: 6px; }
+    .vendor-card-right { padding-left: 34px; }
+
+    .question-card { padding: 10px; }
+    .answer-pills { flex-wrap: wrap; }
+    .tprm-form { padding: 12px; }
+    .form-actions { flex-wrap: wrap; }
+    .form-actions .btn-primary, .form-actions .btn-secondary { flex: 1; min-width: 120px; text-align: center; }
+    .exposure-result { font-size: 0.82em; }
+    table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    thead { white-space: nowrap; }
+    td, th { padding: 6px 8px; font-size: 0.82em; }
+}
+
+/* ── Matrix tooltip ──────────────────────────────────── */
+.matrix-tooltip { display: none; position: fixed; background: var(--ct-surface); border: 1px solid var(--ct-line); border-radius: 6px; padding: 8px 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); font-size: 0.8em; max-width: 320px; z-index: 100; pointer-events: none; }
+
+/* ── Classification columns ──────────────────────────── */
+.cls-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.cls-col { background: var(--ct-canvas); border-radius: 6px; padding: 10px 12px; }
+.cls-col-title { font-size: 0.75em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--ct-ink-2); margin-bottom: 6px; }
+
+/* ── Exposure scoring ──────────────────────────────────── */
+.form-section { font-size: 0.75em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--ct-ink-2); margin: 16px 0 8px; padding-top: 12px; border-top: 1px solid var(--ct-line); }
+.exposure-result { margin: 10px 0; padding: 8px 12px; background: var(--ct-canvas); border-radius: 6px; font-size: 0.9em; }
+
+/* ── Help overlay ────────────────────────────────────── */
+
+/* DORA RoI — clickable cards (replaces inline onmouseover/onmouseout for CSP compliance) */
+.dora-card-hover:hover { background: var(--ct-surface-2) !important; border-color: var(--ct-ink-2) !important; }
+
+/* DORA RoI overview — entity-level input cards (B_01 / B_03 / B_05) */
+.dora-overview-header {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px; margin-bottom: 12px;
+}
+
+/* Section help — small "?" button next to each section title, toggles
+   the matching .dora-hint paragraph (hidden by default). */
+
+.dora-overview-section {
+    border: 1px solid var(--ct-line); border-radius: 8px;
+    padding: 10px 14px 14px; margin: 0 0 14px;
+}
+.dora-overview-section > legend { padding: 0 8px; font-weight: 600; color: var(--ct-ink); }
+
+.dora-empty-block {
+    padding: 12px; border: 1px dashed var(--ct-line); border-radius: 6px;
+    color: var(--ct-ink-2); text-align: center; font-size: 0.9em; margin-bottom: 10px;
+}
+
+.dora-overview-card {
+    border: 1px solid var(--ct-line); border-radius: 6px;
+    background: var(--ct-canvas); padding: 10px 12px; margin-bottom: 8px;
+}
+.dora-overview-card-h { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.dora-overview-card-title { flex: 1; font-weight: 600; }
+
+.dora-overview-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 8px 14px;
+}
+.dora-overview-grid .form-row { margin-bottom: 0; }
+.dora-overview-grid .form-row label {
+    display: block; font-size: 0.82em; color: var(--ct-ink-2); margin-bottom: 2px;
+}
+.dora-overview-grid .form-row input,
+.dora-overview-grid .form-row select { width: 100%; box-sizing: border-box; }
+
+.dora-overview-id { font-size: 0.78em; color: var(--ct-ink-2); font-weight: 400; }
+.dora-overview-parent { color: var(--ct-ink-2); font-weight: 400; font-size: 0.85em; }
+
+/* Labels d'axes des matrices (hex light bakés par ctRenderMatrix pour les
+   exports) : re-thémés en dark. */
+
+/* Extrait des styles inline : la classe portait deja le nom, la mise en
+   forme vivait a cote dans un attribut style. Rendu identique. */
+.maturity-detail { margin-bottom:var(--ct-s3); border:1px solid var(--ct-line); border-radius:8px; background:var(--ct-surface); }
+
+/* Extrait du balisage : la classe existait, son style vivait a cote. */
+.dora-arrangement-card { border:1px solid var(--ct-line); border-radius:6px; padding:8px 10px; background:var(--ct-onsolid); cursor:pointer; transition:background 0.15s,border-color 0.15s; }

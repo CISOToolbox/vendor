@@ -1,0 +1,14 @@
+{
+  "name": "vendor-e2e",
+  "private": true,
+  "version": "1.0.0",
+  "description": "End-to-end tests for the CISO Toolbox Vendor (TPRM) module",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "report": "playwright show-report playwright-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.0"
+  }
+}

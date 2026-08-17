@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portail fournisseur - CISO Toolbox</title>
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="stylesheet" href="../css/cisotoolbox.css">
+<link rel="stylesheet" href="../css/tprm.css">
+<link rel="stylesheet" href="css/portal.css">
+</head>
+<body>
+
+<div class="toolbar">
+    <span class="app-title" data-i18n="portal.title">Portail fournisseur</span>
+    <span class="flex-spacer"></span>
+    <button class="btn-menu" data-click="_portalShowHelp" data-i18n="portal.help_button">Aide</button>
+    <button class="btn-menu" data-click="_portalToggleLang" id="portal-lang-btn">EN</button>
+    <span class="status" id="status-msg"></span>
+</div>
+
+<main class="portal-main">
+<div class="container" id="content"></div>
+</main>
+
+<!-- Help overlay (same pattern as the Risk / Audit apps) -->
+<div class="help-overlay" id="help-overlay" data-click-self="_portalCloseHelp">
+    <div class="help-panel">
+        <button class="help-close" data-click="_portalCloseHelp" aria-label="Close">&times;</button>
+        <div id="help-content"></div>
+    </div>
+</div>
+
+<!-- Shared CISO Toolbox helpers (data-click dispatch, AES, i18n, etc.) -->
+<script src="../js/i18n.js"></script>
+<script src="../js/i18n_core_fr.js"></script>
+<script src="../js/i18n_core_en.js"></script>
+<script src="../js/cisotoolbox.js"></script>
+
+<!-- Reuse Vendor i18n for assessment / coverage / qtype / criticality keys -->
+<script src="../js/TPRM_i18n_fr.js"></script>
+<script src="../js/TPRM_i18n_en.js"></script>
+
+<!-- Portal-specific translations (override / add portal.* keys) -->
+<script src="js/VendorPortal_i18n_fr.js"></script>
+<script src="js/VendorPortal_i18n_en.js"></script>
+<script src="js/VendorPortal_app.js"></script>
+
+</body>
+</html>

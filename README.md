@@ -1,91 +1,169 @@
-# Vendor (TPRM) — Third-Party Risk Management
+# CISO Toolbox - Vendor (standalone)
 
-> Part of [CISO Toolbox](https://www.cisotoolbox.org) — open-source security tools for CISOs.
+Third-party risk management (TPRM): vendor register, assessment campaigns and templates, maturity scoring, DORA register of information.
 
-## Features
+This repository is the **standalone** packaging of the Vendor module: one
+`docker compose up` brings up the module and its database, with its own login.
+It runs on its own - no Pilot, no reverse proxy, no other module required.
 
-### Registry and risk scoring
-- Vendor registry with **6-axis classification** (operational impact, process dependency, replacement difficulty, data sensitivity, system integration, regulatory exposure)
-- Threat level calculation `(Dependence × Penetration) / (Maturity × Trust)` aligned with EBIOS RM methodology
-- Automatic **tier** derivation (critical / high / medium / low) and **DORA critical ICT provider** detection
-- 5×5 inherent and residual risk matrix with a timeline slider
+Part of the [CISO Toolbox](https://cisotoolbox.org) suite. The integrated
+multi-module deployment (Pilot SSO + nginx + every module behind a single
+domain) lives in the CISO Toolbox suite repository.
+Prefer **no server at all**? This repo also ships the module as a
+browser-only webapp (see [`webapp/`](./webapp/) and *One repository, two
+versions* below), hosted at <https://vendor.cisotoolbox.org> — data never leaves your browser.
 
-### Templates and assessments
-- **Modèles d'évaluation** — customizable templates for questionnaires (vendor-filled) or audits (internally-filled). Default templates created on first visit, including the **42 ANSSI hygiene rules** as a ready-to-use audit template.
-- Template editor: sections, free-text questions, criticality (info / major / blocker), weight (0–100)
-- **Import templates from Excel** (downloadable `.xlsx` example with data validation) or create them in the graphical editor
-- Template-driven assessments with **coverage status** (`Covered` / `Partial` / `Not covered` / `N/A`), mandatory **corrective actions or justification** on partial / not-covered, per-question progress, submit-for-approval workflow
-- **Weighted maturity score** aggregating multiple approved assessments (per-question criticality, per-kind weight, temporal decay, manual overrides)
+## One repository, two versions
 
-### Vendor Portal (companion app at `/portal/`)
-- Standalone single-page app for vendors to fill questionnaires in their own browser
-- **Direct link sharing** via gzipped + AES-256 encrypted URL hash (small questionnaires)
-- File-based sharing (`.json`, `.ctenc`, `.xlsx`) with a ready-to-send HTML email template
-- Overdue due-date badge, per-question live status, autosave in `localStorage`
-- Vendor re-exports the filled response (encrypted JSON or Excel) and emails it back; you re-import it into the matching assessment
+This repository ships the same module in two forms. **The features and the
+data format are the same** — a JSON file exported from one can be opened in
+the other — what changes is where your data lives and who can work on it.
 
-### DORA Register of Information (RoI)
+| | Browser-only webapp ([`webapp/`](./webapp/)) | Standalone backend (this directory) |
+|---|---|---|
+| Install | None — open the hosted page or serve the static files | `docker compose up -d` |
+| Data | **Never leaves your browser**: localStorage autosave + JSON file export (optional AES-256 encryption) | PostgreSQL on your server, automatic persistence |
+| Accounts | None | Login, roles, per-user permissions |
+| Collaboration | One person at a time (share the JSON file) | Multi-user, concurrent |
+| API | None | Full REST API |
+| Backups | Your exported files | Scheduled dumps + restore scripts |
+| Upgrade path | Export JSON → import into the standalone or the suite | Join the suite later (same backend) |
 
-- **DORA Register module** built in, aligned with EU Reg. 2024/2956 and the EBA RoI ITS (DPM v4.0)
-- Supported tables: **B_01.01 to B_07.01** (reporting entities, branches, hierarchy, contractual arrangements, signatories, subcontractors, supported functions, substitutability)
-- **Official EBA codelists** (licenced activity, ICT service type, arrangement type, termination reason, currency, country…) with localised FR / EN labels; the ITS code (e.g. `eba_TA:x182`) is preserved in storage and emitted as-is on export
-- **GLEIF LEI lookup** from every LEI field (entities, signatories, subcontractors)
-- **RoI export** (File → DORA RoI export): generates an EBA RoI ITS XLSX workbook (one sheet per B_xx table) with reporting period and target currency selection — amounts in foreign currencies are kept and complemented by a normalised column
-- **Per-vendor DORA tab**: aggregated card of declared arrangements, signatories, subcontractors and supported functions
-- **Subcontractor management** (4th parties) directly from the vendor list (Subcontractors tab) or from each arrangement (arrangement ↔ subcontractor link with rank and provided service)
+**Choose the webapp** when you work alone or want zero infrastructure and
+total data sovereignty: nothing is ever sent to a server, which makes it
+ideal for a quick evaluation, a consultant working on a client's data, or
+an air-gapped context. **Choose the standalone backend** when a team needs
+a shared, durable store with accounts, concurrent editing, an API, and
+server-side backups — or as a stepping stone to the full suite.
 
-### Data and history
-- Document registry with expiry alerts, URL verification, confidence scoring
-- **Undo / redo** (Ctrl+Z / Ctrl+Y) and **snapshots** panel with optional AES-256 encryption
-- AES-256-GCM with PBKDF2 (250k iterations) for encrypted files and snapshots
-- Bilingual FR / EN with lazy-loaded English translations
+## What you get
 
-### AI assistant (optional)
-- Suggest vendor-specific risks and mitigating measures (Anthropic Claude or OpenAI GPT)
-- AI collection of public vendor documentation with URL verification
-- Answer suggestion for questionnaires
+- **Third-party risk management**: vendor registry with criticality
+  classification, mitigation measures, documents and contacts.
+- **Assessments with server-side integrity**: questionnaire templates are
+  snapshot at assessment creation and **immutable** afterwards; a linear
+  gated workflow (draft → pending approval → validated/rejected) with
+  server-recomputed scores blocks tampering even via hand-crafted requests.
+- **Vendor portal**: a companion single-page app your vendors open from a
+  link or file — they answer in their browser and send the response back
+  encrypted, no account needed.
+- **Maturity evaluations** and **DORA Register of Information** with
+  pre-export validation against the official codelists.
+- **AI assistant** (optional) and JSON import/export compatible with the
+  browser-only app; MedSecure demo dataset included.
 
-## Quick start
+## Requirements
 
-1. Visit [vendor.cisotoolbox.org](https://vendor.cisotoolbox.org) or clone this repo
-2. Open `index.html` in a browser
-3. Load `demo-en.json` from **File → Open** to explore a complete vendor assessment (MedSecure)
-4. No backend, no account required
+- Docker Engine 24+ (or Podman 4+) with the Compose plugin
+- ~2 GB RAM and 2 CPU for a single-module stack
+- **Disk**: a Docker volume for the PostgreSQL data directory
+- Python 3.11+ and `pytest` **only** if you want to run the end-to-end tests
+  from the host
 
-## Vendor Portal
+## Install and run
 
-The portal is a separate standalone page under `portal/`, served at [vendor.cisotoolbox.org/portal/](https://vendor.cisotoolbox.org/portal/).
+```bash
+cp .env.example .env
+# Edit .env - every variable is documented inline.
+# Generate each secret separately:  openssl rand -hex 32
+docker compose up -d
+```
 
-- **Vendor workflow**: click the link you received, enter the password shared out of band, fill the questionnaire, export the response. Data stays in the browser at every step.
-- **Your workflow (issuer)**: open an assessment, click **Copier modèle email** or **Lien direct**, send the vendor the link + password through separate channels, then import the returned file.
+The module is then served on <http://localhost:8081>.
 
-## Architecture
+Database migrations (Alembic) run automatically at container start.
 
-- 100% client-side vanilla JS — no framework, no build step, no `node_modules`
-- Data in the browser (localStorage autosave + downloadable JSON/Excel for persistence)
-- Event delegation via `data-click` / `data-change` / `data-input` (CSP-compliant, no inline handlers)
-- AES-256-GCM encryption for saved files and snapshots
-- Shared libraries from `../../shared/` copied at deploy time: `cisotoolbox.js`, `cisotoolbox_local.js`, `i18n.js`, `ai_common.js`, `ct_refselect.js`, `cisotoolbox.css`
-- Reuses the shared **SVG icon helper** (`_icon(name)` from `cisotoolbox.js`), the shared **snapshots panel** (`_renderSnapshotsPanel()` from `cisotoolbox_local.js`) and the shared **undo hook** (`_installUndoHook()`)
-- `<body class="ct-app-shell">` enables the fixed toolbar + sidebar + internal-scroll layout; the portal omits that class for natural document scroll
+```bash
+docker compose logs -f          # follow the logs
+docker compose down             # stop
+docker compose down -v          # stop and DESTROY the data volume
+```
 
-## Import / export
+## Authentication
 
-| Action | Where | Format | Notes |
-|---|---|---|---|
-| Save / Open analysis | File menu | `.json` / `.ctenc` | Encrypted with AES-256-GCM |
-| Export assessment | On an assessment | `.xlsx` | Prebuilt workbook with locked identity columns and conditional formatting |
-| Export assessment | On an assessment | `.json` / `.ctenc` | Plain or encrypted |
-| Assessment link | On an assessment | URL hash | Gzipped + AES-256 encrypted payload for the Vendor Portal |
-| Import assessment | On an assessment | `.xlsx` / `.json` / `.ctenc` | Re-imports the vendor's response into the existing assessment |
-| Import template | On the Modèles d'évaluation page | `.xlsx` | Create a template from a structured sheet (Section, Question, Expected, Criticality, Weight). A downloadable example file is provided. |
+`AUTH_MODE=standalone` (the default in `docker-compose.yml`) enables the local
+token login. `AUTH_TOKEN` is the bootstrap secret: the **first** account that
+uses it becomes admin, later ones are plain users an admin promotes. OAuth /
+OIDC providers can be layered on top - see `.env.example`.
+
+`AUTH_MODE=none` disables authentication entirely and serves every route as
+admin. **Development and test only.** It is the only way to run without a
+credential: in any other mode an empty credential stops the app at boot rather
+than silently opening it up.
+
+Sessions are issued **and** verified by this module alone. `JWT_SECRET` is a
+*root secret, not a signing key*: the actual key is derived at startup with
+
+```
+key = HKDF-SHA256(JWT_SECRET, salt="ciso-suite/jwt-key/v1", info="ciso-module:vendor")
+```
+
+and tokens carry `iss=ciso-vendor` / `aud=ciso-module:vendor`. A session minted by
+any other module - another standalone deployment sharing the same secret, or a
+suite module - fails both the audience *and* the signature check here.
+`MODULE_NAME=vendor` and `MODULE_COOKIE=vendor_token` in `docker-compose.yml` are
+what select that key and keep the cookie distinct; **do not remove them**.
+
+The session cookie is `Secure` by default. It is only sent over plain HTTP when
+`APP_URL` explicitly starts with `http://` - an empty or malformed value fails
+secure rather than silently downgrading the session.
+
+## Configuration
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `JWT_SECRET` | yes | Root secret, min 32 chars. Never signs anything directly (see above). |
+| `DB_PASSWORD` | yes | PostgreSQL password. |
+| `APP_URL` | yes | Public URL of the deployment. Also decides the `Secure` cookie flag. |
+| `AUTH_MODE` | no | `standalone` for a local deploy. `none` disables authentication (dev only). |
+| `AUTH_TOKEN` | yes | Bootstrap secret for the standalone login endpoint. |
+
+The full list, with comments, is in `.env.example`. Runtime settings (AI
+assistant, SMTP, integrations) are configured in the UI and persisted in the
+database - environment variables are for deploy-time bootstrap only.
+
+Deeper operational and security notes: [`STANDALONE.md`](./STANDALONE.md).
+
+## Languages
+
+**English (default)** and **French** both ship in the image; the UI opens in
+the browser's language when available and users can switch at runtime (globe
+icon, per-browser persistence). Missing translations fall back to English.
+
+## Tests
+
+End-to-end tests live in [`tests/e2e/`](./tests/e2e/) and drive a real running
+stack over HTTP (standard library only, no browser required):
+
+```bash
+bash tests/e2e/run-e2e.sh          # up -> test -> down
+```
+
+See [`tests/e2e/README.md`](./tests/e2e/README.md) for running against an
+instance you already started, and for the environment variables involved.
+
+Dependency pins are checked against `constraints.txt`:
+
+```bash
+bash tests/check-deps-drift.sh
+```
+
+## Contributing
+
+Part of this repository is **replicated** from a private shared repository and
+must not be edited here - read [`CONTRIBUTING.md`](./CONTRIBUTING.md) before
+opening a pull request.
+
+## Security
+
+Please report vulnerabilities privately - see [`SECURITY.md`](./SECURITY.md).
+Do not open a public issue for a security problem.
 
 ## License
 
-MIT
+See [`LICENSE`](./LICENSE).
 
-## Links
-
-- Website: https://vendor.cisotoolbox.org
-- Vendor Portal: https://vendor.cisotoolbox.org/portal/
-- CISO Toolbox: https://www.cisotoolbox.org
+> **Not settled yet.** The sources this repository was assembled from
+> contradict each other (an MIT `LICENSE` file, READMEs announcing MIT).
+> [`LICENSE.TODO`](./LICENSE.TODO) states the conflict; it must be resolved
+> before this repository is published.
