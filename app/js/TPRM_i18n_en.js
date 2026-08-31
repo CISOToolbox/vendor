@@ -459,6 +459,7 @@ _registerTranslations("en", {
     "vendor.status_prospect": "Considered",
     "vendor.status_active": "Active",
     "vendor.status_review": "Under review",
+    "vendor.offboard_cleaned": "{m} measure(s) and {r} risk(s) removed as moot; completed items are kept",
     "vendor.status_offboarded": "Former",
     "vendor.tier_low": "Low",
     "vendor.tier_medium": "Medium",

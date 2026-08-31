@@ -156,6 +156,13 @@ async def export_vendors(request: Request, db: AsyncSession = Depends(get_db)):
     return {"vendors": all_vendors}
 
 
+# Statuts de fournisseur qui alimentent le pilotage. Doit rester aligne avec
+# VENDOR_IN_SCOPE dans app/ts/TPRM_app.ts : le frontend et cet export decrivent
+# le meme perimetre, et une divergence ne produirait aucune erreur — seulement
+# deux chiffres differents pour la meme chose.
+VENDOR_IN_SCOPE = ("active", "review")
+
+
 @router.get("/internal/measures")
 async def internal_measures(request: Request, db: AsyncSession = Depends(get_db)):
     """Export all measures across all projects in normalized format for Pilot."""
@@ -166,6 +173,12 @@ async def internal_measures(request: Request, db: AsyncSession = Depends(get_db)
         .join(Vendor, (VendorMeasure.project_id == Vendor.project_id) & (VendorMeasure.vendor_id == Vendor.id))
         .join(Project, VendorMeasure.project_id == Project.id)
         .outerjoin(ProjectMetadata, VendorMeasure.project_id == ProjectMetadata.project_id)
+        # Meme perimetre que le tableau de bord Vendor : un fournisseur
+        # seulement ENVISAGE n'a pas de travail a piloter, et un ANCIEN n'en a
+        # plus. Sans ce filtre, Pilot afficherait dans son plan d'action des
+        # mesures que Vendor a cesse de compter — deux modules en desaccord sur
+        # le meme fournisseur, et rien pour le signaler.
+        .where(Vendor.status.in_(VENDOR_IN_SCOPE))
         .order_by(VendorMeasure.project_id, VendorMeasure.vendor_id, VendorMeasure.sort_order)
     )
     rows = result.all()

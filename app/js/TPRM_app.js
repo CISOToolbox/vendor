@@ -142,8 +142,60 @@ function renderPanel() {
 // ═══════════════════════════════════════════════════════════════
 // DASHBOARD
 // ═══════════════════════════════════════════════════════════════
+// Sortie d'un fournisseur. Les mesures TERMINEES restent : elles attestent de
+// ce qui a ete mis en oeuvre, et cette trace survit au fournisseur. Les autres
+// — planifiees, en cours — n'ont plus d'objet et disparaissent.
+//
+// Meme regle pour les risques : ceux qui ont ete CLOS ou ARCHIVES sont une
+// trace d'analyse ; ceux encore ouverts portent sur une relation qui n'existe
+// plus.
+function _offboardVendor(v) {
+    var TRACE_MESURE = ["termine"];
+    var TRACE_RISQUE = ["closed", "archived"];
+    var mesures = v.measures || [];
+    var gardees = mesures.filter(function (m) { return TRACE_MESURE.indexOf(m.statut) >= 0; });
+    var perdues = mesures.length - gardees.length;
+    v.measures = gardees;
+    var risquesAvant = (D.risks || []).filter(function (r) { return r.vendor_id === v.id; }).length;
+    D.risks = (D.risks || []).filter(function (r) {
+        return r.vendor_id !== v.id || TRACE_RISQUE.indexOf(r.status) >= 0;
+    });
+    var risquesPerdus = risquesAvant - (D.risks || []).filter(function (r) { return r.vendor_id === v.id; }).length;
+    if (perdues || risquesPerdus) {
+        showStatus(t("vendor.offboard_cleaned", { m: String(perdues), r: String(risquesPerdus) }));
+    }
+}
+// ── Perimetre du pilotage : quels fournisseurs alimentent le tableau de bord
+//    et le plan d'action ────────────────────────────────────────────────────
+//
+// Un fournisseur seulement ENVISAGE n'est pas encore un tiers : ses risques et
+// ses mesures sont une projection, pas un engagement. Les compter fausse la
+// posture et encombre le plan d'action de travail qui n'a pas lieu d'etre.
+//
+// EN REVUE reste dans le perimetre : c'est un actif qu'on reevalue, ses
+// mesures restent a piloter pendant la revue.
+//
+// ANCIEN sort du perimetre. Ses mesures TERMINEES sont conservees comme trace
+// de ce qui a ete mis en oeuvre (voir _offboardVendor) ; les autres ont ete
+// supprimees au moment de la sortie.
+var VENDOR_IN_SCOPE = ["active", "review"];
+function _vendorInScope(v) {
+    return VENDOR_IN_SCOPE.indexOf(v && v.status || "prospect") >= 0;
+}
+// Les fournisseurs qui alimentent les indicateurs et le plan d'action.
+function _scopedVendors() {
+    return (D.vendors || []).filter(_vendorInScope);
+}
+// Les risques rattaches a ces fournisseurs uniquement.
+function _scopedRisks() {
+    var ok = {};
+    _scopedVendors().forEach(function (v) { ok[v.id] = true; });
+    return (D.risks || []).filter(function (r) { return ok[r.vendor_id]; });
+}
 function renderDashboard() {
-    var v = D.vendors, r = D.risks, a = D.assessments;
+    // Le nombre total de fournisseurs reste global — c'est un inventaire.
+    // Tout le reste se calcule sur le perimetre pilote.
+    var v = _scopedVendors(), r = _scopedRisks(), a = D.assessments;
     var criticalCount = v.filter(function (x) { var tier = _getTier(x); return tier === "critical"; }).length;
     var highRiskCount = r.filter(function (x) { var sc = (x.impact || 0) * (x.likelihood || 0); return sc >= 15; }).length;
     var openRisks = r.filter(function (x) { return x.status === "needs_treatment" || x.status === "active"; }).length;
@@ -152,7 +204,7 @@ function renderDashboard() {
     var h = '<h2>' + t("dashboard.title") + '</h2>';
     // Cards
     h += '<div class="ct-kpigrid ct-mb-4">';
-    h += _card(v.length, t("dashboard.total_vendors"), "");
+    h += _card((D.vendors || []).length, t("dashboard.total_vendors"), "");
     h += _card(criticalCount, t("dashboard.critical_vendors"), _kpiTone(criticalCount, { bad: 1 }));
     h += _card(highRiskCount, t("dashboard.critical_risks"), _kpiTone(highRiskCount, { bad: 1 }));
     h += _card(pendingAssess, t("dashboard.pending_assessments"), _kpiTone(pendingAssess, { warn: 1 }));
@@ -2380,7 +2432,14 @@ function _autoSaveVendorField() {
         v.exposure.penetration = _avgSliders([cc.data_sensitivity, cc.integration, cc.regulatory_impact]);
         v.exposure.maturite = parseInt(el("v-mat")) || 0;
         v.exposure.confiance = parseInt(el("v-conf")) || 0;
+        var _ancienStatus = v.status;
         v.status = el("v-status");
+        // Sortie du fournisseur : on purge ce qui n'a plus d'objet, on garde
+        // ce qui a ete fait. Declenche uniquement sur la TRANSITION, pas a
+        // chaque enregistrement d'un fournisseur deja ancien — sinon une
+        // mesure ressaisie apres coup serait effacee au premier "Enregistrer".
+        if (v.status === "offboarded" && _ancienStatus !== "offboarded")
+            _offboardVendor(v);
         v.notes = el("v-notes");
         _persist("vendor", v.id, {
             name: v.name, legal_entity: v.legal_entity, country: v.country,
@@ -5417,7 +5476,11 @@ function _vendorMeasureStatusBadge(statut) {
 }
 function renderGlobalMeasures() {
     var allMeasures = [];
+    // Meme perimetre que le tableau de bord : un fournisseur envisage n'a pas
+    // de travail a piloter, un ancien n'en a plus.
     D.vendors.forEach(function (v, vi) {
+        if (!_vendorInScope(v))
+            return;
         (v.measures || []).forEach(function (m, mi) {
             allMeasures.push({
                 id: m.id,

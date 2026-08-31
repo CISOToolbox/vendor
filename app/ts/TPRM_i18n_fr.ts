@@ -472,6 +472,7 @@ _registerTranslations("fr", {
     "vendor.status_prospect": "Envisagé",
     "vendor.status_active": "Actif",
     "vendor.status_review": "En revue",
+    "vendor.offboard_cleaned": "{m} mesure(s) et {r} risque(s) sans objet supprimés ; les éléments terminés sont conservés",
     "vendor.status_offboarded": "Ancien",
 
     "vendor.tier_low": "Faible",

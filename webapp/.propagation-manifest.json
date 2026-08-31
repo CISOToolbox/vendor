@@ -1,6 +1,6 @@
 {
   "$comment": "Files replicated from a private upstream repository. Do NOT edit them here: the next propagation overwrites them and CI rejects local edits. See CONTRIBUTING.md, section 'Shared code'.",
-  "generated": "2026-08-31T16:19:01Z",
+  "generated": "2026-08-31T18:14:23Z",
   "checker": "check-replicated-files.py (run it in CI)",
   "files": {
     "css/cisotoolbox.css": "sha256:fb1dc86016bd7d8b9c9ebe771822fe009b122640617fc9d1e42d92e511f02590",
