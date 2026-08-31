@@ -410,6 +410,7 @@ _registerTranslations("fr", {
     "measure.col_echeance": "Échéance",
     "measure.planifie": "Planifié",
     "measure.en_cours": "En cours",
+    "measure.annule": "Abandonné",
     "measure.termine": "Terminé",
     "measure.delete_unlinked": "Supprimer les mesures non liées",
     "measure.deleted_unlinked": "mesure(s) non liée(s) supprimée(s)",
@@ -472,7 +473,7 @@ _registerTranslations("fr", {
     "vendor.status_prospect": "Envisagé",
     "vendor.status_active": "Actif",
     "vendor.status_review": "En revue",
-    "vendor.offboard_cleaned": "{m} mesure(s) et {r} risque(s) sans objet supprimés ; les éléments terminés sont conservés",
+    "vendor.offboard_cleaned": "{m} mesure(s) abandonnée(s) et {r} risque(s) clos ; rien n'a été supprimé",
     "vendor.status_offboarded": "Ancien",
 
     "vendor.tier_low": "Faible",

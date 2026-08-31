@@ -560,6 +560,10 @@ def _normalize_status(s: str) -> str:
         "completed": "completed", "termine": "completed", "Terminé": "completed",
         "en_cours": "in_progress", "En cours": "in_progress",
         "planifie": "planned", "Planifié": "planned", "planifié": "planned",
+        # Cle partagee « annule », libellee « Abandonne » dans l'interface :
+        # une mesure qu'on renonce a mener. Sans cette entree elle remonterait
+        # brute vers Pilot et tomberait dans un compartiment inconnu.
+        "annule": "cancelled", "Annulé": "cancelled", "abandonne": "cancelled",
     }
     return mapping.get(s, s)
 

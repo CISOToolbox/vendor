@@ -150,19 +150,28 @@ function renderPanel() {
 // trace d'analyse ; ceux encore ouverts portent sur une relation qui n'existe
 // plus.
 function _offboardVendor(v) {
-    var TRACE_MESURE = ["termine"];
-    var TRACE_RISQUE = ["closed", "archived"];
-    var mesures = v.measures || [];
-    var gardees = mesures.filter(function (m) { return TRACE_MESURE.indexOf(m.statut) >= 0; });
-    var perdues = mesures.length - gardees.length;
-    v.measures = gardees;
-    var risquesAvant = (D.risks || []).filter(function (r) { return r.vendor_id === v.id; }).length;
-    D.risks = (D.risks || []).filter(function (r) {
-        return r.vendor_id !== v.id || TRACE_RISQUE.indexOf(r.status) >= 0;
+    // Rien n'est supprime. Le travail qui n'aboutira pas passe en ABANDONNE et
+    // les risques encore ouverts sont CLOS : la trace de ce qui avait ete
+    // identifie survit au fournisseur, et l'operation se relit.
+    //
+    // Les mesures deja terminees ne bougent pas — elles attestent de ce qui a
+    // ete mis en oeuvre.
+    var ouvertes = (v.measures || []).filter(function (m) {
+        return m.statut !== "termine" && m.statut !== "annule";
     });
-    var risquesPerdus = risquesAvant - (D.risks || []).filter(function (r) { return r.vendor_id === v.id; }).length;
-    if (perdues || risquesPerdus) {
-        showStatus(t("vendor.offboard_cleaned", { m: String(perdues), r: String(risquesPerdus) }));
+    ouvertes.forEach(function (m) {
+        m.statut = "annule";
+        _persist("measure", m.id, { statut: "annule" });
+    });
+    var risques = (D.risks || []).filter(function (r) {
+        return r.vendor_id === v.id && r.status !== "closed" && r.status !== "archived";
+    });
+    risques.forEach(function (r) {
+        r.status = "closed";
+        _persist("risk", r.id, { status: "closed" });
+    });
+    if (ouvertes.length || risques.length) {
+        showStatus(t("vendor.offboard_cleaned", { m: String(ouvertes.length), r: String(risques.length) }));
     }
 }
 // ── Perimetre du pilotage : quels fournisseurs alimentent le tableau de bord
@@ -1619,7 +1628,7 @@ function _renderVendorRisks(v) {
             });
             h += '</select></td>';
             h += '<td' + hd("statut") + '><select data-change="updateVendorMeasure" data-args=\'' + _da(_selectedVendor, mi, "statut") + '\' data-pass-value>';
-            [["planifie", t("measure.planifie")], ["en_cours", t("measure.en_cours")], ["termine", t("measure.termine")]].forEach(function (s) {
+            [["planifie", t("measure.planifie")], ["en_cours", t("measure.en_cours")], ["termine", t("measure.termine")], ["annule", t("measure.annule")]].forEach(function (s) {
                 h += '<option value="' + s[0] + '"' + (m.statut === s[0] ? ' selected' : '') + '>' + s[1] + '</option>';
             });
             h += '</select></td>';
@@ -1638,7 +1647,12 @@ function _vendorMeasureModalOpts() {
         statusOptions: [
             { value: "planifie", label: t("measure.planifie") || "Planifié" },
             { value: "en_cours", label: t("measure.en_cours") || "En cours" },
-            { value: "termine", label: t("measure.termine") || "Terminé" }
+            { value: "termine", label: t("measure.termine") || "Terminé" },
+            // Clé partagée « annule » (ct_measure_modal.DEFAULT_STATUS_KEYS),
+            // libellée « Abandonné » : une mesure qu'on renonce à mener, sans
+            // l'effacer. C'est ce que devient le travail en cours d'un
+            // fournisseur qui sort du périmètre.
+            { value: "annule", label: t("measure.annule") || "Abandonné" }
         ]
     };
 }
@@ -5481,7 +5495,11 @@ function renderGlobalMeasures() {
     D.vendors.forEach(function (v, vi) {
         if (!_vendorInScope(v))
             return;
+        // Une mesure abandonnee reste consultable sur la fiche du fournisseur,
+        // mais elle sort du plan d'action : il n'y a plus rien a piloter.
         (v.measures || []).forEach(function (m, mi) {
+            if (m.statut === "annule")
+                return;
             allMeasures.push({
                 id: m.id,
                 vendor: v.name,
