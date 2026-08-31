@@ -615,7 +615,7 @@ Key functions from the shared library used by TPRM:
 | `_saveState()` | Push undo snapshot |
 | `_checkAutoSaveBanner()` | Show restore banner if autosave exists |
 | `ctRenderMatrix(opts)` | Render SVG risk matrix with tooltips |
-| `ctRefRegister(uid, opts)` | Register a ref-select dropdown instance |
+| `ctRefRegister(uid, opts)` | Register a ct-ref-select dropdown instance |
 | `ctRefSelect(uid, val, opts, config)` | Render multi-select dropdown with tags |
 | `ctBadge(text, color)` | Render a colored badge |
 | `colsButton(tableId)` | Render column visibility toggle button |

@@ -134,7 +134,7 @@ function renderPanel() {
             else { c!.innerHTML = renderTemplateList(); }
             break;
         case "history":
-            c!.innerHTML = '<h2>' + t("tprm.history.title") + '</h2><p class="panel-desc">' + t("tprm.history.intro") + '</p><div id="history-content"></div>';
+            c!.innerHTML = '<h2>' + t("tprm.history.title") + '</h2><p class="ct-panel-desc">' + t("tprm.history.intro") + '</p><div id="history-content"></div>';
             renderHistory();
             break;
         case "dora":
@@ -619,7 +619,7 @@ window.selectVendorListTab = function(tab: any) {
 // Card-based listing of project-wide subcontractors (DORA global identities).
 function renderSubcontractorList() {
     if (!window.DoraData || !window.DoraData.getTree()) {
-        return '<div class="empty-state">' + esc(t("dora.unavailable") || "DORA data not available") + '</div>';
+        return '<div class="ct-empty-state">' + esc(t("dora.unavailable") || "DORA data not available") + '</div>';
     }
     var tree = window.DoraData.getTree();
     var subs = (tree!.subcontractors || []).slice();
@@ -639,14 +639,14 @@ function renderSubcontractorList() {
     h += '<button class="ct-btn" data-variant="primary" data-size="xs" data-click="doraAddSub">' + t("dora.add_subcontractor") + '</button>';
     h += '</div></div>';
 
-    h += '<p class="panel-desc" style="margin:0 0 var(--ct-s3) 0">' + esc(t("dora.subs.intro")) + '</p>';
+    h += '<p class="ct-panel-desc" style="margin:0 0 var(--ct-s3) 0">' + esc(t("dora.subs.intro")) + '</p>';
 
     // Search bar (mirrors vendor list).
     h += '<div class="ct-flex ct-gap-2 ct-mb-3 ct-row-wrap">';
     h += '<input type="text" placeholder="🔍 ' + esc(t("vendor.search")) + '" value="' + esc(_subFilter) + '" class="ct-flex-1 ct-minw-180 ct-py-1 ct-px-2 ct-bordered ct-r-md ct-text-meta" data-input="filterSubs" data-pass-value>';
     h += '</div>';
 
-    if (!subs.length) return h + '<div class="empty-state">' + esc(t("dora.subs.empty")) + '</div>';
+    if (!subs.length) return h + '<div class="ct-empty-state">' + esc(t("dora.subs.empty")) + '</div>';
 
     var q = _subFilter;
     var count = 0;
@@ -692,7 +692,7 @@ function renderSubcontractorList() {
         h += '</div>';
     });
     if (count === 0 && q) {
-        h += '<div class="empty-state">' + esc(t("vendor.no_results")) + '</div>';
+        h += '<div class="ct-empty-state">' + esc(t("vendor.no_results")) + '</div>';
     }
     return h;
 }
@@ -747,7 +747,7 @@ function renderVendorList() {
     h += '</select>';
     h += '</div>';
 
-    if (!D.vendors.length) return h + '<div class="empty-state">' + t("vendor.empty") + '</div>';
+    if (!D.vendors.length) return h + '<div class="ct-empty-state">' + t("vendor.empty") + '</div>';
 
     var q = _vendorFilter;
     var sf = _vendorStatusFilter;
@@ -823,7 +823,7 @@ function renderVendorList() {
     });
 
     if (count === 0 && (q || sf)) {
-        h += '<div class="empty-state">' + t("vendor.no_results") + '</div>';
+        h += '<div class="ct-empty-state">' + t("vendor.no_results") + '</div>';
     }
 
     return h;
@@ -937,7 +937,7 @@ function _renderVendorDoraTab(v: any) {
         ? '<span class="ct-ref ct-bg-low-tint ct-text-low-ink" data-size="sm">' + esc(t("dora.bridge.roi_complete")) + '</span>'
         : '<span class="ct-ref ct-bg-high-tint ct-text-high-ink" data-size="sm">⚠ ' + esc(t("dora.bridge.roi_incomplete")) + ' (' + roi.missing.length + ')</span>';
 
-    var h = '<div class="tprm-form" style="max-width:900px">';
+    var h = '<div class="ct-tprm-form" style="max-width:900px">';
     h += '<div class="ct-flex ct-items-center ct-gap-2 ct-mb-1">';
     h += '<h3 class="ct-m-0">' + esc(t("dora.vtab.title")) + '</h3>' + statusBadge;
     h += '</div>';
@@ -945,14 +945,14 @@ function _renderVendorDoraTab(v: any) {
 
     // ── Identity (RoI) ──
     h += '<div class="form-section">' + esc(t("dora.vtab.section_identity")) + '</div>';
-    h += '<div class="form-grid">';
+    h += '<div class="ct-form-grid">';
 
     var hasAddId = !!(v.additional_id_type || v.additional_id_value);
     var addIdShown = hasAddId || _vroiAddIdOpen === v.id;
     // LEI (full width) with GLEIF lookup trigger + discreet checkbox
     // below to reveal the optional additional-id pair.
     var gleifBtn = (window.DoraData && DoraData.gleifTriggerHtml) ? DoraData.gleifTriggerHtml("vroi-lei") : "";
-    h += '<div class="form-row ct-col-span-2"><label>' + esc(t("dora.vtab.lei")) + '</label>';
+    h += '<div class="ct-form-row ct-col-span-2"><label>' + esc(t("dora.vtab.lei")) + '</label>';
     h += '<div class="ct-flex ct-items-center ct-gap-1">';
     h += '<input id="vroi-lei" value="' + esc(v.lei || "") + '" placeholder="20 chars, mod-97-10" data-input="patchVendorRoi" data-args=\'' + _da("lei") + '\' data-pass-value class="ct-flex-1">' + gleifBtn;
     h += '</div>';
@@ -966,21 +966,21 @@ function _renderVendorDoraTab(v: any) {
     // when toggled on. Spans both columns to keep the fields aligned
     // with the rest of the grid.
     if (addIdShown) {
-        h += '<div class="form-row ct-col-span-2"><label>' + esc(t("dora.vtab.additional_id_type")) + '</label>';
+        h += '<div class="ct-form-row ct-col-span-2"><label>' + esc(t("dora.vtab.additional_id_type")) + '</label>';
         h += '<select data-change="patchVendorRoi" data-args=\'' + _da("additional_id_type") + '\' data-pass-value>' + _opts("additional_id_type", idTypes, v.additional_id_type) + '</select></div>';
-        h += '<div class="form-row"><label>' + esc(t("dora.vtab.additional_id_value")) + '</label>';
+        h += '<div class="ct-form-row"><label>' + esc(t("dora.vtab.additional_id_value")) + '</label>';
         h += '<input value="' + esc(v.additional_id_value || "") + '" data-input="patchVendorRoi" data-args=\'' + _da("additional_id_value") + '\' data-pass-value></div>';
     }
 
     // Legal name (full width).
-    h += '<div class="form-row ct-col-span-2"><label>' + esc(t("dora.vtab.legal_name_latin")) + '</label>';
+    h += '<div class="ct-form-row ct-col-span-2"><label>' + esc(t("dora.vtab.legal_name_latin")) + '</label>';
     h += '<input value="' + esc(v.legal_name_latin || "") + '" data-input="patchVendorRoi" data-args=\'' + _da("legal_name_latin") + '\' data-pass-value></div>';
 
     // Country (ISO 3166-1 alpha-2 dropdown — sourced from DORA codelist).
     h += _vendorRoiCountryField(v.country_iso2, countries);
 
     // Person type (translated labels, ITS code value).
-    h += '<div class="form-row"><label>' + esc(t("dora.vtab.person_type")) + '</label>';
+    h += '<div class="ct-form-row"><label>' + esc(t("dora.vtab.person_type")) + '</label>';
     h += '<select data-change="patchVendorRoi" data-args=\'' + _da("person_type") + '\' data-pass-value>' + _opts("person_type", personType, v.person_type) + '</select></div>';
 
     // Ultimate parent (other vendors in same project).
@@ -990,9 +990,9 @@ function _renderVendorDoraTab(v: any) {
         var sel = (v.ultimate_parent_id === otherV.id) ? " selected" : "";
         parentOpts += '<option value="' + esc(otherV.id) + '"' + sel + '>' + esc(otherV.name || otherV.id) + (otherV.lei ? " (" + esc(otherV.lei) + ")" : "") + '</option>';
     });
-    h += '<div class="form-row ct-col-span-2"><label>' + esc(t("dora.vtab.ultimate_parent_id")) + '</label>';
+    h += '<div class="ct-form-row ct-col-span-2"><label>' + esc(t("dora.vtab.ultimate_parent_id")) + '</label>';
     h += '<select data-change="patchVendorRoi" data-args=\'' + _da("ultimate_parent_id") + '\' data-pass-value>' + parentOpts + '</select></div>';
-    h += '</div>';   // end form-grid (identity)
+    h += '</div>';   // end ct-form-grid (identity)
 
     // Rich per-vendor DORA card: arrangements (clickable), functions,
     // signers, sub-contractors (clickable), informal sub_contractors.
@@ -1041,11 +1041,11 @@ function _vendorRoiCountryField(value: string, list: any) {
         if (window.DoraData && typeof DoraData.ensureCodelists === "function") {
             DoraData.ensureCodelists(function() { renderPanel(); });
         }
-        return '<div class="form-row"><label>' + esc(t("dora.vtab.country_iso2")) + '</label>'
+        return '<div class="ct-form-row"><label>' + esc(t("dora.vtab.country_iso2")) + '</label>'
              + '<input value="' + esc(value || "") + '" placeholder="ISO-3166-1 alpha-2" maxlength="2" data-input="patchVendorRoi" data-args=\'' + _da("country_iso2") + '\' data-pass-value class="ct-upper"></div>';
     }
     var cur = (value || "").toUpperCase();
-    var h = '<div class="form-row"><label>' + esc(t("dora.vtab.country_iso2")) + '</label>';
+    var h = '<div class="ct-form-row"><label>' + esc(t("dora.vtab.country_iso2")) + '</label>';
     h += '<select data-change="patchVendorRoi" data-args=\'' + _da("country_iso2") + '\' data-pass-value>';
     h += '<option value="">' + esc(t("dora.vtab.country_placeholder")) + '</option>';
     list.forEach(function(it: any) {
@@ -1078,10 +1078,10 @@ function _renderVendorForm(v: any) {
     var co = v.contact || {};
     var ic = v.internal_contact || {};
     var ex = v.exposure || {};
-    var h = '<div class="tprm-form">';
+    var h = '<div class="ct-tprm-form">';
 
     // ── Identity ──
-    h += '<div class="form-grid">';
+    h += '<div class="ct-form-grid">';
     h += _field("vendor.name", "v-name", v.name);
     h += _field("vendor.legal_entity", "v-legal", v.legal_entity);
     h += _field("vendor.country", "v-country", v.country);
@@ -1090,11 +1090,11 @@ function _renderVendorForm(v: any) {
     h += _field("vendor.siret", "v-siret", v.siret);
     h += '</div>';
     // Logo
-    h += '<div class="form-row"><label>' + t("vendor.logo") + '</label>';
+    h += '<div class="ct-form-row"><label>' + t("vendor.logo") + '</label>';
     h += '<div style="display:flex;gap:8px;align-items:center">';
     h += _vendorAvatar(v);
     h += '<input type="url" id="v-logo-url" placeholder="https://example.com/logo.png" style="flex:1">';
-    h += '<button class="btn-add" style="white-space:nowrap;margin:0" data-click="_fetchLogo">' + t("vendor.logo_fetch") + '</button>';
+    h += '<button class="ct-btn-add" style="white-space:nowrap;margin:0" data-click="_fetchLogo">' + t("vendor.logo_fetch") + '</button>';
     h += '</div>';
     if (v.logo && v.logo.startsWith("data:")) {
         h += '<div style="font-size:0.72em;color:var(--ct-low);margin-top:3px">' + t("vendor.logo_stored") + '</div>';
@@ -1102,7 +1102,7 @@ function _renderVendorForm(v: any) {
     h += '</div>';
 
     // ── Status ──
-    h += '<div class="form-grid">';
+    h += '<div class="ct-form-grid">';
     h += _select("vendor.status", "v-status", v.status || "prospect", [
         ["prospect", t("vendor.status_prospect")], ["active", t("vendor.status_active")],
         ["review", t("vendor.status_review")], ["offboarded", t("vendor.status_offboarded")]
@@ -1111,20 +1111,20 @@ function _renderVendorForm(v: any) {
 
     // ── Vendor contact ──
     h += '<div class="form-section">' + t("vendor.section_contacts") + '</div>';
-    h += '<div class="form-grid">';
+    h += '<div class="ct-form-grid">';
     h += _field("vendor.contact_name", "v-cname", co.name);
     h += _field("vendor.contact_email", "v-cemail", co.email);
     h += '</div>';
-    h += '<div class="form-grid">';
+    h += '<div class="ct-form-grid">';
     h += _field("vendor.internal_contact_name", "v-icname", ic.name);
     h += _field("vendor.internal_contact_email", "v-icemail", ic.email);
     h += '</div>';
 
     // ── Contract ──
     h += '<div class="form-section">' + t("vendor.section_contract") + '</div>';
-    h += '<div class="form-row"><label>' + t("vendor.services") + '</label>';
+    h += '<div class="ct-form-row"><label>' + t("vendor.services") + '</label>';
     h += '<textarea id="v-services" rows="3" class="w-full" data-input="_autoSaveVendorField">' + esc(ct.services || "") + '</textarea></div>';
-    h += '<div class="form-grid">';
+    h += '<div class="ct-form-grid">';
     h += _field("vendor.contract_start", "v-cstart", ct.start_date, "date");
     h += _field("vendor.contract_end", "v-cend", ct.end_date, "date");
     h += _field("vendor.review_date", "v-creview", ct.review_date, "date");
@@ -1183,7 +1183,7 @@ function _renderVendorForm(v: any) {
     h += '</div>';
 
     // ── Notes ──
-    h += '<div class="form-row"><label>' + t("vendor.notes") + '</label><textarea id="v-notes" rows="4" class="w-full" data-input="_autoSaveVendorField">' + esc(v.notes || "") + '</textarea></div>';
+    h += '<div class="ct-form-row"><label>' + t("vendor.notes") + '</label><textarea id="v-notes" rows="4" class="w-full" data-input="_autoSaveVendorField">' + esc(v.notes || "") + '</textarea></div>';
 
     // Auto-save — no save button needed
     h += '</div>';
@@ -1276,7 +1276,7 @@ function _isDoraICTCritical(c: any) {
 }
 
 function _slider(labelKey: any, id: any, value: string | number | undefined, max: any) {
-    var h = '<div class="form-row">';
+    var h = '<div class="ct-form-row">';
     h += '<label>' + t(labelKey) + '</label>';
     h += '<div class="ct-flex ct-items-center ct-gap-2">';
     h += '<input type="range" id="' + id + '" min="0" max="' + max + '" value="' + (value || 0) + '" class="slider-input ct-flex-1" data-invert data-input="_onSliderChange" data-pass-el>';
@@ -1315,7 +1315,7 @@ function _renderVendorRisks(v: any) {
     // Align header styling with the Assessments and Documents tabs:
     // single flex row with the title count on the left and the action
     // buttons on the right. The contextual help previously shown as a
-    // <p class="panel-desc"> is reachable from the sidebar Help item.
+    // <p class="ct-panel-desc"> is reachable from the sidebar Help item.
     var h = '<div class="ct-flex ct-items-center ct-gap-2 ct-mb-2">';
     h += '<strong>' + t("risk.title") + ' (' + risks.length + ')</strong>';
     h += '<span class="ct-flex-1"></span>';
@@ -2096,7 +2096,7 @@ var _riskSearch = "";
 
 function renderRiskList() {
     var h = '<h2>' + t("risk.title") + '</h2>';
-    if (!D.risks.length) return h + '<div class="empty-state">' + t("risk.empty") + '</div>';
+    if (!D.risks.length) return h + '<div class="ct-empty-state">' + t("risk.empty") + '</div>';
 
     // Filters bar
     h += '<div class="ct-flex ct-gap-2 ct-row-wrap ct-mb-2 ct-items-center">';
@@ -2191,7 +2191,7 @@ window.goToRisk = goToRisk;
 
 function renderDocList() {
     var h = '<h2>' + t("doc.title") + '</h2>';
-    if (!D.documents.length) return h + '<div class="empty-state">' + t("doc.empty") + '</div>';
+    if (!D.documents.length) return h + '<div class="ct-empty-state">' + t("doc.empty") + '</div>';
     // Group by vendor
     var byVendor: Record<string, any> = {};
     D.documents.forEach(function(d) {
@@ -2796,10 +2796,10 @@ function renderTemplateList() {
     h += '<button class="ct-btn" data-variant="ghost" data-size="sm" data-click="downloadTemplateExcelExample" title="' + esc(t("template.download_example_hint")) + '">' + _icon("download") + '<span>' + t("template.download_example") + '</span></button>';
     h += '</div>';
     h += '</div>';
-    h += '<p class="panel-desc">' + t("template.intro") + '</p>';
+    h += '<p class="ct-panel-desc">' + t("template.intro") + '</p>';
 
     if (!templates.length) {
-        return h + '<div class="empty-state">' + t("template.empty") + '</div>';
+        return h + '<div class="ct-empty-state">' + t("template.empty") + '</div>';
     }
 
     templates.forEach(function(tpl) {
@@ -2896,26 +2896,26 @@ function renderTemplateEditor(tplId: string) {
     h += '</div>';
 
     // Template metadata block — reuse .tprm-form design from vendor/measure forms
-    h += '<div class="tprm-form tpl-editor-meta">';
-    h += '<div class="form-grid">';
-    h += '<div class="form-row"><label>' + t("template.name") + '</label>';
+    h += '<div class="ct-tprm-form tpl-editor-meta">';
+    h += '<div class="ct-form-grid">';
+    h += '<div class="ct-form-row"><label>' + t("template.name") + '</label>';
     h += '<input type="text" value="' + esc(tpl.name || "") + '" data-input="_onTemplateFieldChange" data-args=\'' + _da(tpl.id, "name") + '\' data-pass-value></div>';
-    h += '<div class="form-row"><label>' + t("template.kind") + '</label>';
+    h += '<div class="ct-form-row"><label>' + t("template.kind") + '</label>';
     h += '<select data-change="_onTemplateFieldChange" data-args=\'' + _da(tpl.id, "kind") + '\' data-pass-value>';
     TEMPLATE_KINDS.forEach(function(k) {
         h += '<option value="' + k + '"' + (kind === k ? " selected" : "") + '>' + esc(t("template.kind_" + k)) + '</option>';
     });
     h += '</select></div>';
     h += '</div>';
-    h += '<div class="form-grid">';
-    h += '<div class="form-row"><label>' + t("template.language") + '</label>';
+    h += '<div class="ct-form-grid">';
+    h += '<div class="ct-form-row"><label>' + t("template.language") + '</label>';
     h += '<select data-change="_onTemplateFieldChange" data-args=\'' + _da(tpl.id, "language") + '\' data-pass-value>';
     h += '<option value="fr"' + (tpl.language === "fr" ? " selected" : "") + '>Francais</option>';
     h += '<option value="en"' + (tpl.language === "en" ? " selected" : "") + '>English</option>';
     h += '</select></div>';
-    h += '<div class="form-row"></div>'; // spacer for grid
+    h += '<div class="ct-form-row"></div>'; // spacer for grid
     h += '</div>';
-    h += '<div class="form-row"><label>' + t("template.description") + '</label>';
+    h += '<div class="ct-form-row"><label>' + t("template.description") + '</label>';
     h += '<textarea rows="3" data-input="_onTemplateFieldChange" data-args=\'' + _da(tpl.id, "description") + '\' data-pass-value>' + esc(tpl.description || "") + '</textarea></div>';
     h += '</div>';
 
@@ -2928,7 +2928,7 @@ function renderTemplateEditor(tplId: string) {
     h += '</div>';
 
     if (!sections.length) {
-        h += '<div class="empty-state">' + t("template.no_sections") + '</div>';
+        h += '<div class="ct-empty-state">' + t("template.no_sections") + '</div>';
     } else {
         sections.forEach(function(section, si) {
             h += _renderTemplateSection(tpl, section, si, sections.length);
@@ -5309,7 +5309,7 @@ function renderGlobalMeasures(): string {
         h += '<button class="ct-btn" data-variant="danger" data-size="sm" data-click="deleteUnlinkedMeasures">' + t("measure.delete_unlinked") + ' (' + unlinkedCount + ')</button>';
     }
     h += '</div></div>';
-    if (!allMeasures.length) return h + '<div class="empty-state">' + t("measure.empty") + '</div>';
+    if (!allMeasures.length) return h + '<div class="ct-empty-state">' + t("measure.empty") + '</div>';
 
     h += ct_table.render({
         rows: allMeasures,
@@ -5632,11 +5632,11 @@ function _scoreColorClass(pct: any) {
 }
 
 function _field(labelKey: any, id: any, value: string | undefined, type?: any) {
-    return '<div class="form-row"><label>' + t(labelKey) + '</label><input type="' + (type || "text") + '" id="' + id + '" value="' + esc(value || "") + '" data-input="_autoSaveVendorField"></div>';
+    return '<div class="ct-form-row"><label>' + t(labelKey) + '</label><input type="' + (type || "text") + '" id="' + id + '" value="' + esc(value || "") + '" data-input="_autoSaveVendorField"></div>';
 }
 
 function _select(labelKey: any, id: any, value: string | undefined, options: any) {
-    var h = '<div class="form-row"><label>' + t(labelKey) + '</label><select id="' + id + '" data-change="_autoSaveVendorField">';
+    var h = '<div class="ct-form-row"><label>' + t(labelKey) + '</label><select id="' + id + '" data-change="_autoSaveVendorField">';
     options.forEach(function(o: any) {
         h += '<option value="' + o[0] + '"' + (value === o[0] ? ' selected' : '') + '>' + esc(o[1]) + '</option>';
     });
@@ -5649,9 +5649,9 @@ function _showModal(content: any) {
     if (existing) existing.remove();
     var bg = document.createElement("div");
     bg.id = "tprm-modal";
-    bg.className = "pwd-overlay";
+    bg.className = "ct-pwd-overlay";
     bg.style.display = "flex";
-    bg.innerHTML = '<div class="pwd-panel" style="max-width:460px;width:90%">' + content + '</div>';
+    bg.innerHTML = '<div class="ct-pwd-panel" style="max-width:460px;width:90%">' + content + '</div>';
     bg.onclick = function(e) { if (e.target === bg) closeModal(); };
     document.body.appendChild(bg);
 }
@@ -5912,7 +5912,7 @@ function aiCollectInfo() {
 
     var apiKey = typeof _aiGetApiKey === "function" ? _aiGetApiKey() : "";
     if (!apiKey) {
-        _showModal('<h3>' + t("ai.not_configured") + '</h3><div style="margin-top:12px"><button class="btn-add" data-click="closeModal">' + t("common.close") + '</button></div>');
+        _showModal('<h3>' + t("ai.not_configured") + '</h3><div style="margin-top:12px"><button class="ct-btn-add" data-click="closeModal">' + t("common.close") + '</button></div>');
         return;
     }
 
@@ -5946,7 +5946,7 @@ function aiCollectInfo() {
         closeModal();
         if (!response) {
             showStatus(t("ai.error"));
-            _showModal('<h3 style="color:var(--ct-critical)">' + t("ai.error") + '</h3><p style="font-size:0.85em">La requete IA n\'a pas retourne de reponse. Verifiez la cle API dans les parametres.</p><div style="margin-top:12px"><button class="btn-add" data-click="closeModal">' + t("common.close") + '</button></div>');
+            _showModal('<h3 style="color:var(--ct-critical)">' + t("ai.error") + '</h3><p style="font-size:0.85em">La requete IA n\'a pas retourne de reponse. Verifiez la cle API dans les parametres.</p><div style="margin-top:12px"><button class="ct-btn-add" data-click="closeModal">' + t("common.close") + '</button></div>');
             return;
         }
         try {
@@ -5979,12 +5979,12 @@ function aiCollectInfo() {
             showStatus(t("ai.collected"));
         } catch (e: any) {
             showStatus(t("ai.error"));
-            _showModal('<h3 style="color:var(--ct-critical)">' + t("ai.error") + '</h3><p style="font-size:0.85em">' + esc(e.message) + '</p><details style="margin-top:8px"><summary style="cursor:pointer;font-size:0.82em">Reponse IA brute</summary><pre style="font-size:0.75em;max-height:200px;overflow:auto;background:var(--ct-canvas);padding:8px;border-radius:4px;margin-top:4px">' + esc(response.substring(0, 1000)) + '</pre></details><div style="margin-top:12px"><button class="btn-add" data-click="closeModal">' + t("common.close") + '</button></div>');
+            _showModal('<h3 style="color:var(--ct-critical)">' + t("ai.error") + '</h3><p style="font-size:0.85em">' + esc(e.message) + '</p><details style="margin-top:8px"><summary style="cursor:pointer;font-size:0.82em">Reponse IA brute</summary><pre style="font-size:0.75em;max-height:200px;overflow:auto;background:var(--ct-canvas);padding:8px;border-radius:4px;margin-top:4px">' + esc(response.substring(0, 1000)) + '</pre></details><div style="margin-top:12px"><button class="ct-btn-add" data-click="closeModal">' + t("common.close") + '</button></div>');
         }
     }).catch(function(err: any) {
         closeModal();
         showStatus(t("ai.error"));
-        _showModal('<h3 style="color:var(--ct-critical)">' + t("ai.error") + '</h3><p style="font-size:0.85em">' + esc(String(err)) + '</p><div style="margin-top:12px"><button class="btn-add" data-click="closeModal">' + t("common.close") + '</button></div>');
+        _showModal('<h3 style="color:var(--ct-critical)">' + t("ai.error") + '</h3><p style="font-size:0.85em">' + esc(String(err)) + '</p><div style="margin-top:12px"><button class="ct-btn-add" data-click="closeModal">' + t("common.close") + '</button></div>');
     });
 }
 window.aiCollectInfo = aiCollectInfo;
@@ -6014,7 +6014,7 @@ function aiCollectDocs() {
 
     var apiKey = typeof _aiGetApiKey === "function" ? _aiGetApiKey() : "";
     if (!apiKey) {
-        _showModal('<h3>' + t("ai.not_configured") + '</h3><div style="margin-top:12px"><button class="btn-add" data-click="closeModal">' + t("common.close") + '</button></div>');
+        _showModal('<h3>' + t("ai.not_configured") + '</h3><div style="margin-top:12px"><button class="ct-btn-add" data-click="closeModal">' + t("common.close") + '</button></div>');
         return;
     }
 
@@ -6112,7 +6112,7 @@ function aiCollectDocs() {
     }).catch(function(err: any) {
         closeModal();
         showStatus(t("ai.error"));
-        _showModal('<h3 style="color:var(--ct-critical)">' + t("ai.error") + '</h3><p style="font-size:0.85em">' + esc(String(err)) + '</p><div style="margin-top:12px"><button class="btn-add" data-click="closeModal">' + t("common.close") + '</button></div>');
+        _showModal('<h3 style="color:var(--ct-critical)">' + t("ai.error") + '</h3><p style="font-size:0.85em">' + esc(String(err)) + '</p><div style="margin-top:12px"><button class="ct-btn-add" data-click="closeModal">' + t("common.close") + '</button></div>');
     });
 }
 window.aiCollectDocs = aiCollectDocs;

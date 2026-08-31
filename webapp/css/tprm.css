@@ -5,7 +5,7 @@
      thème via ses deux composantes. Écran uniquement (pas d'export SVG ici). */
   --tprm-extreme: var(--ct-critical);
 }
-.panel-desc { font-size: 0.85em; color: var(--ct-ink-2); margin-bottom: 16px; }
+.ct-panel-desc { font-size: 0.85em; color: var(--ct-ink-2); margin-bottom: 16px; }
 
 /* ── Dashboard cards ──────────────────────────────────── */
 .tprm-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 16px; }
@@ -73,12 +73,12 @@ details.dora-arrangement[open] summary { border-bottom: 1px solid var(--ct-line)
 .doc-status-expired { color: var(--ct-critical); font-weight: 600; }
 
 /* ── Forms ─────────────────────────────────────────────── */
-.tprm-form { background: var(--ct-surface); padding: 16px; border: 1px solid var(--ct-line); border-radius: 8px; }
-.tprm-form label { display: block; font-size: 0.75em; font-weight: 600; color: var(--ct-ink-2); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
-.tprm-form input, .tprm-form select, .tprm-form textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--ct-line); border-radius: 6px; font-size: 0.9em; font-family: inherit; box-sizing: border-box; }
-.tprm-form input:focus, .tprm-form select:focus, .tprm-form textarea:focus { border-color: var(--ct-accent); outline: none; }
-.form-row { margin-bottom: 10px; }
-.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ct-tprm-form { background: var(--ct-surface); padding: 16px; border: 1px solid var(--ct-line); border-radius: 8px; }
+.ct-tprm-form label { display: block; font-size: 0.75em; font-weight: 600; color: var(--ct-ink-2); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+.ct-tprm-form input, .ct-tprm-form select, .ct-tprm-form textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--ct-line); border-radius: 6px; font-size: 0.9em; font-family: inherit; box-sizing: border-box; }
+.ct-tprm-form input:focus, .ct-tprm-form select:focus, .ct-tprm-form textarea:focus { border-color: var(--ct-accent); outline: none; }
+.ct-form-row { margin-bottom: 10px; }
+.ct-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--ct-line); }
 
 /* Table inline editors and .ct-icon are defined in shared/css/cisotoolbox.css */
@@ -256,7 +256,7 @@ select.tpl-criticality.crit-info, select.tpl-criticality.crit-major, select.tpl-
     .tprm-card { padding: 10px 8px; }
     .tprm-card .card-val { font-size: 1.5em; }
     .tprm-card .card-lbl { font-size: 0.7em; }
-    .form-grid { grid-template-columns: 1fr; }
+    .ct-form-grid { grid-template-columns: 1fr; }
     .cls-columns { grid-template-columns: 1fr; }
 
     .vendor-tabs { flex-direction: column; }
@@ -280,7 +280,7 @@ select.tpl-criticality.crit-info, select.tpl-criticality.crit-major, select.tpl-
 
     .question-card { padding: 10px; }
     .answer-pills { flex-wrap: wrap; }
-    .tprm-form { padding: 12px; }
+    .ct-tprm-form { padding: 12px; }
     .form-actions { flex-wrap: wrap; }
     .form-actions .btn-primary, .form-actions .btn-secondary { flex: 1; min-width: 120px; text-align: center; }
     .exposure-result { font-size: 0.82em; }
@@ -347,12 +347,12 @@ select.tpl-criticality.crit-info, select.tpl-criticality.crit-major, select.tpl-
     display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 8px 14px;
 }
-.dora-overview-grid .form-row { margin-bottom: 0; }
-.dora-overview-grid .form-row label {
+.dora-overview-grid .ct-form-row { margin-bottom: 0; }
+.dora-overview-grid .ct-form-row label {
     display: block; font-size: 0.82em; color: var(--ct-ink-2); margin-bottom: 2px;
 }
-.dora-overview-grid .form-row input,
-.dora-overview-grid .form-row select { width: 100%; box-sizing: border-box; }
+.dora-overview-grid .ct-form-row input,
+.dora-overview-grid .ct-form-row select { width: 100%; box-sizing: border-box; }
 
 .dora-overview-id { font-size: 0.78em; color: var(--ct-ink-2); font-weight: 400; }
 .dora-overview-parent { color: var(--ct-ink-2); font-weight: 400; font-size: 0.85em; }

@@ -278,9 +278,9 @@ function _renderEntityOverview() {
         });
     });
 
-    // Layout helpers — kept consistent with the form-row pattern used
+    // Layout helpers — kept consistent with the ct-form-row pattern used
     // in the Vendor RoI tab and the existing modals (cisotoolbox.css /
-    // tprm.css already style .form-row, label, input, select).
+    // tprm.css already style .ct-form-row, label, input, select).
     function _section(legendHtml: string, bodyHtml: string) {
         return '<fieldset class="dora-overview-section">'
              + '<legend>' + legendHtml + '</legend>'
@@ -290,7 +290,7 @@ function _renderEntityOverview() {
     // toggles a hidden blue help paragraph. Hints are off by default to
     // keep the form lean.
     function _hint(key: string, s: unknown) {
-        return '<p class="panel-desc dora-hint" id="dora-hint-' + key + '" style="display:none;margin:0 0 var(--ct-s2)">' + esc(s) + '</p>';
+        return '<p class="ct-panel-desc dora-hint" id="dora-hint-' + key + '" style="display:none;margin:0 0 var(--ct-s2)">' + esc(s) + '</p>';
     }
     function _helpBtn(key: string) {
         return '<button type="button" class="ct-btn" data-variant="ghost" data-size="sm" data-click="doraToggleHint" data-args=\'["' + key + '"]\' title="' + esc(_doraT("dora.help.toggle", "Afficher / masquer l'aide")) + '" aria-label="' + esc(_doraT("dora.help.toggle", "Afficher / masquer l'aide")) + '">?</button>';
@@ -299,7 +299,7 @@ function _renderEntityOverview() {
         return '<div class="dora-empty-block">' + esc(s) + '</div>';
     }
     function _fld(label: string, controlHtml: string) {
-        return '<div class="form-row"><label>' + esc(label) + '</label>' + controlHtml + '</div>';
+        return '<div class="ct-form-row"><label>' + esc(label) + '</label>' + controlHtml + '</div>';
     }
     function _cardOpen(titleEscapedHtml: string, deleteClick: string, deleteArgs: string) {
         var h = '<article class="dora-overview-card">';
@@ -316,7 +316,7 @@ function _renderEntityOverview() {
     }
 
     var h = '';
-    h += '<p class="panel-desc dora-hint ct-hidden" id="dora-hint-intro">' + esc(_doraT("dora.overview.intro", "Saisie centralisée des informations générales de votre entité financière : entités déclarantes, succursales, périmètre de consolidation et fonctions opérationnelles. Les accords contractuels et sous-traitants se gèrent dans les fiches PSTI et sous-traitants.")) + '</p>';
+    h += '<p class="ct-panel-desc dora-hint ct-hidden" id="dora-hint-intro">' + esc(_doraT("dora.overview.intro", "Saisie centralisée des informations générales de votre entité financière : entités déclarantes, succursales, périmètre de consolidation et fonctions opérationnelles. Les accords contractuels et sous-traitants se gèrent dans les fiches PSTI et sous-traitants.")) + '</p>';
 
     // ── B_01 — Identité de l'entité financière déclarante ──
     var b01Body = '';
@@ -1364,7 +1364,7 @@ window._showDoraValidationModal = function(errors: Array<Record<string, string>>
         branch: _doraT("dora.valid.kind_branch", "Succursale"),
         consolidation: _doraT("dora.valid.kind_consolidation", "Périmètre de consolidation")
     };
-    var body = '<p class="panel-desc" style="margin:0 0 var(--ct-s3)">'
+    var body = '<p class="ct-panel-desc" style="margin:0 0 var(--ct-s3)">'
              + esc(_doraT("dora.valid.intro", "Le registre contient des erreurs qui rendront l'export EBA invalide. Corrigez-les, ou exportez malgré tout en connaissance de cause."))
              + '</p><div style="max-height:50vh;overflow-y:auto">';
     errors.forEach(function(e) {
@@ -1396,14 +1396,14 @@ window.doraOpenExportModal = function() {
     var open = function() {
         var currencies = (_doraCodelists && _doraCodelists.currency_iso4217) || ["EUR","USD","GBP"];
         var rp = _doraDefaultReportingPeriod();
-        var body = '<p class="panel-desc" style="margin:0 0 var(--ct-s3)">'
+        var body = '<p class="ct-panel-desc" style="margin:0 0 var(--ct-s3)">'
                  + esc(_doraT("dora.export.modal_intro", "Génère un classeur XLSX au format EBA RoI ITS (un onglet par table B_xx). La période de reporting est enregistrée sur chaque entité déclarante avant export."))
                  + '</p>';
-        body += '<div class="form-row">'
+        body += '<div class="ct-form-row">'
               +   '<label>' + esc(_doraT("dora.export.reporting_period", "Période de reporting")) + '</label>'
               +   '<input id="dora-export-rp" value="' + esc(rp) + '" placeholder="' + new Date().getFullYear() + '-12-31" maxlength="10" style="width:140px;font-family:monospace">'
               + '</div>';
-        body += '<div class="form-row">'
+        body += '<div class="ct-form-row">'
               +   '<label>' + esc(_doraT("dora.export.target_currency", "Devise cible")) + '</label>'
               +   '<select id="dora-export-cur" class="ct-w-120">';
         currencies.forEach(function(c: any) {
@@ -1571,7 +1571,7 @@ function _doraRefRefreshTags(uid: string, items: any[], emptyText?: string) {
     var wrap = document.getElementById(uid);
     var dd = document.getElementById(uid + "-dd");
     if (!wrap || !dd) return;
-    var tagsEl = wrap.querySelector(".ref-tags");
+    var tagsEl = wrap.querySelector(".ct-ref-tags");
     if (!tagsEl) return;
     var ids: string[] = [];
     dd.querySelectorAll("input:checked").forEach(function(c) { ids.push((c as HTMLInputElement).value); });
@@ -1583,7 +1583,7 @@ function _doraRefRefreshTags(uid: string, items: any[], emptyText?: string) {
     ids.forEach(function(id) {
         var m = items.find(function(x) { return x.id === id; });
         var disp = m ? esc(id + " - " + m.label) : esc(id);
-        html += '<span class="ref-tag">' + disp + '<span class="ref-tag-x" data-click="ctRefRemove" data-args=\'' + _da(uid, id) + '\' data-stop>x</span></span>';
+        html += '<span class="ct-ref-tag">' + disp + '<span class="ct-ref-tag-x" data-click="ctRefRemove" data-args=\'' + _da(uid, id) + '\' data-stop>x</span></span>';
     });
     tagsEl.innerHTML = html;
 }

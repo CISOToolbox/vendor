@@ -30,7 +30,7 @@
     <div class="ct-appbar-actions">
         <button class="ct-iconaction" data-click="ct_toggleLang" data-icon="globe" aria-label="Langue" title="Langue FR / EN"></button>
         <button class="ct-iconaction" data-click="ct_toggleTheme" data-icon="moon" aria-label="Thème" title="Thème clair / sombre"></button>
-        <span class="toolbar-right" id="toolbar-right"></span>
+        <span class="ct-toolbar-right" id="toolbar-right"></span>
     </div>
 </header>
 
@@ -92,9 +92,9 @@
 </div>
 </div>
 
-<div class="pwd-overlay" id="confirm-overlay">
-<div class="pwd-panel">
-    <div class="pwd-title" id="confirm-title"></div>
+<div class="ct-pwd-overlay" id="confirm-overlay">
+<div class="ct-pwd-panel">
+    <div class="ct-pwd-title" id="confirm-title"></div>
     <div id="confirm-body" class="ct-text-data ct-mb-3"></div>
     <div class="ct-flex ct-gap-2 ct-justify-end">
         <button class="ct-btn" id="confirm-non" data-i18n="btn_no">Non</button>
@@ -103,12 +103,12 @@
 </div>
 </div>
 
-<div class="pwd-overlay" id="pwd-overlay">
-<div class="pwd-panel">
-    <div class="pwd-title" id="pwd-title">Mot de passe</div>
-    <input type="password" class="pwd-input" id="pwd-input" placeholder="Mot de passe" autocomplete="off">
-    <input type="password" class="pwd-input hidden" id="pwd-input2" placeholder="Confirmer le mot de passe" autocomplete="off">
-    <div class="pwd-error" id="pwd-error"></div>
+<div class="ct-pwd-overlay" id="pwd-overlay">
+<div class="ct-pwd-panel">
+    <div class="ct-pwd-title" id="pwd-title">Mot de passe</div>
+    <input type="password" class="ct-pwd-input" id="pwd-input" placeholder="Mot de passe" autocomplete="off">
+    <input type="password" class="ct-pwd-input hidden" id="pwd-input2" placeholder="Confirmer le mot de passe" autocomplete="off">
+    <div class="ct-pwd-error" id="pwd-error"></div>
     <div class="ct-flex ct-gap-2 ct-justify-end ct-mt-2">
         <button class="ct-btn" id="pwd-cancel">Annuler</button>
         <button class="ct-btn" data-variant="primary" id="pwd-ok">OK</button>
