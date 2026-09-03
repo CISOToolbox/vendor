@@ -97,16 +97,24 @@ async def update_measure(
     await db.commit()
     await db.refresh(measure)
     import asyncio
-    from src.pilot_notify import notify_pilot_measure
-    from src.routes.internal import _normalize_status
+    from src.pilot_notify import notify_pilot_measure, notify_pilot_measure_deleted
+    from src.routes.internal import VENDOR_IN_SCOPE, _normalize_status
     from src.models import ProjectMetadata
     v_row = await db.execute(
-        select(Vendor.name, Project.name.label("project_name"), ProjectMetadata.organization)
+        select(Vendor.name, Project.name.label("project_name"), ProjectMetadata.organization,
+               Vendor.status)
         .join(Project, Vendor.project_id == Project.id)
         .outerjoin(ProjectMetadata, Vendor.project_id == ProjectMetadata.project_id)
         .where(Vendor.project_id == project_id, Vendor.id == measure.vendor_id)
     )
     vrow = v_row.first()
+    # Le canal push doit tenir le MÊME périmètre que /internal/measures : un
+    # PATCH sur la mesure d'un fournisseur hors pilotage (prospect, ancien)
+    # upsertait la ligne dans le cache Pilot — l'offboarding lui-même
+    # repoussait chaque mesure qu'il abandonnait. Hors périmètre, on retire.
+    if vrow and (vrow[3] or "") not in VENDOR_IN_SCOPE:
+        asyncio.ensure_future(notify_pilot_measure_deleted(measure_id))
+        return measure
     vendor_name = vrow[0] if vrow else ""
     project_name_ = vrow[1] if vrow else ""
     organization = vrow[2] if vrow else ""

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 
-from fastapi import Depends
+from fastapi import Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -24,10 +24,13 @@ from src.ai_proxy_common import (
 )
 from src.auth import get_current_user
 from src.database import get_db
+from src.ai_prompts import (MAX_JSON, SCHEMA_ACTION, bloc_mesures, borner,
+                            borner_liste, measure_context, validate_output)
 from src.models import User
+from src.routes.auth_helpers import get_project_or_404
 
 # Common /api/ai endpoints; the métier endpoints below are appended to it.
-router = make_ai_router()
+router = make_ai_router(generic_complete=False)
 
 
 def _lang_name(language: str) -> str:
@@ -48,18 +51,27 @@ class MeasureSuggestRequest(BaseModel):
     tier: str = ""
     dora_critical: bool = False
     gdpr_subprocessor: bool = False
-    existing_measures: list[str] = []
+    # FEAT-40 — le serveur lit les mesures du fournisseur EN BASE. Le client
+    # envoyait des NOMS seuls, sans id ni description : le modèle ne pouvait
+    # ni juger d'un recouvrement, ni désigner une mesure à enrichir.
+    project_id: str = ""
+    vendor_id: str = ""
+    include_existing_measures: bool = True
     # risk context (mode "risk" / "custom")
     risk: dict = {}
     # custom request (mode "custom")
     custom_request: str = ""
 
 
-def _measure_suggest_system(mode: str, vendor_name: str, language: str) -> str:
+def _measure_suggest_system(mode: str, vendor_name: str, language: str,
+                            avec_mesures: bool = False) -> str:
     name = vendor_name or "Vendor"
     lang = _lang_name(language)
+    # Le discriminant n'est demandé QUE si le plan est transmis : sans lui, le
+    # modèle inventerait des identifiants de mesures qu'il n'a jamais vues.
+    action = SCHEMA_ACTION if avec_mesures else ""
     schema = (
-        '[{"mesure":"SHORT name max 8 words — ' + name + '","details":"DETAILED '
+        '[{' + action + '"mesure":"SHORT name max 8 words — ' + name + '","details":"DETAILED '
         'implementation steps, procedures, tools, frequency, responsible teams '
         '(2-5 sentences)","type":"Contractuelle|Technique|Organisationnelle|'
         'Surveillance","responsable":"suggested owner"}]'
@@ -111,38 +123,54 @@ async def vendor_suggest_measures(body: MeasureSuggestRequest,
     provider, model = await _runtime_provider_model(db)
 
     mode = body.mode if body.mode in ("vendor", "risk", "custom") else "vendor"
-    existing = ", ".join(body.existing_measures) if body.existing_measures else "none"
+
+    # Contexte de mesures : lu en base, jamais reçu du client.
+    contexte = None
+    if body.include_existing_measures and body.project_id and body.vendor_id:
+        try:
+            project = await get_project_or_404(body.project_id, user, db, "read")
+        except HTTPException:
+            raise
+        contexte = await measure_context(db, project.id, body.vendor_id)
+    bloc = bloc_mesures(contexte)
 
     if mode == "vendor":
         user_prompt = (
             "Vendor: " + json.dumps({
-                "name": body.vendor_name, "sector": body.vendor_sector,
-                "services": body.vendor_services,
+                "name": borner(body.vendor_name), "sector": borner(body.vendor_sector),
+                "services": borner(body.vendor_services),
             }, ensure_ascii=False) +
-            "\nExposure: " + json.dumps(body.exposure or {}, ensure_ascii=False) +
-            "\nRisks: " + json.dumps(body.risk or {}, ensure_ascii=False) +
-            "\nExisting measures: " + existing +
-            "\nClassification: " + json.dumps(body.classification or {}, ensure_ascii=False) +
-            "\nTier: " + (body.tier or "") +
+            "\nExposure: " + json.dumps(body.exposure or {}, ensure_ascii=False)[:MAX_JSON] +
+            "\nRisks: " + json.dumps(body.risk or {}, ensure_ascii=False)[:MAX_JSON] +
+            bloc +
+            "\nClassification: " + json.dumps(body.classification or {}, ensure_ascii=False)[:MAX_JSON] +
+            "\nTier: " + borner(body.tier, 60) +
             ("\nDORA critical ICT provider: yes" if body.dora_critical else "") +
             ("\nGDPR subprocessor: yes" if body.gdpr_subprocessor else "")
         )
     elif mode == "risk":
         user_prompt = (
-            "Vendor: " + (body.vendor_name or "") + " (" + (body.vendor_sector or "") + ")" +
-            "\nRisk to mitigate: " + json.dumps(body.risk or {}, ensure_ascii=False) +
-            "\nExisting measures: " + existing
+            "Vendor: " + borner(body.vendor_name) + " (" + borner(body.vendor_sector) + ")" +
+            "\nRisk to mitigate: " + json.dumps(body.risk or {}, ensure_ascii=False)[:MAX_JSON] +
+            bloc
         )
     else:  # custom
         user_prompt = (
-            "Vendor: " + (body.vendor_name or "") +
-            "\nRisk: " + json.dumps(body.risk or {}, ensure_ascii=False) +
-            "\nUser request: " + (body.custom_request or "")
+            "Vendor: " + borner(body.vendor_name) +
+            "\nRisk: " + json.dumps(body.risk or {}, ensure_ascii=False)[:MAX_JSON] +
+            "\nUser request: " + borner(body.custom_request) +
+            # Le mode `custom` n'en recevait AUCUNE : il produisait des doublons
+            # à chaque demande libre.
+            bloc
         )
 
-    system = _measure_suggest_system(mode, body.vendor_name, body.language)
+    system = _measure_suggest_system(mode, borner(body.vendor_name, 200), body.language,
+                                     contexte is not None)
     raw = await _provider_complete(db, system + _REFUSAL_HINT, user_prompt, provider, model)
-    return {"result": _parse_lax_or_refuse(raw)}
+    try:
+        return {"result": validate_output(_parse_lax_or_refuse(raw), "measures")}
+    except ValueError as e:
+        raise HTTPException(status_code=502, detail=f"unusable AI response: {e}")
 
 
 # ── Feature: suggest client risks (with measures) for a vendor ─────────
@@ -160,16 +188,22 @@ class RiskSuggestRequest(BaseModel):
     gdpr_subprocessor: bool = False
     existing_risks: list[str] = []
     custom_request: str = ""
+    # FEAT-40 — ce point d'entrée propose des risques AVEC leurs mesures.
+    project_id: str = ""
+    vendor_id: str = ""
+    include_existing_measures: bool = True
 
 
-def _risk_suggest_system(mode: str, vendor_name: str, language: str) -> str:
+def _risk_suggest_system(mode: str, vendor_name: str, language: str,
+                         avec_mesures: bool = False) -> str:
     name = vendor_name or "Vendor"
     lang = _lang_name(language)
     schema = (
         '[{"title":"client risk (consequence)","category":"CYBER|OPS|FIN|COMP|'
         'STRAT|REP|GEO","impact":1-5,"likelihood":1-5,"description":"explain how '
-        'this vendor situation creates risk for the client","measures":[{"mesure":'
-        '"SHORT name max 8 words — ' + name + '","details":"DETAILED implementation '
+        'this vendor situation creates risk for the client","measures":[{'
+        + (SCHEMA_ACTION if avec_mesures else "") +
+        '"mesure":"SHORT name max 8 words — ' + name + '","details":"DETAILED implementation '
         'steps (2-5 sentences)","type":"Contractuelle|Technique|Organisationnelle|'
         'Surveillance","responsable":"owner"}]}]'
     )
@@ -221,29 +255,49 @@ async def vendor_suggest_risks(body: RiskSuggestRequest,
     _check_rate_limit(str(user.id) if user else "anonymous")
     provider, model = await _runtime_provider_model(db)
 
+    # FEAT-40 — ce point d'entrée propose des risques AVEC leurs mesures : il
+    # doit voir le plan comme les autres. `bloc` y était référencé sans être
+    # calculé (NameError au premier appel en mode personnalisé).
+    contexte = None
+    if body.include_existing_measures and body.project_id and body.vendor_id:
+        project = await get_project_or_404(body.project_id, user, db, "read")
+        contexte = await measure_context(db, project.id, body.vendor_id)
+    bloc = bloc_mesures(contexte)
+
     mode = "custom" if body.mode == "custom" else "auto"
     if mode == "custom":
         user_prompt = (
-            "Vendor: " + (body.vendor_name or "") + " (" + (body.vendor_sector or "") + ")" +
-            "\nServices: " + (body.vendor_services or "") +
-            "\nUser request: " + (body.custom_request or "")
+            "Vendor: " + borner(body.vendor_name) + " (" + borner(body.vendor_sector) + ")" +
+            "\nServices: " + borner(body.vendor_services) +
+            "\nUser request: " + borner(body.custom_request) +
+            # Le mode `custom` n'en recevait AUCUNE : il produisait des doublons
+            # à chaque demande libre.
+            bloc
         )
     else:
         user_prompt = (
             "Vendor: " + json.dumps({
-                "name": body.vendor_name, "sector": body.vendor_sector,
-                "services": body.vendor_services, "website": body.vendor_website,
+                "name": borner(body.vendor_name), "sector": borner(body.vendor_sector),
+                "services": borner(body.vendor_services), "website": borner(body.vendor_website),
             }, ensure_ascii=False) +
-            "\nClassification: " + json.dumps(body.classification or {}, ensure_ascii=False) +
-            "\nTier: " + (body.tier or "") +
+            "\nClassification: " + json.dumps(body.classification or {}, ensure_ascii=False)[:MAX_JSON] +
+            "\nTier: " + borner(body.tier, 60) +
             ("\nDORA critical ICT provider: yes" if body.dora_critical else "") +
             ("\nGDPR subprocessor: yes" if body.gdpr_subprocessor else "") +
-            "\nExisting risks: " + (", ".join(body.existing_risks) if body.existing_risks else "none")
+            "\nExisting risks: " + (", ".join(borner_liste(body.existing_risks)) or "none") +
+            # Chaque branche joint `bloc` EXPLICITEMENT. L'ancien garde-fou
+            # (`if "Existing measures" not in user_prompt`) décidait sur une
+            # sous-chaîne d'un texte partiellement contrôlé par le client :
+            # un champ contenant ces mots supprimait le contexte en silence.
+            bloc
         )
-
-    system = _risk_suggest_system(mode, body.vendor_name, body.language)
+    system = _risk_suggest_system(mode, borner(body.vendor_name, 200), body.language,
+                                  contexte is not None)
     raw = await _provider_complete(db, system + _REFUSAL_HINT, user_prompt, provider, model)
-    return {"result": _parse_lax_or_refuse(raw)}
+    try:
+        return {"result": validate_output(_parse_lax_or_refuse(raw), "risks")}
+    except ValueError as e:
+        raise HTTPException(status_code=502, detail=f"unusable AI response: {e}")
 
 
 # ── Feature: suggest assessment answers for a questionnaire domain ─────
@@ -290,7 +344,10 @@ async def vendor_suggest_assessment(body: AssessmentSuggestRequest,
         "\n".join((q.id or "") + ": " + (q.text or "") for q in body.questions)
     )
     raw = await _provider_complete(db, system + _REFUSAL_HINT, user_prompt, provider, model)
-    return {"result": _parse_lax_or_refuse(raw)}
+    try:
+        return {"result": validate_output(_parse_lax_or_refuse(raw), "assessment")}
+    except ValueError as e:
+        raise HTTPException(status_code=502, detail=f"unusable AI response: {e}")
 
 
 # ── Feature: collect a vendor profile from public knowledge ────────────
@@ -400,7 +457,10 @@ async def vendor_collect_info(body: CollectInfoRequest,
 
     system = _collect_info_system(body.language)
     raw = await _provider_complete(db, system + _REFUSAL_HINT, user_prompt, provider, model)
-    return {"result": _parse_lax_or_refuse(raw)}
+    try:
+        return {"result": validate_output(_parse_lax_or_refuse(raw), "profile")}
+    except ValueError as e:
+        raise HTTPException(status_code=502, detail=f"unusable AI response: {e}")
 
 
 # ── Feature: find public security-documentation URLs for a vendor ──────

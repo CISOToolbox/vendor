@@ -205,7 +205,13 @@ function _scopedRisks(): any[] {
 function renderDashboard() {
     // Le nombre total de fournisseurs reste global — c'est un inventaire.
     // Tout le reste se calcule sur le perimetre pilote.
-    var v = _scopedVendors(), r = _scopedRisks(), a = D.assessments;
+    var v = _scopedVendors(), r = _scopedRisks();
+    // Les évaluations suivent le même périmètre que le reste de la page : une
+    // évaluation en cours chez un prospect ou un ancien n'est pas « en
+    // attente » au sens du pilotage.
+    var inScope: Record<string, boolean> = {};
+    v.forEach(function(x) { inScope[x.id] = true; });
+    var a = (D.assessments || []).filter(function(x: any) { return !x.vendor_id || inScope[x.vendor_id]; });
     var criticalCount = v.filter(function(x) { var tier = _getTier(x); return tier === "critical"; }).length;
     var highRiskCount = r.filter(function(x) { var sc = (x.impact||0) * (x.likelihood||0); return sc >= 15; }).length;
     var openRisks = r.filter(function(x) { return x.status === "needs_treatment" || x.status === "active"; }).length;
@@ -287,7 +293,7 @@ function renderDashboard() {
 }
 
 function _renderRiskTimeline() {
-    var risks = D.risks.filter(function(r) { return r.status !== "closed" && r.status !== "archived"; });
+    var risks = _scopedRisks().filter(function(r) { return r.status !== "closed" && r.status !== "archived"; });
     if (!risks.length) return '<div class="ct-muted ct-text-meta">-</div>';
 
     // Collect all measure deadlines as transition dates
@@ -297,8 +303,8 @@ function _renderRiskTimeline() {
     dates.push(today);
 
     // Find min/max dates for the timeline
-    D.vendors.forEach(function(v) {
-        (v.measures || []).forEach(function(m) {
+    _scopedVendors().forEach(function(v) {
+        (v.measures || []).forEach(function(m: any) {
             if (m.echeance) dates.push(m.echeance);
         });
     });
@@ -358,8 +364,8 @@ function _renderRiskTimeline() {
             if (hasResidual) {
                 var v = D.vendors.find(function(x) { return x.id === r.vendor_id; });
                 if (v && v.measures) {
-                    var linkedIds = (r.linked_measures || "").split(",").map(function(s) { return s.trim().split(" - ")[0].trim(); }).filter(Boolean);
-                    var allMeasuresDone = linkedIds.length > 0 && linkedIds.every(function(mid) {
+                    var linkedIds = (r.linked_measures || "").split(",").map(function(s: string) { return s.trim().split(" - ")[0].trim(); }).filter(Boolean);
+                    var allMeasuresDone = linkedIds.length > 0 && linkedIds.every(function(mid: string) {
                         var m = v!.measures!.find(function(x) { return x.id === mid; });
                         return m && m.echeance && m.echeance <= dateStr;
                     });
@@ -484,7 +490,9 @@ window.setDeadlineDays = setDeadlineDays;
 
 function _getExpiringItems() {
     var items: { date: string; label: string }[] = [], now = new Date(), limit = new Date(now.getTime() + _deadlineDays * 86400000);
-    D.vendors.forEach(function(v) {
+    // Contrats et certifications des seuls fournisseurs pilotés : relancer la
+    // revue contractuelle d'un fournisseur offboardé n'a pas de sens.
+    _scopedVendors().forEach(function(v) {
         if (v.contract && v.contract.end_date) {
             var d = new Date(v.contract.end_date);
             if (d > now && d < limit) items.push({ date: v.contract.end_date, label: v.name + " — " + t("vendor.contract_end") });
@@ -493,7 +501,7 @@ function _getExpiringItems() {
             var dr = new Date(v.contract.review_date);
             if (dr > now && dr < limit) items.push({ date: v.contract.review_date, label: v.name + " — " + t("vendor.review_date") });
         }
-        (v.certifications || []).forEach(function(c) {
+        (v.certifications || []).forEach(function(c: any) {
             if (c.expiry_date) {
                 var d2 = new Date(c.expiry_date);
                 if (d2 > now && d2 < limit) items.push({ date: c.expiry_date, label: v.name + " — " + c.name });
@@ -510,19 +518,21 @@ function _getExpiringItems() {
 
 function _getLastMeasureDate() {
     var last = "";
-    D.vendors.forEach(function(v) {
-        (v.measures || []).forEach(function(m) {
+    _scopedVendors().forEach(function(v) {
+        (v.measures || []).forEach(function(m: any) {
             if (m.echeance && m.echeance > last) last = m.echeance;
         });
     });
-    D.risks.forEach(function(r) {
+    _scopedRisks().forEach(function(r) {
         if (r.treatment && r.treatment.due_date && r.treatment.due_date > last) last = r.treatment.due_date;
     });
     return last || "";
 }
 
 function _renderResidualMatrix(atDate: any) {
-    var active = D.risks.filter(function(r) { return r.status !== "closed" && r.status !== "archived"; });
+    // Les matrices du dashboard suivent le périmètre piloté : les risques
+    // d'un prospect ou d'un ancien fournisseur n'y ont pas leur place.
+    var active = _scopedRisks().filter(function(r) { return r.status !== "closed" && r.status !== "archived"; });
     var checkDate = atDate || new Date().toISOString().split("T")[0];
     var grid: Record<string, any> = {};
     active.forEach(function(r) {
@@ -534,8 +544,8 @@ function _renderResidualMatrix(atDate: any) {
             var measuresApplied = false;
             var v = D.vendors.find(function(x) { return x.id === r.vendor_id; });
             if (v && v.measures) {
-                var linkedIds = (r.linked_measures || "").split(",").map(function(s) { return s.trim().split(" - ")[0].trim(); }).filter(Boolean);
-                var allDone = linkedIds.length > 0 && linkedIds.every(function(mid) {
+                var linkedIds = (r.linked_measures || "").split(",").map(function(s: string) { return s.trim().split(" - ")[0].trim(); }).filter(Boolean);
+                var allDone = linkedIds.length > 0 && linkedIds.every(function(mid: string) {
                     var m = v!.measures!.find(function(x) { return x.id === mid; });
                     return m && m.echeance && m.echeance <= checkDate;
                 });
@@ -1762,6 +1772,72 @@ function _aiPost(path: string, payload: any): Promise<any> {
 }
 
 // Store context for accept handler
+/** FEAT-40 — case « tenir compte des mesures existantes », cochée par défaut.
+ *  Absente du DOM (panneau déjà remplacé par le chargement) => on garde le
+ *  défaut : ne pas créer de doublon est le comportement normal. */
+/** Ce que _mergeMeasureDetails ajoutera réellement : "" si rien ne change. */
+function _measureDetailsAddition(ancien: string, ajout: string): string {
+    var a = (ancien || "").trim();
+    var b = (ajout || "").trim();
+    if (!b) return "";
+    if (a && a.indexOf(b) !== -1) return "";
+    return b;
+}
+
+/** FEAT-40 — aperçu de ce que l'acceptation va écrire dans la mesure visée. */
+function _aiEnrichPreviewHTML(s: any): string {
+    if (!s || !s.id || (s.action !== "enrich" && s.action !== "link")) return "";
+    var v = D.vendors[_aiSuggestContext.vendorIdx];
+    if (!v) return "";
+    var cible = (v.measures || []).find(function(m: any) { return m.id === s.id; }) as any;
+    if (!cible) return "";
+    var h = '<div class="ai-diff ct-mb-2 ct-p-2 ct-r-md" style="background:var(--ct-bg-alt)">';
+    h += '<div class="ct-text-label ct-strong ct-mb-1">'
+       + esc(t(s.action === "link" ? "ai.preview.link" : "ai.preview.title")) + '</div>';
+    h += '<div class="ct-text-label ct-muted">' + esc(cible.id + " — " + (cible.mesure || "")) + '</div>';
+    if (s.action === "link") return h + '</div>';
+
+    var nouveau = (s.mesure || s.measure || "").trim();
+    if (nouveau && nouveau !== cible.mesure) {
+        h += '<div class="ct-text-label ct-muted ct-mt-1">' + esc(t("ai.preview.name")) + '</div>';
+        h += '<div class="ct-text-label"><s class="ct-muted">' + esc(cible.mesure || "") + '</s></div>';
+        h += '<div class="ct-text-label ct-strong">' + esc(nouveau) + '</div>';
+    } else {
+        h += '<div class="ct-text-label ct-muted ct-mt-1">' + esc(t("ai.preview.name_kept")) + '</div>';
+    }
+    if (s.details) {
+        var ajout = _measureDetailsAddition(cible.details || "", s.details);
+        h += '<div class="ct-text-label ct-muted ct-mt-2">' + esc(t("ai.preview.details")) + '</div>';
+        if (cible.details) h += '<div class="ct-text-label ct-muted">' + esc(cible.details) + '</div>';
+        h += ajout
+            ? '<div class="ct-text-label ct-text-ok ct-strong">+ ' + esc(ajout) + '</div>'
+            : '<div class="ct-text-label ct-muted"><em>' + esc(t("ai.preview.no_change")) + '</em></div>';
+    }
+    return h + '</div>';
+}
+
+/** FEAT-40 — étend une description sans écraser l'existante. */
+function _mergeMeasureDetails(ancien: string, ajout: string): string {
+    var a = (ancien || "").trim();
+    var b = (ajout || "").trim();
+    if (!a) return b;
+    if (!b || a.indexOf(b) !== -1) return a;
+    return a + "\n\n" + b;
+}
+
+function _aiIncludeMeasures(): boolean {
+    var el = document.getElementById("ai-include-measures") as HTMLInputElement | null;
+    return el ? el.checked : true;
+}
+
+function _aiIncludeMeasuresHTML(): string {
+    return '<label class="ct-flex ct-items-start ct-gap-2 ct-mb-3 ct-clickable">'
+         + '<input type="checkbox" id="ai-include-measures" class="ct-mt-1" checked>'
+         + '<span class="ct-text-label"><strong>' + esc(t("ai.include_measures")) + '</strong>'
+         + '<br><span class="ct-muted">' + esc(t("ai.include_measures_help")) + '</span></span>'
+         + '</label>';
+}
+
 var _aiSuggestions: any[] = [];
 var _aiSuggestContext: any = {};
 
@@ -1772,6 +1848,9 @@ function suggestMeasuresForRisk(vendorIdx: any, riskIdx: any) {
 
     _aiSuggestContext = { vendorIdx: vendorIdx, riskIdx: riskIdx, type: "risk_measures" };
 
+    // Lire la case AVANT _aiShowLoading : le chargement vide le panneau,
+    // et la case avec lui — la lire ensuite retombait toujours sur true.
+    var inclureMesures = _aiIncludeMeasures();
     _aiShowLoading("✨ " + t("measure.ai_suggest") + " — " + esc(r.title || r.id));
 
     _aiPost("vendor/suggest-measures", {
@@ -1779,7 +1858,12 @@ function suggestMeasuresForRisk(vendorIdx: any, riskIdx: any) {
         language: _locale === "en" ? "en" : "fr",
         vendor_name: v.name || "",
         vendor_sector: v.sector || "",
-        existing_measures: (v.measures || []).map(function(m) { return m.mesure; }),
+        // FEAT-40 — le serveur lit les mesures du fournisseur EN BASE. On
+        // envoyait des noms seuls, sans id ni description : le modèle ne
+        // pouvait ni juger d'un doublon, ni désigner une mesure à enrichir.
+        project_id: window.getActiveProjectId ? window.getActiveProjectId() : "",
+        vendor_id: v.id,
+        include_existing_measures: inclureMesures,
         risk: { title: r.title, category: r.category, impact: r.impact, likelihood: r.likelihood, description: r.description }
     }).then(function(jr: any) {
         var suggestions = jr.result;
@@ -1807,6 +1891,7 @@ function openAiRiskAssistant(vendorIdx: any) {
     h += '<div class="settings-label">' + t("ai.option_risks") + '</div>';
     h += '<p class="fs-xs text-muted ct-mb-2">' + t("ai.option_risks_hint") + '</p>';
     h += '<textarea class="settings-input ct-w-full ct-mb-2" id="ai-risk-prompt" rows="2" placeholder="' + esc(t("ai.custom_prompt_placeholder")) + '"></textarea>';
+    h += _aiIncludeMeasuresHTML();
     h += '<button class="ct-btn btn-ai ct-w-full" data-click="aiRunRiskSuggestion" data-args=\'' + _da(vendorIdx) + '\'>&#10024; ' + t("ai.generate_risks") + '</button>';
     h += '</div>';
 
@@ -1869,9 +1954,13 @@ function _aiSuggestRisksCustom(vendorIdx: any, prompt: any) {
     if (!v || typeof _aiIsEnabled !== "function" || !_aiIsEnabled()) return;
 
     _aiSuggestContext = { vendorIdx: vendorIdx, type: "risks_and_measures" };
+    var inclureMesures = _aiIncludeMeasures();
     _aiShowLoading("✨ " + esc(prompt.substring(0, 50)));
 
     _aiPost("vendor/suggest-risks", {
+        project_id: window.getActiveProjectId ? window.getActiveProjectId() : "",
+        vendor_id: v.id,
+        include_existing_measures: inclureMesures,
         mode: "custom",
         language: _locale === "en" ? "en" : "fr",
         vendor_name: v.name || "",
@@ -1892,9 +1981,13 @@ function _aiSuggestMeasuresCustom(vendorIdx: any, riskIdx: any, prompt: any) {
     if (!v || !r || typeof _aiIsEnabled !== "function" || !_aiIsEnabled()) return;
 
     _aiSuggestContext = { vendorIdx: vendorIdx, riskIdx: riskIdx, type: "risk_measures" };
+    var inclureMesures = _aiIncludeMeasures();
     _aiShowLoading("✨ " + esc(prompt.substring(0, 50)));
 
     _aiPost("vendor/suggest-measures", {
+        project_id: window.getActiveProjectId ? window.getActiveProjectId() : "",
+        vendor_id: v.id,
+        include_existing_measures: inclureMesures,
         mode: "custom",
         language: _locale === "en" ? "en" : "fr",
         vendor_name: v.name || "",
@@ -1915,9 +2008,13 @@ function aiSuggestRisksAndMeasures(vendorIdx: any) {
     var existingRisks = D.risks.filter(function(r) { return r.vendor_id === v.id; });
 
     _aiSuggestContext = { vendorIdx: vendorIdx, type: "risks_and_measures" };
+    var inclureMesures = _aiIncludeMeasures();
     _aiShowLoading("✨ " + t("measure.ai_suggest") + " — " + esc(v.name));
 
     _aiPost("vendor/suggest-risks", {
+        project_id: window.getActiveProjectId ? window.getActiveProjectId() : "",
+        vendor_id: v.id,
+        include_existing_measures: inclureMesures,
         mode: "auto",
         language: _locale === "en" ? "en" : "fr",
         vendor_name: v.name || "",
@@ -1983,6 +2080,7 @@ function _renderAiCards() {
                 }
             } else {
                 // Measure card
+                h += _aiEnrichPreviewHTML(s);
                 h += '<div class="ai-card-title">' + esc(s.mesure || s.measure || "Measure " + (i + 1)) + '</div>';
                 if (s.details) h += '<div class="ai-card-details">' + esc(s.details) + '</div>';
                 h += '<div class="ct-text-label ct-muted ct-mt-1">';
@@ -2010,6 +2108,21 @@ function _renderAiCards() {
                 };
                 D.risks.push(risk);
                 (s.measures || []).forEach(function(m: any) {
+                    // FEAT-40 — ce chemin créait une mesure par risque proposé,
+                    // sans jamais consulter le plan du fournisseur.
+                    if ((m.action === "enrich" || m.action === "link") && m.id) {
+                        var dejaV = (v.measures || []).find(function(x: any) { return x.id === m.id; }) as any;
+                        if (dejaV) {
+                            if (m.action === "enrich") {
+                                if (m.details) dejaV.details = _mergeMeasureDetails(dejaV.details || "", m.details);
+                                var ntv = (m.mesure || m.measure || "").trim();
+                                if (ntv && ntv !== dejaV.mesure) dejaV.mesure = ntv;
+                                _persist("measure", dejaV.id, { mesure: dejaV.mesure, details: dejaV.details });
+                            }
+                            risk.linked_measures = _csvAppendRef(risk.linked_measures || "", dejaV.id, dejaV.mesure || "");
+                            return;
+                        }
+                    }
                     var mId = _nextVendorMeasureId(v);
                     var newM = {
                         id: mId, vendor_id: v.id, mesure: m.mesure || m.measure || "", details: m.details || "",
@@ -2021,6 +2134,36 @@ function _renderAiCards() {
                     risk.linked_measures = _csvAppendRef(risk.linked_measures || "", mId, m.mesure || "");
                 });
                 _persistCreate("risk", risk);
+            } else if ((s.action === "enrich" || s.action === "link") && s.id
+                       && (v.measures || []).some(function(m: any) { return m.id === s.id; })) {
+                // FEAT-40 — Vendor n'avait AUCUN chemin d'enrichissement :
+                // onAccept créait toujours. Même si le modèle proposait de
+                // s'appuyer sur l'existant, le frontend ne savait pas le faire.
+                var cible = v.measures!.find(function(m: any) { return m.id === s.id; }) as any;
+                if (s.action === "enrich") {
+                    // Concaténer : la rédaction déjà faite ne doit pas être
+                    // remplacée par le fragment proposé.
+                    if (s.details) cible.details = _mergeMeasureDetails(cible.details || "", s.details);
+                    // Titre ajusté SEULEMENT si le modèle en propose un autre :
+                    // c'est sous ce libellé que la mesure apparaît dans les
+                    // risques auxquels elle est rattachée.
+                    var nt = (s.mesure || s.measure || "").trim();
+                    if (nt && nt !== cible.mesure) cible.mesure = nt;
+                    if (!cible.responsable && s.responsable) cible.responsable = s.responsable;
+                    _persist("measure", cible.id, { mesure: cible.mesure,
+                                                    details: cible.details,
+                                                    responsable: cible.responsable });
+                }
+                // Dans les deux cas on rattache au risque courant : c'est
+                // l'effet visible attendu, et ce qui évite que l'utilisateur
+                // recrée la mesure à la main.
+                if (ctx.riskIdx != null) {
+                    var rl = D.risks[ctx.riskIdx];
+                    if (rl) {
+                        rl.linked_measures = _csvAppendRef(rl.linked_measures || "", cible.id, cible.mesure || "");
+                        _persist("risk", rl.id, { linked_measures: rl.linked_measures });
+                    }
+                }
             } else {
                 // Create measure and link to risk
                 var mId = _nextVendorMeasureId(v);
@@ -5465,15 +5608,20 @@ function renderGlobalMeasures(): string {
         });
     });
 
-    // Count unlinked measures
+    // Count unlinked measures — MÊME prédicat que deleteUnlinkedMeasures :
+    // le bouton annonçait plus de suppressions qu'il n'y avait de lignes
+    // visibles (comptage global, table scopée).
     var unlinkedCount = 0;
     D.vendors.forEach(function(v) {
+        if (!_vendorInScope(v)) return;
         var vendorRisks = D.risks.filter(function(r) { return r.vendor_id === v.id; });
         var allLinkedIds: Record<string, any> = {};
         vendorRisks.forEach(function(r) {
             (r.linked_measures || "").split(",").forEach(function(s) { var id = s.trim().split(" - ")[0].trim(); if (id) allLinkedIds[id] = true; });
         });
-        (v.measures || []).forEach(function(m) { if (!allLinkedIds[m.id]) unlinkedCount++; });
+        (v.measures || []).forEach(function(m) {
+            if (!allLinkedIds[m.id] && m.statut !== "termine" && m.statut !== "annule") unlinkedCount++;
+        });
     });
 
     var h = '<div class="ct-flex ct-row-between ct-items-center ct-mb-2">';
@@ -5634,6 +5782,11 @@ window._bulkVendorMeasuresDelete = function(scope: string) {
 function deleteUnlinkedMeasures() {
     var count = 0;
     D.vendors.forEach(function(v) {
+        // Uniquement les fournisseurs pilotés : chez un ancien fournisseur,
+        // les mesures terminées ou abandonnées sont la TRACE de l'offboarding
+        // (« Nothing is deleted ») — rarement liées à un risque encore là,
+        // elles partaient toutes au premier clic de ménage.
+        if (!_vendorInScope(v)) return;
         if (!v.measures || !v.measures.length) return;
         var vendorRisks = D.risks.filter(function(r) { return r.vendor_id === v.id; });
         var allLinkedIds: Record<string, any> = {};
@@ -5644,7 +5797,11 @@ function deleteUnlinkedMeasures() {
             });
         });
         var before = v.measures.length;
-        v.measures = v.measures.filter(function(m) { return allLinkedIds[m.id]; });
+        // Une mesure terminée ou abandonnée n'est pas « orpheline » : c'est de
+        // l'historique. Le ménage ne vise que le travail ouvert sans risque.
+        v.measures = v.measures.filter(function(m) {
+            return allLinkedIds[m.id] || m.statut === "termine" || m.statut === "annule";
+        });
         if (v.measures.length < before) _persist("vendor", v.id, { measures: v.measures });
         count += before - v.measures.length;
     });

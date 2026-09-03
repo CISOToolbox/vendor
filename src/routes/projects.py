@@ -362,14 +362,17 @@ async def _renotify_project_measures(db: AsyncSession, project_id: uuid.UUID) ->
     and internal.py call sites — fire-and-forget."""
     import asyncio
     from src.pilot_notify import notify_pilot_measures_bulk
-    from src.routes.internal import _normalize_status
+    from src.routes.internal import VENDOR_IN_SCOPE, _normalize_status
 
     rows = await db.execute(
         select(VendorMeasure, Vendor.name, Project.name.label("project_name"), ProjectMetadata.organization)
         .join(Vendor, (VendorMeasure.project_id == Vendor.project_id) & (VendorMeasure.vendor_id == Vendor.id))
         .join(Project, VendorMeasure.project_id == Project.id)
         .outerjoin(ProjectMetadata, VendorMeasure.project_id == ProjectMetadata.project_id)
-        .where(VendorMeasure.project_id == project_id)
+        # Même périmètre que /internal/measures — le canal push ne doit pas
+        # ressusciter dans le cache Pilot ce que le canal pull filtre.
+        .where(VendorMeasure.project_id == project_id,
+               Vendor.status.in_(VENDOR_IN_SCOPE))
     )
     # Build every payload, then hand Pilot the whole batch in ONE request
     # instead of spawning a POST (+ a fresh httpx client) per measure — a

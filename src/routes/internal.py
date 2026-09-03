@@ -217,13 +217,21 @@ async def internal_stats(request: Request, db: AsyncSession = Depends(get_db)):
     _check_service_token(request)
     from datetime import date as _date
 
-    total_vendors = await db.scalar(select(func.count()).select_from(Vendor)) or 0
+    # Même périmètre que /internal/measures : la posture et le plan d'action
+    # doivent compter les MÊMES fournisseurs, sinon Pilot affiche deux chiffres
+    # différents pour la même chose (prospects et anciens inclus dans l'un,
+    # exclus de l'autre).
+    total_vendors = await db.scalar(
+        select(func.count()).select_from(Vendor)
+        .where(Vendor.status.in_(VENDOR_IN_SCOPE))
+    ) or 0
 
     # ── Vendors by tier ──
     # Project only the columns the menace formula + top_items need — no full
     # Vendor hydration just to bucket (stats is polled by Pilot every 30s).
     vendor_rows = (await db.execute(
         select(Vendor.id, Vendor.name, Vendor.exposure)
+        .where(Vendor.status.in_(VENDOR_IN_SCOPE))
     )).all()
     tiers = {"critical": 0, "high": 0, "medium": 0, "low": 0}
     vendor_list = []
@@ -237,6 +245,8 @@ async def internal_stats(request: Request, db: AsyncSession = Depends(get_db)):
     # Project only the two columns the status buckets need.
     measures_rows = (await db.execute(
         select(VendorMeasure.statut, VendorMeasure.echeance)
+        .join(Vendor, (VendorMeasure.project_id == Vendor.project_id) & (VendorMeasure.vendor_id == Vendor.id))
+        .where(Vendor.status.in_(VENDOR_IN_SCOPE))
     )).all()
     total_measures = len(measures_rows)
     completed = 0
@@ -244,8 +254,14 @@ async def internal_stats(request: Request, db: AsyncSession = Depends(get_db)):
     planned = 0
     overdue = 0
     today = _date.today().isoformat()
+    cancelled = 0
     for statut, echeance in measures_rows:
         st = (statut or "").strip()
+        if st in ("annule", "Annulé", "abandonne", "cancelled"):
+            # Abandonnée : ni à faire, ni en retard — la compter « planned »
+            # déclenchait l'alerte retard pour un travail auquel on a renoncé.
+            cancelled += 1
+            continue
         if st in ("completed", "termine", "Terminé"):
             completed += 1
         elif st in ("in_progress", "en_cours"):
@@ -254,22 +270,28 @@ async def internal_stats(request: Request, db: AsyncSession = Depends(get_db)):
             planned += 1
         if echeance and echeance < today and st not in ("completed", "termine", "Terminé"):
             overdue += 1
-    progress_pct = round(completed / total_measures * 100) if total_measures else 0
+    actives = total_measures - cancelled
+    progress_pct = round(completed / actives * 100) if actives else 0
 
     # ── Posture: average of validated assessment scores ──
     # func.avg in SQL — hydrating every validated assessment (each carries a
     # large template_snapshot blob) just to average one column was wasteful.
     posture_avg = await db.scalar(
-        select(func.avg(VendorAssessment.score)).where(
+        select(func.avg(VendorAssessment.score))
+        .join(Vendor, (VendorAssessment.project_id == Vendor.project_id) & (VendorAssessment.vendor_id == Vendor.id))
+        .where(
             VendorAssessment.status == "validated",
             VendorAssessment.score.is_not(None),
+            Vendor.status.in_(VENDOR_IN_SCOPE),
         )
     )
     posture_score = round(posture_avg) if posture_avg is not None else None
 
     pending = await db.scalar(
         select(func.count()).select_from(VendorAssessment)
-        .where(VendorAssessment.status == "pending_approval")
+        .join(Vendor, (VendorAssessment.project_id == Vendor.project_id) & (VendorAssessment.vendor_id == Vendor.id))
+        .where(VendorAssessment.status == "pending_approval",
+               Vendor.status.in_(VENDOR_IN_SCOPE))
     ) or 0
 
     # ── Donut ──
