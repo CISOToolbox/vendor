@@ -1,9 +1,9 @@
 """Design regression (H4 phase 5): vendor migrated to the shared AI proxy.
 
 routes/ai.py dropped from 922 to ~489 lines (provider plumbing now in
-src/ai_proxy_common.py). Vendor keeps its five TPRM métier endpoints and their
+src/ai_proxy_common.py). Vendor keeps its five TPRM business endpoints and their
 prompt builders. This confirms the router still exposes the common endpoints
-plus all five métier ones.
+plus all five business ones.
 """
 import os
 import sys
@@ -25,6 +25,6 @@ def test_router_exposes_common_and_all_metier_endpoints():
         "/api/ai/vendor/suggest-risks",
         "/api/ai/vendor/suggest-assessment",
         "/api/ai/vendor/collect-info",
-        "/api/ai/vendor/collect-docs",                     # vendor métier
+        "/api/ai/vendor/collect-docs",                     # vendor business
     ):
         assert p in paths, f"missing endpoint: {p}"

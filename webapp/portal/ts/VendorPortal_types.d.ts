@@ -1,8 +1,8 @@
 /**
- * Vendor Portal — types du questionnaire échangé avec l'app Vendor.
- * Fichier de types pur (pas d'emit). Mêmes formes que TPRM_types.d.ts
- * (programme tsc séparé — duplication minimale assumée). Schéma de
- * référence : backend-clients/demo-docker/vendor/src/assessment_validation.py.
+ * Vendor Portal — types of the questionnaire exchanged with the Vendor app.
+ * Pure type file (no emit). Same shapes as TPRM_types.d.ts (separate tsc
+ * program — minimal duplication accepted). Reference schema:
+ * backend-clients/demo-docker/vendor/src/assessment_validation.py.
  */
 
 type VpCoverage = "covered" | "partial" | "not_covered" | "not_applicable" | null;
@@ -58,7 +58,7 @@ interface VpTemplate {
     [k: string]: any;
 }
 
-/** Objet questionnaire unique du portail (payload ciso_toolbox_vendor_assessment). */
+/** The portal's single questionnaire object (ciso_toolbox_vendor_assessment payload). */
 interface VpQuestionnaire {
     assessment_id: string;
     vendor_id: string;

@@ -1,19 +1,19 @@
 /**
- * TPRM (Vendor) — types du modèle de données D + globals d'app.
- * Fichier de types pur (pas d'emit). Schéma de référence :
+ * TPRM (Vendor) — types of the D data model + app globals.
+ * Pure type file (no emit). Reference schema:
  * backend-clients/demo-docker/vendor/src/assessment_validation.py
- * (docstring "DATA MODEL CONTRACT") + usages réels de TPRM_app.js,
+ * (docstring "DATA MODEL CONTRACT") + actual usages in TPRM_app.js,
  * TPRM_dora.js, TPRM_dora_export.js, VendorPortal_app.js.
  */
 
 /* ── Assessments V2 ─────────────────────────────────────────────── */
 
-/** R3 — closed set. null = pas encore renseigné. */
+/** R3 — closed set. null = not filled in yet. */
 type TprmCoverage = "covered" | "partial" | "not_covered" | "not_applicable" | null;
 
 /**
- * R5 — statuts V2 (draft|in_progress|pending_approval|validated|rejected)
- * + "completed" utilisé par le flux legacy (questionnaire 25+5 sans
+ * R5 — V2 statuses (draft|in_progress|pending_approval|validated|rejected)
+ * + "completed" used by the legacy flow (25+5 questionnaire without
  * template_snapshot).
  */
 type TprmAssessmentStatus =
@@ -24,10 +24,10 @@ type TprmQuestionType = "free_text" | "single_choice" | "multi_choice" | "file_u
 type TprmCriticality = "info" | "major" | "blocker";
 type TprmTemplateKind = "questionnaire" | "audit";
 
-/** Réponse fichier (file_upload) : data = base64. */
+/** File answer (file_upload): data = base64. */
 interface TprmFileAnswer { name: string; size: number; data: string; }
 
-/** answer : str | string[] (multi_choice) | fichier | null. */
+/** answer: str | string[] (multi_choice) | file | null. */
 type TprmAnswer = string | string[] | TprmFileAnswer | null;
 
 interface TprmActionPlan {
@@ -46,7 +46,7 @@ interface TprmResponse {
     comment?: string;
     action_plans?: TprmActionPlan[];
     justification?: string;
-    /** Flux legacy (questionnaire 25+5) : compliant|partial|non_compliant|na. */
+    /** Legacy flow (25+5 questionnaire): compliant|partial|non_compliant|na. */
     documents?: string[];
 }
 
@@ -56,13 +56,13 @@ interface TprmTemplateQuestion {
     description?: string;
     expected?: string;
     type?: TprmQuestionType;
-    /** 0..100 (templates V2) ; poids 1..10 côté questionnaire legacy. */
+    /** 0..100 (V2 templates); weight 1..10 on the legacy questionnaire side. */
     weight?: number;
     criticality?: TprmCriticality;
     options?: string[];
 }
 
-/** Question aplatie par _allQuestions (ajout du contexte section). */
+/** Question flattened by _allQuestions (section context added). */
 interface TprmFlatQuestion extends TprmTemplateQuestion {
     section_id?: string;
     section_title?: string;
@@ -76,11 +76,11 @@ interface TprmTemplateSection {
 }
 
 /**
- * Template de questionnaire/audit. Sert aussi de TYPE du
- * template_snapshot (R1 : le snapshot est une copie profonde figée à la
- * création de l'évaluation — IMMUABLE ensuite ; l'immutabilité est une
- * règle runtime/backend, pas exprimable par le système de types sans
- * casser l'iso-fonctionnalité des écritures locales du flux natif).
+ * Questionnaire/audit template. Also serves as the TYPE of the
+ * template_snapshot (R1: the snapshot is a deep copy frozen at the
+ * creation of the assessment — IMMUTABLE afterwards; immutability is a
+ * runtime/backend rule, not expressible by the type system without
+ * breaking iso-functionality of the native flow's local writes).
  */
 interface TprmTemplate {
     id: string;
@@ -97,9 +97,9 @@ interface TprmTemplate {
 type TprmTemplateSnapshot = TprmTemplate;
 
 /**
- * Évaluation (V2 si template_snapshot présent, legacy sinon — R9).
- * score / completion_rate : 0..100, recalculés par _touchAssessment
- * (mêmes formules que le backend : _computeAssessmentV2Score /
+ * Assessment (V2 if template_snapshot present, legacy otherwise — R9).
+ * score / completion_rate: 0..100, recomputed by _touchAssessment
+ * (same formulas as the backend: _computeAssessmentV2Score /
  * _assessmentStats).
  */
 interface TprmAssessment {
@@ -108,9 +108,9 @@ interface TprmAssessment {
     type?: string;             // periodic | onboarding | ...
     date?: string;
     due_date?: string;
-    template_id?: string;      // figé à la création
-    template_version?: number; // figé à la création
-    template_snapshot?: TprmTemplateSnapshot; // R1 — immuable
+    template_id?: string;      // frozen at creation
+    template_version?: number; // frozen at creation
+    template_snapshot?: TprmTemplateSnapshot; // R1 — immutable
     status?: TprmAssessmentStatus;
     responses?: TprmResponse[];
     self_validation?: boolean;
@@ -121,7 +121,7 @@ interface TprmAssessment {
     rejected_reason?: string | null;
     score?: number | null;
     completion_rate?: number;
-    /** Pondération maturité (agrégat fournisseur). */
+    /** Maturity weighting (vendor aggregate). */
     weight_override?: number;
     excluded?: boolean;
 }
@@ -148,7 +148,7 @@ interface TprmClassification {
     [k: string]: unknown;
 }
 
-/** Exposition menace (sliders 0..4) — convention "" = non renseigné. */
+/** Threat exposure (sliders 0..4) — convention "" = not filled in. */
 interface TprmExposure {
     dependance?: number | "";
     penetration?: number | "";
@@ -166,7 +166,7 @@ interface TprmMeasure {
     id: string;
     vendor_id?: string;
     mesure?: string;
-    /** alias historiques rencontrés dans les imports/IA */
+    /** historical aliases found in imports/AI */
     measure?: string;
     details?: string;
     type?: string;
@@ -201,9 +201,9 @@ interface TprmVendor {
     sub_contractors?: unknown[];
     measures?: TprmMeasure[];
     notes?: string;
-    /** Score maturité agrégé 0..100 (affiché ; dérivé). */
+    /** Aggregated maturity score 0..100 (displayed; derived). */
     maturity_score?: number;
-    /* RoI DORA (B_01.02) — patchés dynamiquement par patchVendorRoi */
+    /* DORA RoI (B_01.02) — patched dynamically by patchVendorRoi */
     lei?: string;
     legal_name_latin?: string;
     country_iso2?: string;
@@ -259,9 +259,9 @@ interface TprmMaturityConfig {
 /* ── DORA RoI tree (EBA Reg. (EU) 2024/2956) ────────────────────── */
 
 /**
- * Les enregistrements RoI portent des dizaines de champs ITS pilotés
- * par les codelists EBA et patchés dynamiquement (doraPatch*). Type
- * structurel minimal + index signature.
+ * RoI records carry dozens of ITS fields driven by the EBA codelists
+ * and patched dynamically (doraPatch*). Minimal structural type +
+ * index signature.
  */
 interface DoraRecord {
     id: string;
@@ -299,7 +299,7 @@ interface DoraTree {
     [k: string]: any;
 }
 
-/** Entrée de codelist EBA ({code,label,eba_code}) ou code brut. */
+/** EBA codelist entry ({code,label,eba_code}) or raw code. */
 interface DoraCodeEntry {
     code: string;
     label?: string;
@@ -326,7 +326,7 @@ interface TprmLegacyQuestion {
     [k: string]: any;
 }
 
-/* ── Racine D ───────────────────────────────────────────────────── */
+/* ── D root ─────────────────────────────────────────────────────── */
 
 interface TprmData {
     vendors: TprmVendor[];
@@ -335,13 +335,13 @@ interface TprmData {
     documents: TprmDocument[];
     questionnaire_templates: TprmTemplate[];
     maturity_config: TprmMaturityConfig;
-    /** Variante backend : l'arbre DORA vit en base (API /dora), pas dans D. */
+    /** Backend variant: the DORA tree lives in the DB (/dora API), not in D. */
     dora?: DoraTree;
     metadata: { organization: string; created: string; [k: string]: any };
     [k: string]: any;
 }
 
-/* ── API DoraData (publiée par TPRM_dora.js, IIFE) ──────────────── */
+/* ── DoraData API (published by TPRM_dora.js, IIFE) ─────────────── */
 
 interface DoraSubRowJoined extends DoraSubLink {
     id: string;
@@ -364,14 +364,14 @@ interface DoraDataApi {
     renderVendorCard(v: TprmVendor, opts?: { embedded?: boolean }): string;
     renderSubcontractors(): string;
     naceDatalist(): string;
-    /* posés en fin de TPRM_dora.js */
+    /* set at the end of TPRM_dora.js */
     gleifTriggerHtml?: (targetInputId: string, opts?: any) => string;
     gleifOpenLookup?: (triggerEl: Element, targetInput: HTMLInputElement, onPick?: (rec: any) => void) => void;
     getCodelist?: (key: string) => DoraCodeEntry[];
     ensureCodelists?: (cb?: (cl: DoraCodelists | null) => void) => void;
 }
 
-/** Validateurs RoI soft (TPRM_dora_validation.js). */
+/** Soft RoI validators (TPRM_dora_validation.js). */
 interface DoraValidApi {
     lei(s: unknown): boolean;
     leiChecksum(lei: string): boolean;
@@ -383,14 +383,14 @@ interface DoraValidApi {
     ebaCode(value: unknown, codelistKey: string): boolean;
 }
 
-/* ── Globals shared déclarés Window-only dans les .d.ts générés ────
+/* ── Shared globals declared Window-only in the generated .d.ts ────
  * ai_common / ct_settings / ct_table / ct_bulkbar / ct_modal /
- * ct_measure_modal n'exposent leurs APIs que sur l'interface Window
- * (propriétés optionnelles). TPRM_app.js les appelle en globals nus —
- * déclarations ambiantes locales (aucun impact sur le js émis).
- * VendorAPI / getActiveProjectId / _isAdmin n'existent que dans la
- * variante backend (vendor_api.js) : déclarés `| undefined`, le code
- * opensource les garde derrière des guards typeof. */
+ * ct_measure_modal expose their APIs only on the Window interface
+ * (optional properties). TPRM_app.js calls them as bare globals —
+ * local ambient declarations (no impact on the emitted js).
+ * VendorAPI / getActiveProjectId / _isAdmin only exist in the
+ * backend variant (vendor_api.js): declared `| undefined`, the
+ * opensource code keeps them behind typeof guards. */
 declare function _aiIsEnabled(): boolean;
 declare function _aiGetApiKey(): string;
 declare function _aiCallAPI(systemPrompt: string, userPrompt: string): Promise<string>;
@@ -405,28 +405,28 @@ declare var ct_table: CtTableApi;
 declare var ct_bulkbar: CtBulkbarApi;
 declare var ct_modal: CtModalApi;
 declare var ct_measure_modal: CtMeasureModalApi;
-/** Posé par TPRM_dora.js (window.renderDoraPanel) — guard typeof requis. */
+/** Set by TPRM_dora.js (window.renderDoraPanel) — typeof guard required. */
 declare var renderDoraPanel: ((host: HTMLElement) => void) | undefined;
-/** Posé par TPRM_dora.js (window.DoraData). */
+/** Set by TPRM_dora.js (window.DoraData). */
 declare var DoraData: DoraDataApi;
-/** Couche API backend (vendor_api.ts) — typée ci-dessous. */
+/** Backend API layer (vendor_api.ts) — typed below. */
 declare var VendorAPI: VendorApiClient;
 declare var getActiveProjectId: (() => string | null) | undefined;
 declare var _isAdmin: (() => boolean) | undefined;
 
-/* ── Couche persistance backend (vendor_api.ts) ─────────────────────
- * Remplace cisotoolbox_local.js (non chargé en demo-docker). Le contrat
- * _persist/_persistCreate/_persistDelete/_obj est posé sur window par
- * vendor_api.js AVANT TPRM_app.js ; déclarés ici en globals nus. */
+/* ── Backend persistence layer (vendor_api.ts) ──────────────────────
+ * Replaces cisotoolbox_local.js (not loaded in demo-docker). The
+ * _persist/_persistCreate/_persistDelete/_obj contract is set on window
+ * by vendor_api.js BEFORE TPRM_app.js; declared here as bare globals. */
 
-/** Types d'entité du contrat de persistance (clés de _PATCH_FNS). */
+/** Entity types of the persistence contract (keys of _PATCH_FNS). */
 type TprmPersistType =
     | "vendor" | "measure" | "risk" | "document" | "assessment"
     | "vendor_roi" | "dora_entity" | "dora_function" | "dora_branch"
     | "dora_cs" | "dora_arrangement" | "dora_signer"
     | "dora_subcontractor" | "dora_sub_link";
 
-/** Payload générique de PATCH/POST (champs partiels d'une entité). */
+/** Generic PATCH/POST payload (partial fields of an entity). */
 type VendorApiPayload = Record<string, unknown>;
 
 declare function _persist(entityType: string, entityId: string | number, fields: VendorApiPayload): void;
@@ -435,12 +435,12 @@ declare function _persistDelete(entityType: string, entityId: string | number): 
 declare function _obj(k: string, v: any): Record<string, any>;
 declare function _autoSave(): void;
 declare function _setDataReady(): void;
-/** Fournis par cisotoolbox_local.js en opensource — ABSENTS en backend
- * (toujours appelés derrière un guard typeof dans TPRM_app.js). */
+/** Provided by cisotoolbox_local.js in opensource — ABSENT in backend
+ * (always called behind a typeof guard in TPRM_app.js). */
 declare var _installUndoHook: (() => void) | undefined;
 declare var _renderSnapshotsPanel: ((opts: any) => Promise<void>) | undefined;
 
-/* ── Client REST VendorAPI (vendor_api.ts) ──────────────────────── */
+/* ── VendorAPI REST client (vendor_api.ts) ──────────────────────── */
 
 interface VendorApiProjectSummary {
     id: string;
@@ -448,7 +448,7 @@ interface VendorApiProjectSummary {
     [k: string]: any;
 }
 
-/** Projet complet ; data arrive en objet ou en chaîne JSON selon la route. */
+/** Full project; data arrives as an object or a JSON string depending on the route. */
 interface VendorApiProject extends VendorApiProjectSummary {
     data?: TprmData | Record<string, unknown> | string;
 }
@@ -459,13 +459,13 @@ interface VendorApiUser {
     email?: string;
     role?: string;            // admin | user | viewer | pending
     picture?: string;
-    ai_enabled?: string;      // "true" | "false" (stocké en str côté backend)
+    ai_enabled?: string;      // "true" | "false" (stored as str backend-side)
     last_login?: string;
     [k: string]: any;
 }
 
 interface VendorApiClient {
-    /* projets (legacy + blob fallback) */
+    /* projects (legacy + blob fallback) */
     list(): Promise<VendorApiProjectSummary[]>;
     get(id: string): Promise<VendorApiProject>;
     create(data?: { name: string; data: Record<string, unknown> }): Promise<VendorApiProject>;
@@ -491,14 +491,14 @@ interface VendorApiClient {
     createDocument(projectId: string, data: VendorApiPayload): Promise<unknown>;
     patchDocument(projectId: string, docId: string, fields: VendorApiPayload): Promise<unknown>;
     deleteDocument(projectId: string, docId: string): Promise<null>;
-    /* assessments (règles serveur : assessment_validation.py R1..R9) */
+    /* assessments (server rules: assessment_validation.py R1..R9) */
     createAssessment(projectId: string, data: VendorApiPayload): Promise<unknown>;
     patchAssessment(projectId: string, assessId: string, fields: VendorApiPayload): Promise<unknown>;
     deleteAssessment(projectId: string, assessId: string): Promise<null>;
-    /* utilitaires */
+    /* utilities */
     verifyUrl(url: string): Promise<unknown>;
     probeVendorUrls(website: string): Promise<unknown>;
-    /* IA (mode managé Pilot) */
+    /* AI (Pilot managed mode) */
     aiComplete(systemPrompt: string, userPrompt: string, provider?: string, model?: string): Promise<unknown>;
     aiConfig(): Promise<unknown>;
     aiGetKeys(): Promise<unknown>;
@@ -507,7 +507,7 @@ interface VendorApiClient {
     authMe(): Promise<VendorApiUser | null>;
     authProviders(): Promise<any>;
     authLogout(): Promise<unknown>;
-    /* admin utilisateurs */
+    /* user admin */
     listUsers(): Promise<VendorApiUser[]>;
     updateUser(id: string, data: VendorApiPayload): Promise<unknown>;
     /* DORA RoI */
@@ -550,9 +550,9 @@ interface VendorApiClient {
     unlinkDoraSub(p: string, aid: string, sid: string): Promise<null>;
 }
 
-/* ── Divers ─────────────────────────────────────────────────────── */
+/* ── Misc ───────────────────────────────────────────────────────── */
 
-/** Métadonnées du graphe timeline (drag de la ligne de date). */
+/** Timeline chart metadata (date-line drag). */
 interface TprmTimelineMeta {
     ML: number; MR: number; MT: number; MB: number;
     W: number; H: number; cW: number;
@@ -561,14 +561,14 @@ interface TprmTimelineMeta {
     endDate: Date;
 }
 
-/** Suggestion IA (risque ou mesure) en attente d'acceptation. */
+/** AI suggestion (risk or measure) awaiting acceptance. */
 interface TprmAiSuggestion {
     kind: "risk" | "measure";
     [k: string]: any;
 }
 
 interface Window {
-    /** Tree DORA en cache, publié par TPRM_dora.js. */
+    /** Cached DORA tree, published by TPRM_dora.js. */
     _doraTreeCache?: DoraTree | null;
     _doraCodelists?: DoraCodelists;
     _doraValid?: DoraValidApi;
@@ -580,36 +580,36 @@ interface Window {
     /** Export EBA XLSX (TPRM_dora_export.js). */
     _doraExportEBA?: (tree: DoraTree, codelists: DoraCodelists | null, targetCurrency?: string) => void;
     _timelineMeta?: TprmTimelineMeta;
-    /** Hook d'init optionnel (variante backend). */
+    /** Optional init hook (backend variant). */
     _appInitCallback?: () => void;
-    /** Utilisateur connecté (variante backend uniquement). */
+    /** Logged-in user (backend variant only). */
     _currentUser?: VendorApiUser;
-    /** Couche API backend (vendor_api.ts). */
+    /** Backend API layer (vendor_api.ts). */
     VendorAPI: VendorApiClient;
-    /** Contrat de persistance backend, posé par vendor_api.ts. */
+    /** Backend persistence contract, set by vendor_api.ts. */
     _persist?: typeof _persist;
     _persistCreate?: typeof _persistCreate;
     _persistDelete?: typeof _persistDelete;
     _obj?: typeof _obj;
     _setDataReady?: () => void;
     getActiveProjectId?: () => string | null;
-    /** Rôle module (auth/role) posé par _initAuth de vendor_api.ts. */
+    /** Module role (auth/role) set by _initAuth of vendor_api.ts. */
     _moduleRole?: string;
     _logout?: () => void;
-    /** Section DORA à ouvrir (posée par TPRM_dora.js). */
+    /** DORA section to open (set by TPRM_dora.js). */
     doraSection?: (section: string) => void;
     ExcelJS?: typeof ExcelJS;
     /**
-     * Index dynamique : ré-exports data-click (window.foo = foo) et
-     * globals d'app — même convention que EBIOS_RM_types.d.ts (risk).
+     * Dynamic index: data-click re-exports (window.foo = foo) and app
+     * globals — same convention as EBIOS_RM_types.d.ts (risk).
      */
     [k: string]: any;
 }
 
 declare var _dirPicker: (currentValue: string | null | undefined, handler: string, argsJson: string) => string;
 
-// Hooks du panneau démo : définis dans cisotoolbox_local.js, que les apps
-// backend ne chargent pas — le garde typeof dans AI_APP_CONFIG renvoie ""
-// dans ce cas. Donc possiblement indéfinis, comme dans Compliance.
+// Demo panel hooks: defined in cisotoolbox_local.js, which the backend
+// apps do not load — the typeof guard in AI_APP_CONFIG returns "" in
+// that case. So possibly undefined, as in Compliance.
 declare var _demoSettingsHTML: (() => string) | undefined;
 declare var _wireDemoSettings: (() => void) | undefined;

@@ -45,11 +45,11 @@ BASE_URL = os.getenv("E2E_BASE_URL", "http://localhost:%d" % DEFAULT_PORT).rstri
 AUTH_TOKEN = os.getenv("E2E_AUTH_TOKEN") or _env_file_value("AUTH_TOKEN")
 TIMEOUT = float(os.getenv("E2E_TIMEOUT", "20"))
 
-# Ce que /auth/providers doit annoncer ici. Le meme fichier de test sert la
-# suite et le standalone ; c'est cette constante qui les distingue.
+# What /auth/providers must announce here. The same test file serves the
+# suite and the standalone; this constant is what tells them apart.
 POSTURE_FLAG = "standalone"
 
-# Pilot federe les autres modules : il est OAuth/OIDC seul, sans jeton local.
+# Pilot federates the other modules: it is OAuth/OIDC only, no local token.
 HAS_OPENAPI = True
 HAS_TOKEN_LOGIN = True
 

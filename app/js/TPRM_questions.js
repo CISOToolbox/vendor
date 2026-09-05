@@ -4,7 +4,7 @@
  *         continuity, supply chain, audit, HR, physical, cloud, incidents, compliance
  */
 var TPRM_QUESTIONS = [
-    // ── Gouvernance & organisation ──────────────────────────────────
+    // ── Governance & organization ────────────────────────────────
     {
         id: "Q01", domain: "governance",
         text_fr: "Disposez-vous d'une politique de sécurité (PSSI) formalisée, approuvée par la direction et mise à jour annuellement ?",
@@ -41,7 +41,7 @@ var TPRM_QUESTIONS = [
         evidence_en: "Organization chart, CISO job description, security budget",
         weight: 8
     },
-    // ── Gestion des accès ───────────────────────────────────────────
+    // ── Access management ────────────────────────────────────────
     {
         id: "Q04", domain: "access_management",
         text_fr: "Supportez-vous le SSO (SAML/OIDC) avec provisioning/deprovisioning automatique (SCIM) ?",
@@ -78,7 +78,7 @@ var TPRM_QUESTIONS = [
         evidence_en: "Access review report, employee offboarding procedure",
         weight: 8
     },
-    // ── Sécurité réseau ─────────────────────────────────────────────
+    // ── Network security ─────────────────────────────────────────
     {
         id: "Q07", domain: "network",
         text_fr: "Votre réseau est-il segmenté avec un filtrage entre zones (production, DMZ, management) ?",
@@ -91,7 +91,7 @@ var TPRM_QUESTIONS = [
         evidence_en: "Network diagram, flow matrix, firewall rules",
         weight: 8
     },
-    // ── Gestion des vulnérabilités ──────────────────────────────────
+    // ── Vulnerability management ─────────────────────────────────
     {
         id: "Q08", domain: "vulnerability_mgmt",
         text_fr: "Avez-vous un processus de patch management avec des SLA par sévérité ?",
@@ -116,7 +116,7 @@ var TPRM_QUESTIONS = [
         evidence_en: "Recent pentest report, remediation plan, fix attestation",
         weight: 10
     },
-    // ── Sécurité du développement ───────────────────────────────────
+    // ── Secure development ───────────────────────────────────────
     {
         id: "Q10", domain: "dev_security",
         text_fr: "Les environnements prod/dev/test sont-ils strictement isolés ? Les données prod sont-elles masquées en dev ?",
@@ -141,7 +141,7 @@ var TPRM_QUESTIONS = [
         evidence_en: "Pipeline config, SAST/DAST reports, threshold policy",
         weight: 8
     },
-    // ���─ Protection des données ──────────────────────────────────────
+    // ── Data protection ──────────────────────────────────────────
     {
         id: "Q12", domain: "data_protection",
         text_fr: "Les données sont-elles chiffrées au repos (AES-256) et en transit (TLS 1.2+) ?",
@@ -178,7 +178,7 @@ var TPRM_QUESTIONS = [
         evidence_en: "Classification policy, retention matrix",
         weight: 6
     },
-    // ── Protection des postes ───��───────────────────────────────────
+    // ── Endpoint protection ──────────────────────────────────────
     {
         id: "Q15", domain: "endpoint_protection",
         text_fr: "Un EDR est-il déployé et supervisé sur l'ensemble du parc, intégré à un SIEM ?",
@@ -191,7 +191,7 @@ var TPRM_QUESTIONS = [
         evidence_en: "EDR coverage rate, detection SLAs, playbooks",
         weight: 10
     },
-    // ── Détection & réponse aux incidents ────────────────────────────
+    // ── Detection & incident response ────────────────────────────
     {
         id: "Q16", domain: "incident_response",
         text_fr: "Disposez-vous d'un plan de réponse aux incidents documenté et testé ?",
@@ -216,7 +216,7 @@ var TPRM_QUESTIONS = [
         evidence_en: "Contractual notification clause, escalation procedure",
         weight: 8
     },
-    // ── Continuité d'activité ───────────────────────────────────────
+    // ── Business continuity ──────────────────────────────────────
     {
         id: "Q18", domain: "continuity",
         text_fr: "Quelle est la fréquence des sauvegardes ? Quels sont vos RTO/RPO ? Le plan de reprise est-il testé ?",
@@ -241,7 +241,7 @@ var TPRM_QUESTIONS = [
         evidence_en: "Architecture diagram, contractual SLA, availability history",
         weight: 6
     },
-    // ── Chaîne d'approvisionnement ──────���───────────────────────────
+    // ── Supply chain ─────────────────────────────────────────────
     {
         id: "Q20", domain: "supply_chain",
         text_fr: "Maintenez-vous un inventaire de vos sous-traitants (4th parties) ? Les évaluez-vous ?",
@@ -254,7 +254,7 @@ var TPRM_QUESTIONS = [
         evidence_en: "4th-party register, contractual clauses, assessments",
         weight: 10
     },
-    // ── Ressources humaines ─────────────────────────────────────────
+    // ── Human resources ──────────────────────────────────────────
     {
         id: "Q21", domain: "hr_security",
         text_fr: "Les collaborateurs suivent-ils une formation de sensibilisation à la sécurité (incluant phishing) ?",
@@ -279,7 +279,7 @@ var TPRM_QUESTIONS = [
         evidence_en: "HR policy, NDA template, onboarding procedure",
         weight: 6
     },
-    // ── Sécurité cloud ──────────────────────────────────────────────
+    // ── Cloud security ───────────────────────────────────────────
     {
         id: "Q23", domain: "cloud_security",
         text_fr: "Quel est votre modèle d'hébergement (cloud public, privé, hybride, on-premise) et quelles certifications possédez-vous ?",
@@ -304,7 +304,7 @@ var TPRM_QUESTIONS = [
         evidence_en: "Logging policy, SIEM architecture, sample alerts",
         weight: 8
     },
-    // ── Conformité & certifications ─────────────────────────────────
+    // ── Compliance & certifications ──────────────────────────────
     {
         id: "Q25", domain: "compliance",
         text_fr: "Quelles certifications de sécurité détenez-vous et quelle est leur date de validité ?",

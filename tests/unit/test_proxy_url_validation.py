@@ -52,9 +52,9 @@ class TestPrivateIPsRejected:
         with pytest.raises(HTTPException) as exc:
             _validate_proxy_url("http://127.0.0.1:8080")
         assert exc.value.status_code == 400
-        # Le motif exact appartient a ssrf_guard : on verifie le refus et
-        # qu'il est motive, pas la formulation, sinon le test casse a chaque
-        # reformulation du message partage.
+        # The exact wording belongs to ssrf_guard: we check the refusal and
+        # that it carries a reason, not the phrasing, otherwise the test
+        # breaks on every rewording of the shared message.
         assert exc.value.detail
 
     def test_private_10(self):

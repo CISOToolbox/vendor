@@ -108,10 +108,10 @@ async def update_measure(
         .where(Vendor.project_id == project_id, Vendor.id == measure.vendor_id)
     )
     vrow = v_row.first()
-    # Le canal push doit tenir le MÊME périmètre que /internal/measures : un
-    # PATCH sur la mesure d'un fournisseur hors pilotage (prospect, ancien)
-    # upsertait la ligne dans le cache Pilot — l'offboarding lui-même
-    # repoussait chaque mesure qu'il abandonnait. Hors périmètre, on retire.
+    # The push channel must hold the SAME scope as /internal/measures: a
+    # PATCH on a measure of an out-of-scope vendor (prospect, former) used to
+    # upsert the row into the Pilot cache — offboarding itself re-pushed every
+    # measure it was abandoning. Out of scope, we remove.
     if vrow and (vrow[3] or "") not in VENDOR_IN_SCOPE:
         asyncio.ensure_future(notify_pilot_measure_deleted(measure_id))
         return measure

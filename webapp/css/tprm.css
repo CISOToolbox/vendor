@@ -1,8 +1,8 @@
 /* ── TPRM — App-specific styles ─────────────────────────── */
 :root {
-  /* Cellule "Extrême" des matrices : un cran au-dessus de critical-tint sans
-     sauter au critical plein (écart trop brutal parmi les teintes). Suit le
-     thème via ses deux composantes. Écran uniquement (pas d'export SVG ici). */
+  /* Matrix "Extrême" cell: one notch above critical-tint without jumping to
+     full critical (too brutal a gap among the tints). Follows the theme
+     through its two components. Screen only (no SVG export here). */
   --tprm-extreme: var(--ct-critical);
 }
 .ct-panel-desc { font-size: 0.85em; color: var(--ct-ink-2); margin-bottom: 16px; }
@@ -195,7 +195,7 @@ details.dora-arrangement[open] summary { border-bottom: 1px solid var(--ct-line)
 .tpl-section-questions-label { font-size: 0.74em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--ct-ink-1); }
 
 .tpl-question { background: var(--ct-canvas); border: 1px solid var(--ct-line); border-radius: 6px; padding: 10px 12px; margin-bottom: 6px; }
-/* Liseré par niveau d'importance (grade solid : liseré) — repère visuel rapide. */
+/* Colored left border by importance level (solid grade: border) — quick visual cue. */
 .tpl-question.crit-q-info    { border-left: 3px solid var(--ct-info); }
 .tpl-question.crit-q-major   { border-left: 3px solid var(--ct-high); }
 .tpl-question.crit-q-blocker { border-left: 3px solid var(--ct-critical); }
@@ -262,13 +262,13 @@ select.tpl-criticality.crit-info, select.tpl-criticality.crit-major, select.tpl-
     .vendor-tabs { flex-direction: column; }
     .vendor-tab { padding: 10px; font-size: 0.85em; }
     .dash-risk-row { flex-direction: column; }
-    /* flex:1 1 0 (règle de base) répartit les matrices en colonnes égales tant
-       que .dash-risk-row est en ligne. En colonne, ce flex-basis:0 s'applique à
-       la HAUTEUR : sans espace libre à distribuer dans un conteneur en hauteur
-       auto, le bloc s'écrase à ~2px de contenu et le SVG — qui, lui, se
-       dimensionne correctement — déborde d'une boîte que overflow-x:auto rend
-       défilante. D'où des matrices absentes sur mobile, intactes sur bureau.
-       Rétablir une hauteur pilotée par le contenu. */
+    /* flex:1 1 0 (the base rule) spreads the matrices into equal columns as
+       long as .dash-risk-row is a row. In a column, that flex-basis:0 applies
+       to the HEIGHT: with no free space to distribute in an auto-height
+       container, the block collapses to ~2px of content and the SVG — which
+       does size itself correctly — overflows a box that overflow-x:auto turns
+       scrollable. Hence matrices missing on mobile, intact on desktop.
+       Restore a content-driven height. */
     .dash-matrix { flex: 0 0 auto; width: auto; max-width: 100%; min-width: 0; }
     .dash-timeline { padding: 8px; }
     .dash-grid-2col { grid-template-columns: 1fr !important; }
@@ -357,7 +357,7 @@ select.tpl-criticality.crit-info, select.tpl-criticality.crit-major, select.tpl-
 .dora-overview-id { font-size: 0.78em; color: var(--ct-ink-2); font-weight: 400; }
 .dora-overview-parent { color: var(--ct-ink-2); font-weight: 400; font-size: 0.85em; }
 
-/* Labels d'axes des matrices (hex light bakés par ctRenderMatrix pour les
-   exports) : re-thémés en dark. */
+/* Matrix axis labels (light hex baked in by ctRenderMatrix for the
+   exports): re-themed in dark. */
 :root[data-theme="dark"] .risk-matrix-container svg text[fill="#3c4453"] { fill: var(--ct-ink-1); }
 :root[data-theme="dark"] .risk-matrix-container svg text[fill="#6b7488"] { fill: var(--ct-ink-2); }

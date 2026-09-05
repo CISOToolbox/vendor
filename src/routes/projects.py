@@ -369,8 +369,8 @@ async def _renotify_project_measures(db: AsyncSession, project_id: uuid.UUID) ->
         .join(Vendor, (VendorMeasure.project_id == Vendor.project_id) & (VendorMeasure.vendor_id == Vendor.id))
         .join(Project, VendorMeasure.project_id == Project.id)
         .outerjoin(ProjectMetadata, VendorMeasure.project_id == ProjectMetadata.project_id)
-        # Même périmètre que /internal/measures — le canal push ne doit pas
-        # ressusciter dans le cache Pilot ce que le canal pull filtre.
+        # Same scope as /internal/measures — the push channel must not
+        # resurrect in the Pilot cache what the pull channel filters out.
         .where(VendorMeasure.project_id == project_id,
                Vendor.status.in_(VENDOR_IN_SCOPE))
     )

@@ -17,8 +17,8 @@ var _saveTimer: ReturnType<typeof setTimeout> | null = null;
 // handler around _doFlush so pending PATCHes are not dropped.
 var _persistKeepalive = false;
 
-/** Options acceptées par _fetch : RequestInit dont le body peut être un
- * objet brut (sérialisé en JSON) ou un FormData (envoyé tel quel). */
+/** Options accepted by _fetch: a RequestInit whose body may be a plain
+ * object (serialized to JSON) or a FormData (sent as-is). */
 interface VFetchOpts extends Omit<RequestInit, "body" | "headers"> {
     headers?: Record<string, string>;
     body?: VendorApiPayload | FormData | string;
@@ -346,8 +346,8 @@ window._persistCreate = function(entityType: string, data: VendorApiPayload) {
     return p;
 };
 
-// entityId élargi string | number pour matcher le contrat _persistDelete
-// (les ids vendor sont toujours des strings au runtime — cast localisé).
+// entityId widened to string | number to match the _persistDelete contract
+// (vendor ids are always strings at runtime — cast kept local).
 window._persistDelete = function(entityType: string, entityId: string | number) {
     if (!_dataReady || !_activeId) return;
     var DELETE_FNS: Partial<Record<TprmPersistType, (id: string) => Promise<unknown>>> = {
@@ -405,8 +405,9 @@ window._autoSave = function() {
 
 var _origLoadBuffer = window._loadBuffer;
 if (_origLoadBuffer) {
-    // Le hook source est synchrone (ne renvoie rien) alors que la décl globale
-    // de _loadBuffer est async (Promise<true | null>) — cast hérité du port risk.
+    // The source hook is synchronous (returns nothing) whereas the global
+    // decl of _loadBuffer is async (Promise<true | null>) — cast inherited
+    // from the risk port.
     (window as any)._loadBuffer = function(buffer: ArrayBuffer, filename: string) {
         _origLoadBuffer(buffer, filename);
         setTimeout(function() {

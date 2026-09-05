@@ -1,7 +1,7 @@
 """Add phase 0b columns to vendor_assessments
 
 New fields to support template-driven assessments, coverage statuses,
-action plans, maturity pondération and the approval workflow. See
+action plans, maturity weighting and the approval workflow. See
 src/assessment_validation.py for the complete data contract and the
 server-side rules that enforce immutability / completeness / status
 transitions.

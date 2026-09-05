@@ -1,11 +1,11 @@
-"""Validation de sortie IA par FORME DE RÉPONSE (post-incident 2026-09-02).
+"""AI output validation per RESPONSE SHAPE (post-incident 2026-09-02).
 
-Un `_CHAMPS` unique pour tout le module avait vidé les réponses de
-`suggest-assessment` et `collect-info` (aucun de leurs champs n'y figurait) :
-502 systématique, invisible des tests car AUCUN test n'exerçait ces formes.
-Chaque forme a désormais son nettoyeur, et chaque nettoyeur son test.
+A single `_CHAMPS` for the whole module had emptied the responses of
+`suggest-assessment` and `collect-info` (none of their fields were in it):
+systematic 502, invisible to the tests because NO test exercised those
+shapes. Each shape now has its own cleaner, and each cleaner its test.
 
-Stdlib + pytest, aucune base : la validation est pure.
+Stdlib + pytest, no database: the validation is pure.
 """
 from __future__ import annotations
 
@@ -35,8 +35,8 @@ def test_measures_keeps_the_fields_the_frontend_reads():
 
 
 def test_an_invalid_action_takes_the_id_with_it():
-    # Un id valide orphelin retomberait dans le chemin historique du frontend
-    # (mise à jour aveugle, sans aperçu). L'action invalide retire l'id.
+    # An orphaned valid id would fall back into the frontend's historical
+    # path (blind update, no preview). The invalid action removes the id.
     out = validate_output([{"action": "Overwrite", "id": "M-01",
                             "mesure": "x"}], "measures")
     assert out == [{"mesure": "x"}]
@@ -57,8 +57,8 @@ def test_a_malformed_id_takes_the_action_with_it():
 # ── forme "risks" ────────────────────────────────────────────────────────
 
 def test_risks_constrain_the_nested_measures_too():
-    # Les mesures imbriquées écrivent dans le même plan que les mesures de
-    # premier niveau : mêmes contraintes action/id.
+    # Nested measures write into the same plan as top-level measures:
+    # same action/id constraints.
     out = validate_output([{
         "title": "Défaillance sous-traitant", "category": "OPS",
         "impact": 9, "likelihood": 0,
@@ -78,8 +78,8 @@ def test_a_non_numeric_impact_is_dropped_not_propagated():
 # ── forme "assessment" ───────────────────────────────────────────────────
 
 def test_assessment_answers_survive_validation():
-    # La forme qui répondait 502 : aucun de ses champs n'était dans l'ancien
-    # _CHAMPS global.
+    # The shape that answered 502: none of its fields were in the old
+    # global _CHAMPS.
     out = validate_output([{"question_id": "Q01", "answer": "partial",
                             "comment": "SOC 2 en cours"}], "assessment")
     assert out == [{"question_id": "Q01", "answer": "partial",
@@ -100,8 +100,8 @@ def test_assessment_answer_outside_the_enum_is_dropped():
 # ── forme "profile" ──────────────────────────────────────────────────────
 
 def test_profile_returns_the_object_the_frontend_applies():
-    # L'autre forme qui répondait 502. `_applyAiData` lit un OBJET, pas une
-    # liste — la validation doit le rendre tel quel.
+    # The other shape that answered 502. `_applyAiData` reads an OBJECT, not
+    # a list — the validation must return it as-is.
     out = validate_output({
         "legal_entity": "MedSecure SAS", "country": "FR",
         "certifications": ["ISO 27001"],
@@ -124,11 +124,11 @@ def test_an_unusable_profile_raises():
         validate_output({"champ": "hors schéma"}, "profile")
 
 
-# ── garde-fou transversal ────────────────────────────────────────────────
+# ── cross-cutting safeguard ──────────────────────────────────────────────
 
 def test_the_routes_module_imports_what_it_raises():
-    # Le bug d'origine : `raise HTTPException` sans import — NameError → 500
-    # sur chaque chemin d'erreur, invisible du happy path.
+    # The original bug: `raise HTTPException` without import — NameError → 500
+    # on every error path, invisible from the happy path.
     import importlib
     mod = importlib.import_module("src.routes.ai")
     assert hasattr(mod, "HTTPException")

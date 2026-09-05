@@ -1,8 +1,8 @@
 /* ── TPRM — App-specific styles ─────────────────────────── */
 :root {
-  /* Cellule "Extrême" des matrices : un cran au-dessus de critical-tint sans
-     sauter au critical plein (écart trop brutal parmi les teintes). Suit le
-     thème via ses deux composantes. Écran uniquement (pas d'export SVG ici). */
+  /* Matrix "Extrême" cell: one notch above critical-tint without jumping to
+     full critical (too brutal a gap among the tints). Follows the theme
+     through its two components. Screen only (no SVG export here). */
   --tprm-extreme: var(--ct-critical);
 }
 .ct-panel-desc { font-size: 0.85em; color: var(--ct-ink-2); margin-bottom: 16px; }
@@ -157,7 +157,7 @@ details.dora-arrangement[open] summary { border-bottom: 1px solid var(--ct-line)
 .tpl-section-questions-label { font-size: 0.74em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--ct-ink-1); }
 
 .tpl-question { background: var(--ct-canvas); border: 1px solid var(--ct-line); border-radius: 6px; padding: 10px 12px; margin-bottom: 6px; }
-/* Liseré par niveau d'importance (grade solid : liseré) — repère visuel rapide. */
+/* Colored left border by importance level (solid grade: border) — quick visual cue. */
 .tpl-question.crit-q-info    { border-left: 3px solid var(--ct-info); }
 .tpl-question.crit-q-major   { border-left: 3px solid var(--ct-high); }
 .tpl-question.crit-q-blocker { border-left: 3px solid var(--ct-critical); }
@@ -183,9 +183,9 @@ details.dora-arrangement[open] summary { border-bottom: 1px solid var(--ct-line)
 .evalv2-status-pending_approval { background: var(--ct-high-tint); color: var(--ct-high-ink); }
 .evalv2-status-validated { background: var(--ct-low-tint); color: var(--ct-low-ink); }
 .evalv2-status-rejected { background: var(--ct-critical-tint); color: var(--ct-critical-ink); }
-/* Controle de formulaire, pas un badge : il garde sa classe et recoit le ton par
-   attribut. Les trois niveaux (info / major / blocker) se projettent sur les
-   tons info / high / critical via _vendorTone. */
+/* A form control, not a badge: it keeps its class and receives the tone through
+   an attribute. The three levels (info / major / blocker) map onto the
+   info / high / critical tones via _vendorTone. */
 select.tpl-criticality { font-weight: 700; border-width: 1px; border-color: currentColor; }
 select.tpl-criticality[data-tone="info"]     { background: var(--ct-info-tint);     color: var(--ct-info-ink); }
 select.tpl-criticality[data-tone="high"]     { background: var(--ct-high-tint);     color: var(--ct-high-ink); }
@@ -213,13 +213,13 @@ select.tpl-criticality[data-tone="critical"] { background: var(--ct-critical-tin
     .vendor-tabs { flex-direction: column; }
     .vendor-tab { padding: 10px; font-size: 0.85em; }
     .dash-risk-row { flex-direction: column; }
-    /* flex:1 1 0 (règle de base) répartit les matrices en colonnes égales tant
-       que .dash-risk-row est en ligne. En colonne, ce flex-basis:0 s'applique à
-       la HAUTEUR : sans espace libre à distribuer dans un conteneur en hauteur
-       auto, le bloc s'écrase à ~2px de contenu et le SVG — qui, lui, se
-       dimensionne correctement — déborde d'une boîte que overflow-x:auto rend
-       défilante. D'où des matrices absentes sur mobile, intactes sur bureau.
-       Rétablir une hauteur pilotée par le contenu. */
+    /* flex:1 1 0 (the base rule) spreads the matrices into equal columns as
+       long as .dash-risk-row is a row. In a column, that flex-basis:0 applies
+       to the HEIGHT: with no free space to distribute in an auto-height
+       container, the block collapses to ~2px of content and the SVG — which
+       does size itself correctly — overflows a box that overflow-x:auto turns
+       scrollable. Hence matrices missing on mobile, intact on desktop.
+       Restore a content-driven height. */
     .dash-matrix { flex: 0 0 auto; width: auto; max-width: 100%; min-width: 0; }
     .dash-timeline { padding: 8px; }
     .dash-grid-2col { grid-template-columns: 1fr !important; }
@@ -298,12 +298,12 @@ select.tpl-criticality[data-tone="critical"] { background: var(--ct-critical-tin
 .dora-overview-id { font-size: 0.78em; color: var(--ct-ink-2); font-weight: 400; }
 .dora-overview-parent { color: var(--ct-ink-2); font-weight: 400; font-size: 0.85em; }
 
-/* Labels d'axes des matrices (hex light bakés par ctRenderMatrix pour les
-   exports) : re-thémés en dark. */
+/* Matrix axis labels (light hex baked in by ctRenderMatrix for the
+   exports): re-themed in dark. */
 
-/* Extrait des styles inline : la classe portait deja le nom, la mise en
-   forme vivait a cote dans un attribut style. Rendu identique. */
+/* Extracted from inline styles: the class already carried the name, the
+   formatting lived next to it in a style attribute. Identical rendering. */
 .maturity-detail { margin-bottom:var(--ct-s3); border:1px solid var(--ct-line); border-radius:8px; background:var(--ct-surface); }
 
-/* Extrait du balisage : la classe existait, son style vivait a cote. */
+/* Extracted from the markup: the class existed, its style lived next to it. */
 .dora-arrangement-card { border:1px solid var(--ct-line); border-radius:6px; padding:8px 10px; background:var(--ct-onsolid); cursor:pointer; transition:background 0.15s,border-color 0.15s; }

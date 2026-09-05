@@ -1,12 +1,12 @@
-"""Le périmètre VENDOR_IN_SCOPE doit tenir sur TOUS les canaux vers Pilot.
+"""The VENDOR_IN_SCOPE scope must hold on ALL channels toward Pilot.
 
-L'audit du 2026-09-02 a montré le filtre posé sur /internal/measures (pull)
-mais absent de /internal/stats et des deux canaux push (PATCH mesure, bulk
-notify au renommage de projet) : la posture Pilot comptait prospects et
-anciens fournisseurs, et l'offboarding repoussait dans le cache Pilot chaque
-mesure qu'il venait d'abandonner.
+The 2026-09-02 audit showed the filter present on /internal/measures (pull)
+but absent from /internal/stats and from both push channels (measure PATCH,
+bulk notify on project rename): the Pilot posture counted prospects and
+former vendors, and offboarding re-pushed into the Pilot cache every
+measure it had just abandoned.
 
-Contrôles par AST sur le code source — l'invariant est invisible dans un diff.
+AST checks on the source code — the invariant is invisible in a diff.
 """
 import ast
 import os
@@ -25,7 +25,7 @@ def _function_source(path: str, name: str) -> str:
 
 def test_internal_stats_is_scoped_everywhere():
     src = _function_source(os.path.join(ROUTES, "internal.py"), "internal_stats")
-    # 5 lectures : total, tiers, mesures, posture, pending — chacune scopée.
+    # 5 reads: total, tiers, measures, posture, pending — each one scoped.
     assert src.count("VENDOR_IN_SCOPE") >= 5, (
         "internal_stats must scope every query with VENDOR_IN_SCOPE — an "
         "unscoped one silently skews the Pilot posture")
@@ -49,7 +49,7 @@ def test_the_bulk_push_channel_honours_the_scope():
         src = f.read()
     idx = src.find("notify_pilot_measures_bulk")
     assert idx != -1
-    # Le filtre doit apparaître dans la requête qui alimente le bulk.
+    # The filter must appear in the query that feeds the bulk.
     window = src[max(0, idx - 200): idx + 1500]
     assert "VENDOR_IN_SCOPE" in window, (
         "the project-rename bulk notify must only push in-scope vendors")

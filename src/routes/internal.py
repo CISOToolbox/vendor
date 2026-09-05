@@ -156,10 +156,10 @@ async def export_vendors(request: Request, db: AsyncSession = Depends(get_db)):
     return {"vendors": all_vendors}
 
 
-# Statuts de fournisseur qui alimentent le pilotage. Doit rester aligne avec
-# VENDOR_IN_SCOPE dans app/ts/TPRM_app.ts : le frontend et cet export decrivent
-# le meme perimetre, et une divergence ne produirait aucune erreur — seulement
-# deux chiffres differents pour la meme chose.
+# Vendor statuses that feed the steering. Must stay aligned with
+# VENDOR_IN_SCOPE in app/ts/TPRM_app.ts: the frontend and this export describe
+# the same scope, and a divergence would produce no error — only two
+# different figures for the same thing.
 VENDOR_IN_SCOPE = ("active", "review")
 
 
@@ -173,11 +173,11 @@ async def internal_measures(request: Request, db: AsyncSession = Depends(get_db)
         .join(Vendor, (VendorMeasure.project_id == Vendor.project_id) & (VendorMeasure.vendor_id == Vendor.id))
         .join(Project, VendorMeasure.project_id == Project.id)
         .outerjoin(ProjectMetadata, VendorMeasure.project_id == ProjectMetadata.project_id)
-        # Meme perimetre que le tableau de bord Vendor : un fournisseur
-        # seulement ENVISAGE n'a pas de travail a piloter, et un ANCIEN n'en a
-        # plus. Sans ce filtre, Pilot afficherait dans son plan d'action des
-        # mesures que Vendor a cesse de compter — deux modules en desaccord sur
-        # le meme fournisseur, et rien pour le signaler.
+        # Same scope as the Vendor dashboard: a vendor that is merely
+        # PROSPECTIVE has no work to steer, and a FORMER one no longer does.
+        # Without this filter, Pilot would show in its action plan measures
+        # that Vendor has stopped counting — two modules disagreeing about
+        # the same vendor, and nothing to flag it.
         .where(Vendor.status.in_(VENDOR_IN_SCOPE))
         .order_by(VendorMeasure.project_id, VendorMeasure.vendor_id, VendorMeasure.sort_order)
     )
@@ -217,10 +217,10 @@ async def internal_stats(request: Request, db: AsyncSession = Depends(get_db)):
     _check_service_token(request)
     from datetime import date as _date
 
-    # Même périmètre que /internal/measures : la posture et le plan d'action
-    # doivent compter les MÊMES fournisseurs, sinon Pilot affiche deux chiffres
-    # différents pour la même chose (prospects et anciens inclus dans l'un,
-    # exclus de l'autre).
+    # Same scope as /internal/measures: the posture and the action plan must
+    # count the SAME vendors, otherwise Pilot shows two different figures for
+    # the same thing (prospects and former vendors included in one, excluded
+    # from the other).
     total_vendors = await db.scalar(
         select(func.count()).select_from(Vendor)
         .where(Vendor.status.in_(VENDOR_IN_SCOPE))
@@ -258,8 +258,8 @@ async def internal_stats(request: Request, db: AsyncSession = Depends(get_db)):
     for statut, echeance in measures_rows:
         st = (statut or "").strip()
         if st in ("annule", "Annulé", "abandonne", "cancelled"):
-            # Abandonnée : ni à faire, ni en retard — la compter « planned »
-            # déclenchait l'alerte retard pour un travail auquel on a renoncé.
+            # Cancelled: neither to-do nor late — counting it as "planned"
+            # triggered the overdue alert for work that was given up.
             cancelled += 1
             continue
         if st in ("completed", "termine", "Terminé"):
@@ -505,7 +505,7 @@ async def patch_measure(
     if not measure:
         raise HTTPException(status_code=404, detail="Measure not found")
 
-    # Transverse Pilot ↔ Vendor mapping: title → mesure, description → details.
+    # Cross-cutting Pilot ↔ Vendor mapping: title → mesure, description → details.
     if "title" in body:
         measure.mesure = body["title"]
     if "description" in body:
@@ -582,9 +582,9 @@ def _normalize_status(s: str) -> str:
         "completed": "completed", "termine": "completed", "Terminé": "completed",
         "en_cours": "in_progress", "En cours": "in_progress",
         "planifie": "planned", "Planifié": "planned", "planifié": "planned",
-        # Cle partagee « annule », libellee « Abandonne » dans l'interface :
-        # une mesure qu'on renonce a mener. Sans cette entree elle remonterait
-        # brute vers Pilot et tomberait dans un compartiment inconnu.
+        # Shared key « annule », labeled « Abandonne » in the UI: a measure
+        # one gives up on. Without this entry it would flow raw up to Pilot
+        # and fall into an unknown bucket.
         "annule": "cancelled", "Annulé": "cancelled", "abandonne": "cancelled",
     }
     return mapping.get(s, s)

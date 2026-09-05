@@ -2,7 +2,7 @@
 
 The shared /api/ai proxy (provider registry, key/settings management,
 /complete, /runtime, /config, /keys, /validate-key, the LLM dispatch) lives in
-src/ai_proxy_common.py. Only the TPRM métier prompts and their suggestion /
+src/ai_proxy_common.py. Only the TPRM business prompts and their suggestion /
 collection endpoints are here — the methodology stays server-side.
 """
 from __future__ import annotations
@@ -29,7 +29,7 @@ from src.ai_prompts import (MAX_JSON, SCHEMA_ACTION, bloc_mesures, borner,
 from src.models import User
 from src.routes.auth_helpers import get_project_or_404
 
-# Common /api/ai endpoints; the métier endpoints below are appended to it.
+# Common /api/ai endpoints; the business endpoints below are appended to it.
 router = make_ai_router(generic_complete=False)
 
 
@@ -51,9 +51,9 @@ class MeasureSuggestRequest(BaseModel):
     tier: str = ""
     dora_critical: bool = False
     gdpr_subprocessor: bool = False
-    # FEAT-40 — le serveur lit les mesures du fournisseur EN BASE. Le client
-    # envoyait des NOMS seuls, sans id ni description : le modèle ne pouvait
-    # ni juger d'un recouvrement, ni désigner une mesure à enrichir.
+    # FEAT-40 — the server reads the vendor's measures FROM THE DATABASE. The
+    # client used to send NAMES only, without id or description: the model
+    # could neither judge an overlap nor designate a measure to enrich.
     project_id: str = ""
     vendor_id: str = ""
     include_existing_measures: bool = True
@@ -67,8 +67,8 @@ def _measure_suggest_system(mode: str, vendor_name: str, language: str,
                             avec_mesures: bool = False) -> str:
     name = vendor_name or "Vendor"
     lang = _lang_name(language)
-    # Le discriminant n'est demandé QUE si le plan est transmis : sans lui, le
-    # modèle inventerait des identifiants de mesures qu'il n'a jamais vues.
+    # The discriminator is requested ONLY when the plan is transmitted: without
+    # it, the model would invent measure identifiers it has never seen.
     action = SCHEMA_ACTION if avec_mesures else ""
     schema = (
         '[{' + action + '"mesure":"SHORT name max 8 words — ' + name + '","details":"DETAILED '
@@ -124,7 +124,7 @@ async def vendor_suggest_measures(body: MeasureSuggestRequest,
 
     mode = body.mode if body.mode in ("vendor", "risk", "custom") else "vendor"
 
-    # Contexte de mesures : lu en base, jamais reçu du client.
+    # Measure context: read from the database, never received from the client.
     contexte = None
     if body.include_existing_measures and body.project_id and body.vendor_id:
         try:
@@ -159,8 +159,8 @@ async def vendor_suggest_measures(body: MeasureSuggestRequest,
             "Vendor: " + borner(body.vendor_name) +
             "\nRisk: " + json.dumps(body.risk or {}, ensure_ascii=False)[:MAX_JSON] +
             "\nUser request: " + borner(body.custom_request) +
-            # Le mode `custom` n'en recevait AUCUNE : il produisait des doublons
-            # à chaque demande libre.
+            # The `custom` mode used to receive NONE of them: it produced
+            # duplicates on every free-form request.
             bloc
         )
 
@@ -188,7 +188,7 @@ class RiskSuggestRequest(BaseModel):
     gdpr_subprocessor: bool = False
     existing_risks: list[str] = []
     custom_request: str = ""
-    # FEAT-40 — ce point d'entrée propose des risques AVEC leurs mesures.
+    # FEAT-40 — this endpoint suggests risks WITH their measures.
     project_id: str = ""
     vendor_id: str = ""
     include_existing_measures: bool = True
@@ -255,9 +255,9 @@ async def vendor_suggest_risks(body: RiskSuggestRequest,
     _check_rate_limit(str(user.id) if user else "anonymous")
     provider, model = await _runtime_provider_model(db)
 
-    # FEAT-40 — ce point d'entrée propose des risques AVEC leurs mesures : il
-    # doit voir le plan comme les autres. `bloc` y était référencé sans être
-    # calculé (NameError au premier appel en mode personnalisé).
+    # FEAT-40 — this endpoint suggests risks WITH their measures: it must see
+    # the plan like the others. `bloc` was referenced here without being
+    # computed (NameError on the first call in custom mode).
     contexte = None
     if body.include_existing_measures and body.project_id and body.vendor_id:
         project = await get_project_or_404(body.project_id, user, db, "read")
@@ -270,8 +270,8 @@ async def vendor_suggest_risks(body: RiskSuggestRequest,
             "Vendor: " + borner(body.vendor_name) + " (" + borner(body.vendor_sector) + ")" +
             "\nServices: " + borner(body.vendor_services) +
             "\nUser request: " + borner(body.custom_request) +
-            # Le mode `custom` n'en recevait AUCUNE : il produisait des doublons
-            # à chaque demande libre.
+            # The `custom` mode used to receive NONE of them: it produced
+            # duplicates on every free-form request.
             bloc
         )
     else:
@@ -285,10 +285,10 @@ async def vendor_suggest_risks(body: RiskSuggestRequest,
             ("\nDORA critical ICT provider: yes" if body.dora_critical else "") +
             ("\nGDPR subprocessor: yes" if body.gdpr_subprocessor else "") +
             "\nExisting risks: " + (", ".join(borner_liste(body.existing_risks)) or "none") +
-            # Chaque branche joint `bloc` EXPLICITEMENT. L'ancien garde-fou
-            # (`if "Existing measures" not in user_prompt`) décidait sur une
-            # sous-chaîne d'un texte partiellement contrôlé par le client :
-            # un champ contenant ces mots supprimait le contexte en silence.
+            # Each branch appends `bloc` EXPLICITLY. The old safeguard
+            # (`if "Existing measures" not in user_prompt`) decided on a
+            # substring of a text partially controlled by the client: a
+            # field containing those words silently dropped the context.
             bloc
         )
     system = _risk_suggest_system(mode, borner(body.vendor_name, 200), body.language,

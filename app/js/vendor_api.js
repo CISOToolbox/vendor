@@ -332,8 +332,8 @@
         p.then(clear, clear);
         return p;
     };
-    // entityId élargi string | number pour matcher le contrat _persistDelete
-    // (les ids vendor sont toujours des strings au runtime — cast localisé).
+    // entityId widened to string | number to match the _persistDelete contract
+    // (vendor ids are always strings at runtime — cast kept local).
     window._persistDelete = function (entityType, entityId) {
         if (!_dataReady || !_activeId)
             return;
@@ -394,8 +394,9 @@
     // ═══════════════════════════════════════════════════════════════
     var _origLoadBuffer = window._loadBuffer;
     if (_origLoadBuffer) {
-        // Le hook source est synchrone (ne renvoie rien) alors que la décl globale
-        // de _loadBuffer est async (Promise<true | null>) — cast hérité du port risk.
+        // The source hook is synchronous (returns nothing) whereas the global
+        // decl of _loadBuffer is async (Promise<true | null>) — cast inherited
+        // from the risk port.
         window._loadBuffer = function (buffer, filename) {
             _origLoadBuffer(buffer, filename);
             setTimeout(function () {

@@ -304,7 +304,7 @@ function _renderEntityOverview() {
     var h = '';
     h += '<p class="ct-panel-desc dora-hint ct-hidden" id="dora-hint-intro">' + esc(_doraT("dora.overview.intro", "Saisie centralisée des informations générales de votre entité financière : entités déclarantes, succursales, périmètre de consolidation et fonctions opérationnelles. Les accords contractuels et sous-traitants se gèrent dans les fiches PSTI et sous-traitants.")) + '</p>';
 
-    // ── B_01 — Identité de l'entité financière déclarante ──
+    // ── B_01 — Identity of the reporting financial entity ──
     var b01Body = '';
     // RFE block
     b01Body += '<div class="ct-flex ct-items-center ct-justify-between ct-mb-1">'
@@ -383,7 +383,7 @@ function _renderEntityOverview() {
     }
     h += _section(esc(_doraT("dora.overview.title_b01", "Identité de l'entité financière déclarante")), b01Body);
 
-    // ── B_03 — Fonctions opérationnelles ──
+    // ── B_03 — Operational functions ──
     var b03Body = '';
     b03Body += '<div class="ct-flex ct-items-center ct-justify-between ct-mb-1">'
             +   '<span class="ct-muted">' + fns.length + ' ' + esc(fns.length > 1 ? _doraT("dora.overview.functions_pl", "fonctions") : _doraT("dora.overview.functions_sg", "fonction")) + '</span>'
@@ -417,7 +417,7 @@ function _renderEntityOverview() {
     }
     h += _section(esc(_doraT("dora.overview.title_b03", "Fonctions opérationnelles")) + ' ' + _helpBtn("functions"), b03Body);
 
-    // ── B_01.02 — Périmètre de consolidation ──
+    // ── B_01.02 — Scope of consolidation ──
     // Reported INSIDE the B_01.02 sheet at export time (relationship_to_rfe
     // column on each row), but kept as a distinct UI block here so the
     // user can edit consolidation entities separately from the RFEs.

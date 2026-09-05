@@ -46,9 +46,9 @@ var _vendorListTab = "vendors";
 // ═══════════════════════════════════════════════════════════════
 // SIDEBAR + NAVIGATION
 // ═══════════════════════════════════════════════════════════════
-// Badges Vendor. Deux natures, deux primitives (spec §2) : un NIVEAU se mappe
-// sur un ton fermé, une RÉFÉRENCE (le cadre réglementaire, le type de modèle)
-// est une identité et prend .ct-ref.
+// Vendor badges. Two natures, two primitives (spec §2): a LEVEL maps to a
+// closed tone, a REFERENCE (the regulatory framework, the template type) is
+// an identity and takes .ct-ref.
 var _VENDOR_TONES = {
     critical: "critical", high: "high", medium: "medium", low: "low",
     blocker: "critical", major: "high", info: "info",
@@ -142,20 +142,19 @@ function renderPanel() {
 // ═══════════════════════════════════════════════════════════════
 // DASHBOARD
 // ═══════════════════════════════════════════════════════════════
-// Sortie d'un fournisseur. Les mesures TERMINEES restent : elles attestent de
-// ce qui a ete mis en oeuvre, et cette trace survit au fournisseur. Les autres
-// — planifiees, en cours — n'ont plus d'objet et disparaissent.
+// Offboarding a vendor. COMPLETED measures stay: they attest to what was
+// actually implemented, and that trace outlives the vendor. The others
+// — planned, in progress — have no object any more and disappear.
 //
-// Meme regle pour les risques : ceux qui ont ete CLOS ou ARCHIVES sont une
-// trace d'analyse ; ceux encore ouverts portent sur une relation qui n'existe
-// plus.
+// Same rule for risks: those that were CLOSED or ARCHIVED are an analysis
+// trace; those still open bear on a relationship that no longer exists.
 function _offboardVendor(v) {
-    // Rien n'est supprime. Le travail qui n'aboutira pas passe en ABANDONNE et
-    // les risques encore ouverts sont CLOS : la trace de ce qui avait ete
-    // identifie survit au fournisseur, et l'operation se relit.
+    // Nothing is deleted. Work that will not be completed moves to ABANDONED
+    // and the risks still open are CLOSED: the trace of what had been
+    // identified outlives the vendor, and the operation stays readable.
     //
-    // Les mesures deja terminees ne bougent pas — elles attestent de ce qui a
-    // ete mis en oeuvre.
+    // Measures already completed do not move — they attest to what was
+    // implemented.
     var ouvertes = (v.measures || []).filter(function (m) {
         return m.statut !== "termine" && m.statut !== "annule";
     });
@@ -174,40 +173,40 @@ function _offboardVendor(v) {
         showStatus(t("vendor.offboard_cleaned", { m: String(ouvertes.length), r: String(risques.length) }));
     }
 }
-// ── Perimetre du pilotage : quels fournisseurs alimentent le tableau de bord
-//    et le plan d'action ────────────────────────────────────────────────────
+// ── Management scope: which vendors feed the dashboard and the action
+//    plan ───────────────────────────────────────────────────────────────────
 //
-// Un fournisseur seulement ENVISAGE n'est pas encore un tiers : ses risques et
-// ses mesures sont une projection, pas un engagement. Les compter fausse la
-// posture et encombre le plan d'action de travail qui n'a pas lieu d'etre.
+// A vendor that is only CONSIDERED is not a third party yet: its risks and
+// its measures are a projection, not a commitment. Counting them skews the
+// posture and clutters the action plan with work that has no reason to be.
 //
-// EN REVUE reste dans le perimetre : c'est un actif qu'on reevalue, ses
-// mesures restent a piloter pendant la revue.
+// UNDER REVIEW stays in scope: it is an asset being re-assessed, its
+// measures remain to be managed during the review.
 //
-// ANCIEN sort du perimetre. Ses mesures TERMINEES sont conservees comme trace
-// de ce qui a ete mis en oeuvre (voir _offboardVendor) ; les autres ont ete
-// supprimees au moment de la sortie.
+// FORMER leaves the scope. Its COMPLETED measures are kept as a trace of
+// what was implemented (see _offboardVendor); the others were deleted at
+// offboarding time.
 var VENDOR_IN_SCOPE = ["active", "review"];
 function _vendorInScope(v) {
     return VENDOR_IN_SCOPE.indexOf(v && v.status || "prospect") >= 0;
 }
-// Les fournisseurs qui alimentent les indicateurs et le plan d'action.
+// The vendors that feed the indicators and the action plan.
 function _scopedVendors() {
     return (D.vendors || []).filter(_vendorInScope);
 }
-// Les risques rattaches a ces fournisseurs uniquement.
+// The risks attached to those vendors only.
 function _scopedRisks() {
     var ok = {};
     _scopedVendors().forEach(function (v) { ok[v.id] = true; });
     return (D.risks || []).filter(function (r) { return ok[r.vendor_id]; });
 }
 function renderDashboard() {
-    // Le nombre total de fournisseurs reste global — c'est un inventaire.
-    // Tout le reste se calcule sur le perimetre pilote.
+    // The total vendor count stays global — it is an inventory.
+    // Everything else is computed on the managed scope.
     var v = _scopedVendors(), r = _scopedRisks();
-    // Les évaluations suivent le même périmètre que le reste de la page : une
-    // évaluation en cours chez un prospect ou un ancien n'est pas « en
-    // attente » au sens du pilotage.
+    // Assessments follow the same scope as the rest of the page: an
+    // assessment in progress at a prospect or a former vendor is not
+    // "pending" in the management sense.
     var inScope = {};
     v.forEach(function (x) { inScope[x.id] = true; });
     var a = (D.assessments || []).filter(function (x) { return !x.vendor_id || inScope[x.vendor_id]; });
@@ -477,8 +476,8 @@ function setDeadlineDays(days) {
 window.setDeadlineDays = setDeadlineDays;
 function _getExpiringItems() {
     var items = [], now = new Date(), limit = new Date(now.getTime() + _deadlineDays * 86400000);
-    // Contrats et certifications des seuls fournisseurs pilotés : relancer la
-    // revue contractuelle d'un fournisseur offboardé n'a pas de sens.
+    // Contracts and certifications of managed vendors only: re-running the
+    // contract review of an offboarded vendor makes no sense.
     _scopedVendors().forEach(function (v) {
         if (v.contract && v.contract.end_date) {
             var d = new Date(v.contract.end_date);
@@ -519,8 +518,8 @@ function _getLastMeasureDate() {
     return last || "";
 }
 function _renderResidualMatrix(atDate) {
-    // Les matrices du dashboard suivent le périmètre piloté : les risques
-    // d'un prospect ou d'un ancien fournisseur n'y ont pas leur place.
+    // The dashboard matrices follow the managed scope: risks of a prospect
+    // or a former vendor have no place there.
     var active = _scopedRisks().filter(function (r) { return r.status !== "closed" && r.status !== "archived"; });
     var checkDate = atDate || new Date().toISOString().split("T")[0];
     var grid = {};
@@ -575,8 +574,8 @@ function _renderResidualMatrix(atDate) {
             { label: t("matrix.critical") || "Critique", color: "var(--ct-critical-fill)" },
             { label: t("matrix.extreme") || "Extreme", color: "var(--tprm-extreme)" }
         ],
-        // CtMatrixItem (decl shared) n'a pas d'index signature — les items
-        // portent impact/likelihood/vendor_id en plus : annotation locale any[].
+        // CtMatrixItem (shared decl) has no index signature — the items also
+        // carry impact/likelihood/vendor_id: local any[] annotation.
         tooltipFn: function (items) {
             return items.map(function (r) {
                 var sc = (r.impact || 1) * (r.likelihood || 1);
@@ -1250,10 +1249,10 @@ function _renderVendorForm(v) {
     h += _field("vendor.contact_email", "v-cemail", co.email);
     h += '</div>';
     h += '<div class="ct-form-grid">';
-    // Le selecteur d'annuaire travaille sur l'EMAIL et resout le nom : en mode
-    // suite, internal_contact.name fait double emploi avec l'annuaire de Pilot.
-    // Il reste alimente pour l'export et pour le mode autonome, ou _dirPicker
-    // retombe de lui-meme sur un champ texte.
+    // The directory picker works on the EMAIL and resolves the name: in suite
+    // mode, internal_contact.name duplicates the Pilot directory. It is still
+    // populated for the export and for standalone mode, where _dirPicker
+    // falls back to a plain text field on its own.
     h += '<div class="ct-form-row"><label>' + t("vendor.internal_contact") + '</label>'
         + _dirPicker(ic.email || "", "updateVendorInternalContact", _da(_selectedVendor))
         + '</div>';
@@ -1267,7 +1266,7 @@ function _renderVendorForm(v) {
     h += _field("vendor.contract_end", "v-cend", ct.end_date, "date");
     h += _field("vendor.review_date", "v-creview", ct.review_date, "date");
     h += '</div>';
-    // ── Classification (2 columns: Dépendance | Pénétration) ──
+    // ── Classification (2 columns: Dependency | Penetration) ──
     h += '<div class="form-section">' + t("vendor.section_classification") + '</div>';
     h += '<div class="cls-columns">';
     h += '<div class="cls-col">';
@@ -1353,9 +1352,9 @@ function _refreshThreatDisplay() {
             '<strong class="' + _exposureClass(menace) + '">' + menace + '</strong>' +
             ' — <span class="' + _exposureClass(menace) + '">' + _exposureLabel(menace) + '</span>' +
             (dora ? ' <span class="ct-ref" data-size="sm">' + t("vendor.dora_critical") + '</span>' : '');
-        // Deux gardes sur des identifiants d'en-tete absents de tout gabarit ont
-        // ete retirees ici : elles etaient toujours fausses. Le tier est rendu par
-        // la carte fournisseur, le marqueur DORA juste au-dessus.
+        // Two guards on header ids absent from every template were removed
+        // here: they were always false. The tier is rendered by the vendor
+        // card, the DORA marker just above.
         var detailEl = threatEl.nextElementSibling;
         if (detailEl && detailEl.style && detailEl.style.fontSize === "0.78em") {
             detailEl.innerHTML = t("vendor.dependance") + ' : <strong>' + (ex.dependance || 0) + '/4</strong>' +
@@ -1467,7 +1466,7 @@ function _renderVendorRisks(v) {
     h += '</div>';
     if (!risks.length)
         return h + '<div class="ct-muted ct-text-meta ct-mt-2">' + t("risk.empty") + '</div>';
-    // Split measures into "en place" (terminé) and "prévues" (planifié/en_cours)
+    // Split measures into in-place ("termine") and planned ("planifie"/"en_cours")
     var measEnPlace = v.measures.filter(function (m) { return m.statut === "termine"; });
     var measPrevues = v.measures.filter(function (m) { return m.statut !== "termine"; });
     var optsEnPlace = measEnPlace.map(function (m) { return { id: m.id, label: (m.mesure || "").substring(0, 50) }; });
@@ -1658,18 +1657,18 @@ function _vendorMeasureModalOpts() {
             { value: "planifie", label: t("measure.planifie") || "Planifié" },
             { value: "en_cours", label: t("measure.en_cours") || "En cours" },
             { value: "termine", label: t("measure.termine") || "Terminé" },
-            // Clé partagée « annule » (ct_measure_modal.DEFAULT_STATUS_KEYS),
-            // libellée « Abandonné » : une mesure qu'on renonce à mener, sans
-            // l'effacer. C'est ce que devient le travail en cours d'un
-            // fournisseur qui sort du périmètre.
+            // Shared key « annule » (ct_measure_modal.DEFAULT_STATUS_KEYS),
+            // labelled « Abandonné »: a measure we give up on carrying out,
+            // without erasing it. That is what the open work of a vendor
+            // leaving the scope becomes.
             { value: "annule", label: t("measure.annule") || "Abandonné" }
         ]
     };
 }
 function _nextVendorRiskId(v) {
-    // Meme regle que _nextVendorMeasureId : on saute les numeros liberes par
-    // une suppression, sinon un nouveau risque reprend l'identifiant d'un
-    // ancien et les mesures qui le referencaient basculent dessus.
+    // Same rule as _nextVendorMeasureId: skip the numbers freed by a
+    // deletion, otherwise a new risk takes back the id of an old one and the
+    // measures that referenced it switch over to it.
     var mine = (D.risks || []).filter(function (r) { return r.vendor_id === v.id; });
     var n = mine.length + 1;
     var mk = function (i) { return v.id + "-R" + String(i).padStart(2, "0"); };
@@ -1757,7 +1756,7 @@ function deleteVendorMeasure(vendorIdx, measureIdx) {
     renderPanel();
 }
 window.deleteVendorMeasure = deleteVendorMeasure;
-// ── Métier endpoint helper: POST structured data, the server owns the
+// ── Business endpoint helper: POST structured data, the server owns the
 //    TPRM methodology prompt. See docs/CHANTIER_IA_BACKEND.md §Phase 2.
 function _aiPost(path, payload) {
     return fetch("api/ai/" + path, {
@@ -1784,10 +1783,11 @@ function _aiPost(path, payload) {
     });
 }
 // Store context for accept handler
-/** FEAT-40 — case « tenir compte des mesures existantes », cochée par défaut.
- *  Absente du DOM (panneau déjà remplacé par le chargement) => on garde le
- *  défaut : ne pas créer de doublon est le comportement normal. */
-/** Ce que _mergeMeasureDetails ajoutera réellement : "" si rien ne change. */
+/** FEAT-40 — « tenir compte des mesures existantes » checkbox, ticked by
+ *  default. Absent from the DOM (panel already replaced by the loading
+ *  state) => keep the default: not creating a duplicate is the normal
+ *  behaviour. */
+/** What _mergeMeasureDetails will actually add: "" if nothing changes. */
 function _measureDetailsAddition(ancien, ajout) {
     var a = (ancien || "").trim();
     var b = (ajout || "").trim();
@@ -1797,7 +1797,7 @@ function _measureDetailsAddition(ancien, ajout) {
         return "";
     return b;
 }
-/** FEAT-40 — aperçu de ce que l'acceptation va écrire dans la mesure visée. */
+/** FEAT-40 — preview of what accepting will write into the target measure. */
 function _aiEnrichPreviewHTML(s) {
     if (!s || !s.id || (s.action !== "enrich" && s.action !== "link"))
         return "";
@@ -1833,7 +1833,7 @@ function _aiEnrichPreviewHTML(s) {
     }
     return h + '</div>';
 }
-/** FEAT-40 — étend une description sans écraser l'existante. */
+/** FEAT-40 — extends a description without overwriting the existing one. */
 function _mergeMeasureDetails(ancien, ajout) {
     var a = (ancien || "").trim();
     var b = (ajout || "").trim();
@@ -1862,8 +1862,9 @@ function suggestMeasuresForRisk(vendorIdx, riskIdx) {
     if (!v || !r || typeof _aiIsEnabled !== "function" || !_aiIsEnabled())
         return;
     _aiSuggestContext = { vendorIdx: vendorIdx, riskIdx: riskIdx, type: "risk_measures" };
-    // Lire la case AVANT _aiShowLoading : le chargement vide le panneau,
-    // et la case avec lui — la lire ensuite retombait toujours sur true.
+    // Read the checkbox BEFORE _aiShowLoading: the loading state empties the
+    // panel, and the checkbox with it — reading it after always fell back
+    // to true.
     var inclureMesures = _aiIncludeMeasures();
     _aiShowLoading("✨ " + t("measure.ai_suggest") + " — " + esc(r.title || r.id));
     _aiPost("vendor/suggest-measures", {
@@ -1871,9 +1872,9 @@ function suggestMeasuresForRisk(vendorIdx, riskIdx) {
         language: _locale === "en" ? "en" : "fr",
         vendor_name: v.name || "",
         vendor_sector: v.sector || "",
-        // FEAT-40 — le serveur lit les mesures du fournisseur EN BASE. On
-        // envoyait des noms seuls, sans id ni description : le modèle ne
-        // pouvait ni juger d'un doublon, ni désigner une mesure à enrichir.
+        // FEAT-40 — the server reads the vendor measures FROM THE DB. We
+        // used to send names alone, with no id and no description: the model
+        // could neither judge a duplicate nor point at a measure to enrich.
         project_id: window.getActiveProjectId ? window.getActiveProjectId() : "",
         vendor_id: v.id,
         include_existing_measures: inclureMesures,
@@ -2115,8 +2116,8 @@ function _renderAiCards() {
                 };
                 D.risks.push(risk);
                 (s.measures || []).forEach(function (m) {
-                    // FEAT-40 — ce chemin créait une mesure par risque proposé,
-                    // sans jamais consulter le plan du fournisseur.
+                    // FEAT-40 — this path created one measure per proposed
+                    // risk, without ever consulting the vendor's plan.
                     if ((m.action === "enrich" || m.action === "link") && m.id) {
                         var dejaV = (v.measures || []).find(function (x) { return x.id === m.id; });
                         if (dejaV) {
@@ -2146,18 +2147,18 @@ function _renderAiCards() {
             }
             else if ((s.action === "enrich" || s.action === "link") && s.id
                 && (v.measures || []).some(function (m) { return m.id === s.id; })) {
-                // FEAT-40 — Vendor n'avait AUCUN chemin d'enrichissement :
-                // onAccept créait toujours. Même si le modèle proposait de
-                // s'appuyer sur l'existant, le frontend ne savait pas le faire.
+                // FEAT-40 — Vendor had NO enrichment path at all: onAccept
+                // always created. Even when the model proposed to build on
+                // the existing plan, the frontend could not do it.
                 var cible = v.measures.find(function (m) { return m.id === s.id; });
                 if (s.action === "enrich") {
-                    // Concaténer : la rédaction déjà faite ne doit pas être
-                    // remplacée par le fragment proposé.
+                    // Concatenate: the wording already written must not be
+                    // replaced by the proposed fragment.
                     if (s.details)
                         cible.details = _mergeMeasureDetails(cible.details || "", s.details);
-                    // Titre ajusté SEULEMENT si le modèle en propose un autre :
-                    // c'est sous ce libellé que la mesure apparaît dans les
-                    // risques auxquels elle est rattachée.
+                    // Title adjusted ONLY if the model proposes another one:
+                    // this is the label under which the measure appears in
+                    // the risks it is linked to.
                     var nt = (s.mesure || s.measure || "").trim();
                     if (nt && nt !== cible.mesure)
                         cible.mesure = nt;
@@ -2167,9 +2168,9 @@ function _renderAiCards() {
                         details: cible.details,
                         responsable: cible.responsable });
                 }
-                // Dans les deux cas on rattache au risque courant : c'est
-                // l'effet visible attendu, et ce qui évite que l'utilisateur
-                // recrée la mesure à la main.
+                // In both cases we link to the current risk: that is the
+                // expected visible effect, and what stops the user from
+                // re-creating the measure by hand.
                 if (ctx.riskIdx != null) {
                     var rl = D.risks[ctx.riskIdx];
                     if (rl) {
@@ -2579,9 +2580,10 @@ function _autoSaveVendorField() {
         v.siret = el("v-siret");
         // v.logo is managed by _fetchLogo (stored as base64)
         v.contact = { name: el("v-cname"), email: el("v-cemail") };
-        // internal_contact est ecrit par updateVendorInternalContact des la
-        // selection dans l'annuaire. Le relire ici l'ecraserait par "" : el()
-        // rend une chaine vide pour un element absent, sans rien signaler.
+        // internal_contact is written by updateVendorInternalContact as soon
+        // as the directory selection happens. Re-reading it here would
+        // overwrite it with "": el() returns an empty string for a missing
+        // element, without signalling anything.
         v.contract = { services: el("v-services"), start_date: el("v-cstart"), end_date: el("v-cend"), review_date: el("v-creview") };
         v.classification = {
             ops_impact: parseInt(el("v-cls-ops")) || 0,
@@ -2601,10 +2603,10 @@ function _autoSaveVendorField() {
         v.exposure.confiance = parseInt(el("v-conf")) || 0;
         var _ancienStatus = v.status;
         v.status = el("v-status");
-        // Sortie du fournisseur : on purge ce qui n'a plus d'objet, on garde
-        // ce qui a ete fait. Declenche uniquement sur la TRANSITION, pas a
-        // chaque enregistrement d'un fournisseur deja ancien — sinon une
-        // mesure ressaisie apres coup serait effacee au premier "Enregistrer".
+        // Vendor offboarding: purge what has no object any more, keep what
+        // was done. Triggered on the TRANSITION only, not on every save of
+        // an already-former vendor — otherwise a measure re-entered
+        // afterwards would be wiped on the first "Save".
         if (v.status === "offboarded" && _ancienStatus !== "offboarded")
             _offboardVendor(v);
         v.notes = el("v-notes");
@@ -2632,9 +2634,9 @@ function deleteVendor(idx) {
     if (v) {
         D.risks = D.risks.filter(function (r) { return r.vendor_id !== v.id; });
         D.assessments = D.assessments.filter(function (a) { return a.vendor_id !== v.id; });
-        // Les documents portent aussi vendor_id : sans ce filtre ils restaient
-        // dans D.documents, invisibles (toutes les vues filtrent par fournisseur)
-        // mais comptes dans les indicateurs et reexportes.
+        // Documents also carry vendor_id: without this filter they stayed in
+        // D.documents, invisible (every view filters by vendor) but counted
+        // in the indicators and re-exported.
         D.documents = (D.documents || []).filter(function (d) { return d.vendor_id !== v.id; });
     }
     var vid = v ? v.id : null;
@@ -2979,33 +2981,33 @@ function _buildDefaultQuestionnaireTemplate(lang) {
     });
     return tpl;
 }
-// ANSSI — 42 règles d'hygiène informatique
+// ANSSI — 42 IT hygiene rules
 // Source: https://cyber.gouv.fr/publications/guide-dhygiene-informatique
 // Organized in 10 thematic groups.
 var ANSSI_42_RULES = [
-    // 1. Sensibiliser et former
+    // 1. Raise awareness and train
     { n: 1, group: "training", fr: "Former les equipes operationnelles a la securite des systemes d'information", en: "Train operational teams on information system security" },
     { n: 2, group: "training", fr: "Sensibiliser les utilisateurs aux bonnes pratiques elementaires de securite informatique", en: "Raise user awareness of basic IT security practices" },
     { n: 3, group: "training", fr: "Maitriser les risques de l'infogerance", en: "Control the risks of outsourcing" },
-    // 2. Connaitre le SI
+    // 2. Know the information system
     { n: 4, group: "inventory", fr: "Identifier les informations et serveurs les plus sensibles et maintenir un schema du reseau", en: "Identify the most sensitive information and servers and maintain a network diagram" },
     { n: 5, group: "inventory", fr: "Disposer d'un inventaire exhaustif des comptes privilegies et le maintenir a jour", en: "Maintain a complete and up-to-date inventory of privileged accounts" },
     { n: 6, group: "inventory", fr: "Organiser les procedures d'arrivee, de depart et de changement de fonction des utilisateurs", en: "Organize onboarding, offboarding and role change procedures" },
     { n: 7, group: "inventory", fr: "Autoriser la connexion au reseau de l'entite aux seuls equipements maitrises", en: "Only allow controlled devices to connect to the entity's network" },
-    // 3. Authentifier et controler les acces
+    // 3. Authenticate and control access
     { n: 8, group: "access", fr: "Identifier nommement chaque personne accedant au systeme et distinguer les roles utilisateur/administrateur", en: "Identify each user by name and separate user/administrator roles" },
     { n: 9, group: "access", fr: "Attribuer les bons droits sur les ressources sensibles du systeme d'information", en: "Grant appropriate rights on sensitive information system resources" },
     { n: 10, group: "access", fr: "Definir et verifier des regles de choix et de dimensionnement des mots de passe", en: "Define and enforce password selection and sizing rules" },
     { n: 11, group: "access", fr: "Proteger les mots de passe stockes sur les systemes", en: "Protect passwords stored on systems" },
     { n: 12, group: "access", fr: "Changer les elements d'authentification par defaut sur les equipements et services", en: "Change default authentication credentials on equipment and services" },
     { n: 13, group: "access", fr: "Privilegier lorsque c'est possible une authentification forte", en: "Favor strong authentication whenever possible" },
-    // 4. Securiser les postes
+    // 4. Secure the workstations
     { n: 14, group: "endpoint", fr: "Mettre en place un niveau de securite minimal sur l'ensemble du parc informatique", en: "Establish a minimum security baseline across the IT estate" },
     { n: 15, group: "endpoint", fr: "Se proteger des menaces relatives a l'utilisation de supports amovibles", en: "Protect against threats from removable media" },
     { n: 16, group: "endpoint", fr: "Utiliser un outil de gestion centralise afin d'homogeneiser les politiques de securite", en: "Use centralized management to homogenize security policies" },
     { n: 17, group: "endpoint", fr: "Activer et configurer le pare-feu local des postes de travail", en: "Enable and configure local workstation firewalls" },
     { n: 18, group: "endpoint", fr: "Chiffrer les donnees sensibles transmises par voie Internet", en: "Encrypt sensitive data transmitted over the Internet" },
-    // 5. Securiser le reseau
+    // 5. Secure the network
     { n: 19, group: "network", fr: "Segmenter le reseau et mettre en place un cloisonnement entre ces zones", en: "Segment the network and partition between zones" },
     { n: 20, group: "network", fr: "S'assurer de la securite des reseaux d'acces Wi-Fi et de la separation des usages", en: "Ensure Wi-Fi access network security and separation of uses" },
     { n: 21, group: "network", fr: "Utiliser des protocoles reseaux securises des qu'ils existent", en: "Use secure network protocols whenever available" },
@@ -3014,25 +3016,25 @@ var ANSSI_42_RULES = [
     { n: 24, group: "network", fr: "Proteger sa messagerie professionnelle", en: "Protect the corporate email system" },
     { n: 25, group: "network", fr: "Securiser les interconnexions reseau dediees avec les partenaires", en: "Secure dedicated network interconnections with partners" },
     { n: 26, group: "network", fr: "Controler et proteger l'acces aux salles serveurs et aux locaux techniques", en: "Control and protect access to server rooms and technical premises" },
-    // 6. Securiser l'administration
+    // 6. Secure administration
     { n: 27, group: "admin", fr: "Interdire l'acces a Internet depuis les comptes ou depuis les machines utilisees pour l'administration", en: "Forbid Internet access from admin accounts or admin machines" },
     { n: 28, group: "admin", fr: "Utiliser un reseau dedie et cloisonne pour l'administration du systeme d'information", en: "Use a dedicated and partitioned network for IS administration" },
     { n: 29, group: "admin", fr: "Limiter au strict besoin operationnel les droits d'administration sur les postes de travail", en: "Limit workstation admin rights to operational necessity" },
-    // 7. Gerer le nomadisme
+    // 7. Manage mobile working
     { n: 30, group: "mobility", fr: "Prendre des mesures de securisation physique des terminaux nomades", en: "Take physical security measures for mobile devices" },
     { n: 31, group: "mobility", fr: "Chiffrer les donnees sensibles, en particulier sur le materiel potentiellement perdable", en: "Encrypt sensitive data, especially on devices that could be lost" },
     { n: 32, group: "mobility", fr: "Securiser la connexion reseau des postes utilises en situation de nomadisme", en: "Secure the network connection of mobile endpoints" },
     { n: 33, group: "mobility", fr: "Adopter des politiques de securite dediees aux terminaux mobiles", en: "Adopt dedicated security policies for mobile devices" },
-    // 8. Maintenir le SI a jour
+    // 8. Keep the information system up to date
     { n: 34, group: "update", fr: "Definir une politique de mise a jour des composants du systeme d'information", en: "Define an IS component update policy" },
     { n: 35, group: "update", fr: "Anticiper la fin de la maintenance des logiciels et systemes et limiter les adherences logicielles", en: "Anticipate end-of-life of software and systems and limit dependencies" },
-    // 9. Superviser, auditer, reagir
+    // 9. Monitor, audit, react
     { n: 36, group: "monitor", fr: "Activer et configurer les journaux des composants les plus importants", en: "Enable and configure logging for the most important components" },
     { n: 37, group: "monitor", fr: "Definir et appliquer une politique de sauvegarde des composants critiques", en: "Define and apply a backup policy for critical components" },
     { n: 38, group: "monitor", fr: "Proceder a des controles et audits de securite reguliers puis appliquer les actions correctives associees", en: "Carry out regular security checks and audits then apply corrective actions" },
     { n: 39, group: "monitor", fr: "Designer un point de contact en securite des systemes d'information et s'assurer de sa formation", en: "Appoint a security contact and ensure they are trained" },
     { n: 40, group: "monitor", fr: "Definir une procedure de gestion des incidents de securite", en: "Define a security incident management procedure" },
-    // 10. Pour aller plus loin
+    // 10. Going further
     { n: 41, group: "advanced", fr: "Mener une analyse formelle des risques pesant sur le systeme d'information", en: "Conduct a formal risk analysis of the information system" },
     { n: 42, group: "advanced", fr: "Privilegier l'usage de produits et de services qualifies par l'ANSSI", en: "Prefer products and services certified by ANSSI" }
 ];
@@ -3191,9 +3193,9 @@ function renderTemplateEditor(tplId) {
     }
     var kind = tpl.kind || "questionnaire";
     var h = '<div class="tpl-header">';
-    // Bouton de retour : ghost, comme partout ailleurs. En .btn-add il portait
-    // l'aplat accent d'une action primaire, alors qu'il ne fait que sortir de
-    // l'écran — la hiérarchie visuelle annonçait l'inverse de ce qu'il fait.
+    // Back button: ghost, like everywhere else. As .btn-add it carried the
+    // accent fill of a primary action, while all it does is leave the
+    // screen — the visual hierarchy announced the opposite of what it does.
     h += '<button class="ct-btn" data-variant="ghost" data-click="closeTemplateEditor">&laquo; ' + t("template.back") + '</button>';
     h += '<h2>' + esc(tpl.name || "") + '</h2>';
     h += '<span class="ct-ref" data-size="sm">' + esc(t("template.kind_" + kind)) + '</span>';
@@ -3274,8 +3276,8 @@ function _renderTemplateQuestion(tpl, section, q, qi, total) {
     // Type dropdown removed — only free_text is supported now.
     h += '<div class="tpl-question-header">';
     h += '<span class="tpl-question-id">' + esc(q.id) + '</span>';
-    // Le ton passe par data-tone, comme partout ailleurs : la couleur n'est plus
-    // portee par le nom de la classe.
+    // The tone goes through data-tone, like everywhere else: the color is no
+    // longer carried by the class name.
     var critTone = _vendorTone(q.criticality || "major");
     h += '<select class="tpl-criticality" data-tone="' + critTone + '" data-change="_onQuestionFieldChange" data-args=\'' + _da(tpl.id, section.id, q.id, "criticality") + '\' data-pass-value>';
     CRITICALITY_LEVELS.forEach(function (cr) {
@@ -3500,10 +3502,10 @@ window.moveQuestion = moveQuestion;
 // openAssessment / setAnswer / saveAssessment functions.
 // ═══════════════════════════════════════════════════════════════
 var _assessmentV2Returning = null; // vendorIdx to return to after save
-// Numerotation par le MAXIMUM existant, jamais par la longueur du tableau :
-// apres une suppression, la longueur redonne un identifiant deja pris, et le
-// nouvel objet se confond alors avec un ancien. _nextAssessmentId fait de meme
-// en bouclant ; ce helper generalise le principe aux autres collections.
+// Numbering from the existing MAXIMUM, never from the array length: after a
+// deletion, the length hands back an id already taken, and the new object is
+// then confused with an old one. _nextAssessmentId does the same by looping;
+// this helper generalises the principle to the other collections.
 function _nextSeqId(prefix, items, field) {
     var f = field || "id";
     var max = 0;
@@ -3514,9 +3516,9 @@ function _nextSeqId(prefix, items, field) {
     });
     return prefix + "-" + String(max + 1).padStart(3, "0");
 }
-// Appele par _dirPicker avec l'email choisi. Le nom est resolu depuis
-// l'annuaire quand il est disponible, sinon on conserve ce qui est saisi —
-// en mode autonome, _dirPicker rend un champ texte libre.
+// Called by _dirPicker with the chosen email. The name is resolved from the
+// directory when it is available, otherwise we keep what was typed — in
+// standalone mode, _dirPicker renders a free text field.
 function updateVendorInternalContact(vendorIdx, email) {
     var v = D.vendors[vendorIdx];
     if (!v)
@@ -3808,7 +3810,7 @@ function aiSuggestSectionV2(assessId, sectionId) {
     }).catch(function (e) { showStatus(t("measure.ai_error") + ": " + e.message); });
 }
 window.aiSuggestSectionV2 = aiSuggestSectionV2;
-// BUG-17 ménage: migrate a legacy V1 assessment (responses[].answer, no
+// BUG-17 cleanup: migrate a legacy V1 assessment (responses[].answer, no
 // template_snapshot) to the V2 schema (template_snapshot + coverage). V1
 // question ids are "Q01".."Q25" (TPRM_QUESTIONS order); V2 template ids are
 // "Q-001".."Q-025" in the same order, so we match by the numeric part. The
@@ -3940,9 +3942,9 @@ function _renderAssessmentQuestion(a, section, q, resp) {
             });
         }
         h += '<div class="ct-flex ct-gap-2 ct-mt-1 ct-row-wrap">';
-        // La variante porte l'état : primaire quand l'exigence est satisfaite,
-        // avertissement sinon. Un fond posé en style inline ne suit pas le thème
-        // et échappe au data-variant du socle.
+        // The variant carries the state: primary when the requirement is
+        // satisfied, neutral otherwise. A background set inline does not
+        // follow the theme and escapes the base data-variant.
         h += '<button class="ct-btn ct-m-0" data-size="xs" data-variant="' + (satisfied ? "primary" : "neutral") + '" data-click="_addActionPlan" data-args=\'' + _da(a.id, q.id) + '\'>+ ' + esc(_tk(a, "assessment.add_action_plan")) + '</button>';
         h += '</div>';
         // Justification (alternative)
@@ -5643,13 +5645,13 @@ function _vendorMeasureStatusBadge(statut) {
 }
 function renderGlobalMeasures() {
     var allMeasures = [];
-    // Meme perimetre que le tableau de bord : un fournisseur envisage n'a pas
-    // de travail a piloter, un ancien n'en a plus.
+    // Same scope as the dashboard: a considered vendor has no work to
+    // manage, a former one has none left.
     D.vendors.forEach(function (v, vi) {
         if (!_vendorInScope(v))
             return;
-        // Une mesure abandonnee reste consultable sur la fiche du fournisseur,
-        // mais elle sort du plan d'action : il n'y a plus rien a piloter.
+        // An abandoned measure stays visible on the vendor record, but it
+        // leaves the action plan: there is nothing left to manage.
         (v.measures || []).forEach(function (m, mi) {
             if (m.statut === "annule")
                 return;
@@ -5667,9 +5669,9 @@ function renderGlobalMeasures() {
             });
         });
     });
-    // Count unlinked measures — MÊME prédicat que deleteUnlinkedMeasures :
-    // le bouton annonçait plus de suppressions qu'il n'y avait de lignes
-    // visibles (comptage global, table scopée).
+    // Count unlinked measures — SAME predicate as deleteUnlinkedMeasures:
+    // the button announced more deletions than there were visible rows
+    // (global count, scoped table).
     var unlinkedCount = 0;
     D.vendors.forEach(function (v) {
         if (!_vendorInScope(v))
@@ -5849,10 +5851,10 @@ window._bulkVendorMeasuresDelete = function (scope) {
 function deleteUnlinkedMeasures() {
     var count = 0;
     D.vendors.forEach(function (v) {
-        // Uniquement les fournisseurs pilotés : chez un ancien fournisseur,
-        // les mesures terminées ou abandonnées sont la TRACE de l'offboarding
-        // (« Nothing is deleted ») — rarement liées à un risque encore là,
-        // elles partaient toutes au premier clic de ménage.
+        // Managed vendors only: on a former vendor, the completed or
+        // abandoned measures are the TRACE of the offboarding ("Nothing is
+        // deleted") — rarely linked to a risk that is still there, they all
+        // went away on the first cleanup click.
         if (!_vendorInScope(v))
             return;
         if (!v.measures || !v.measures.length)
@@ -5867,8 +5869,8 @@ function deleteUnlinkedMeasures() {
             });
         });
         var before = v.measures.length;
-        // Une mesure terminée ou abandonnée n'est pas « orpheline » : c'est de
-        // l'historique. Le ménage ne vise que le travail ouvert sans risque.
+        // A completed or abandoned measure is not "orphaned": it is history.
+        // The cleanup only targets open work with no risk attached.
         v.measures = v.measures.filter(function (m) {
             return allLinkedIds[m.id] || m.statut === "termine" || m.statut === "annule";
         });
@@ -6216,10 +6218,10 @@ function _initDataAndRender(cb) {
 // ═══════════════════════════════════════════════════════════════
 window.AI_APP_CONFIG = {
     storagePrefix: "tprm",
-    // Le bloc démo se compose ici comme dans Risk et Compliance. Vendor
-    // enregistrait bien ses propres sections (DORA, questionnaire) mais
-    // n'avait jamais ajouté celle-ci : le bouton de chargement des données
-    // de test manquait donc au panneau réglages du seul module Vendor.
+    // The demo block is composed here as in Risk and Compliance. Vendor did
+    // register its own sections (DORA, questionnaire) but had never added
+    // this one: the test-data loading button was therefore missing from the
+    // settings panel of the Vendor module only.
     settingsExtraHTML: function () {
         return _doraSettingsHTML() + _customQuestionnaireHTML()
             + (typeof _demoSettingsHTML === "function" ? _demoSettingsHTML() : "");
@@ -6361,7 +6363,7 @@ function aiCollectInfo() {
     // Show loading state
     _showModal('<div class="ct-ta-c ct-p-8"><div class="ct-text-page ct-mb-2">&#10024;</div><div class="ct-strong">' + t("ai.collecting") + '...</div><div class="ct-text-meta ct-muted ct-mt-1">' + esc(v.name) + '</div></div>');
     var lang = typeof _locale !== "undefined" ? _locale : "fr";
-    // Métier endpoint: the TPRM collection methodology prompt is built
+    // Business endpoint: the TPRM collection methodology prompt is built
     // server-side (POST /api/ai/vendor/collect-info).
     _aiPost("vendor/collect-info", {
         language: lang === "en" ? "en" : "fr",
@@ -6432,7 +6434,7 @@ function aiCollectDocs() {
     else {
         probePromise = Promise.resolve();
     }
-    // Phase 2: Métier endpoint — the documentation-research methodology
+    // Phase 2: Business endpoint — the documentation-research methodology
     // prompt (taxonomy + rules) is built server-side
     // (POST /api/ai/vendor/collect-docs).
     probePromise.then(function () {

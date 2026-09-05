@@ -81,9 +81,9 @@ var _vendorTab = "info";
 // ═══════════════════════════════════════════════════════════════
 // SIDEBAR + NAVIGATION
 // ═══════════════════════════════════════════════════════════════
-// Badges Vendor. Deux natures, deux primitives (spec §2) : un NIVEAU se mappe
-// sur un ton fermé, une RÉFÉRENCE (le cadre réglementaire, le type de modèle)
-// est une identité et prend .ct-ref.
+// Vendor badges. Two natures, two primitives (spec §2): a LEVEL maps to a
+// closed tone, a REFERENCE (the regulatory framework, the template type) is
+// an identity and takes .ct-ref.
 var _VENDOR_TONES = {
     critical: "critical", high: "high", medium: "medium", low: "low",
     blocker: "critical", major: "high", info: "info",
@@ -534,8 +534,8 @@ function _renderResidualMatrix(atDate) {
             { label: t("matrix.critical") || "Critique", color: "var(--ct-critical-fill)" },
             { label: t("matrix.extreme") || "Extreme", color: "var(--tprm-extreme)" }
         ],
-        // CtMatrixItem (decl shared) n'a pas d'index signature — les items
-        // portent impact/likelihood/vendor_id en plus : annotation locale any[].
+        // CtMatrixItem (shared decl) has no index signature — the items also
+        // carry impact/likelihood/vendor_id: local any[] annotation.
         tooltipFn: function (items) {
             return items.map(function (r) {
                 var sc = (r.impact || 1) * (r.likelihood || 1);
@@ -1126,7 +1126,7 @@ function _renderVendorForm(v) {
     h += _field("vendor.contract_end", "v-cend", ct.end_date, "date");
     h += _field("vendor.review_date", "v-creview", ct.review_date, "date");
     h += '</div>';
-    // ── Classification (2 columns: Dépendance | Pénétration) ──
+    // ── Classification (2 columns: Dependency | Penetration) ──
     h += '<div class="form-section">' + t("vendor.section_classification") + '</div>';
     h += '<div class="cls-columns">';
     h += '<div class="cls-col">';
@@ -1212,9 +1212,9 @@ function _refreshThreatDisplay() {
             '<strong class="' + _exposureClass(menace) + '">' + menace + '</strong>' +
             ' — <span class="' + _exposureClass(menace) + '">' + _exposureLabel(menace) + '</span>' +
             (dora ? ' <span class="ct-ref" data-size="sm">' + t("vendor.dora_critical") + '</span>' : '');
-        // Deux gardes sur des identifiants d'en-tete absents de tout gabarit ont
-        // ete retirees ici : elles etaient toujours fausses. Le tier est rendu par
-        // la carte fournisseur, le marqueur DORA juste au-dessus.
+        // Two guards on header ids absent from every template were removed
+        // here: they were always false. The tier is rendered by the vendor
+        // card, the DORA marker just above.
         var detailEl = threatEl.nextElementSibling;
         if (detailEl && detailEl.style && detailEl.style.fontSize === "0.78em") {
             detailEl.innerHTML = t("vendor.dependance") + ' : <strong>' + (ex.dependance || 0) + '/4</strong>' +
@@ -1326,7 +1326,7 @@ function _renderVendorRisks(v) {
     h += '</div>';
     if (!risks.length)
         return h + '<div class="ct-muted ct-text-meta ct-mt-2">' + t("risk.empty") + '</div>';
-    // Split measures into "en place" (terminé) and "prévues" (planifié/en_cours)
+    // Split measures into in-place ("termine") and planned ("planifie"/"en_cours")
     var measEnPlace = v.measures.filter(function (m) { return m.statut === "termine"; });
     var measPrevues = v.measures.filter(function (m) { return m.statut !== "termine"; });
     var optsEnPlace = measEnPlace.map(function (m) { return { id: m.id, label: (m.mesure || "").substring(0, 50) }; });
@@ -2667,33 +2667,33 @@ function _buildDefaultQuestionnaireTemplate(lang) {
     });
     return tpl;
 }
-// ANSSI — 42 règles d'hygiène informatique
+// ANSSI — 42 IT hygiene rules
 // Source: https://cyber.gouv.fr/publications/guide-dhygiene-informatique
 // Organized in 10 thematic groups.
 var ANSSI_42_RULES = [
-    // 1. Sensibiliser et former
+    // 1. Raise awareness and train
     { n: 1, group: "training", fr: "Former les equipes operationnelles a la securite des systemes d'information", en: "Train operational teams on information system security" },
     { n: 2, group: "training", fr: "Sensibiliser les utilisateurs aux bonnes pratiques elementaires de securite informatique", en: "Raise user awareness of basic IT security practices" },
     { n: 3, group: "training", fr: "Maitriser les risques de l'infogerance", en: "Control the risks of outsourcing" },
-    // 2. Connaitre le SI
+    // 2. Know the information system
     { n: 4, group: "inventory", fr: "Identifier les informations et serveurs les plus sensibles et maintenir un schema du reseau", en: "Identify the most sensitive information and servers and maintain a network diagram" },
     { n: 5, group: "inventory", fr: "Disposer d'un inventaire exhaustif des comptes privilegies et le maintenir a jour", en: "Maintain a complete and up-to-date inventory of privileged accounts" },
     { n: 6, group: "inventory", fr: "Organiser les procedures d'arrivee, de depart et de changement de fonction des utilisateurs", en: "Organize onboarding, offboarding and role change procedures" },
     { n: 7, group: "inventory", fr: "Autoriser la connexion au reseau de l'entite aux seuls equipements maitrises", en: "Only allow controlled devices to connect to the entity's network" },
-    // 3. Authentifier et controler les acces
+    // 3. Authenticate and control access
     { n: 8, group: "access", fr: "Identifier nommement chaque personne accedant au systeme et distinguer les roles utilisateur/administrateur", en: "Identify each user by name and separate user/administrator roles" },
     { n: 9, group: "access", fr: "Attribuer les bons droits sur les ressources sensibles du systeme d'information", en: "Grant appropriate rights on sensitive information system resources" },
     { n: 10, group: "access", fr: "Definir et verifier des regles de choix et de dimensionnement des mots de passe", en: "Define and enforce password selection and sizing rules" },
     { n: 11, group: "access", fr: "Proteger les mots de passe stockes sur les systemes", en: "Protect passwords stored on systems" },
     { n: 12, group: "access", fr: "Changer les elements d'authentification par defaut sur les equipements et services", en: "Change default authentication credentials on equipment and services" },
     { n: 13, group: "access", fr: "Privilegier lorsque c'est possible une authentification forte", en: "Favor strong authentication whenever possible" },
-    // 4. Securiser les postes
+    // 4. Secure the workstations
     { n: 14, group: "endpoint", fr: "Mettre en place un niveau de securite minimal sur l'ensemble du parc informatique", en: "Establish a minimum security baseline across the IT estate" },
     { n: 15, group: "endpoint", fr: "Se proteger des menaces relatives a l'utilisation de supports amovibles", en: "Protect against threats from removable media" },
     { n: 16, group: "endpoint", fr: "Utiliser un outil de gestion centralise afin d'homogeneiser les politiques de securite", en: "Use centralized management to homogenize security policies" },
     { n: 17, group: "endpoint", fr: "Activer et configurer le pare-feu local des postes de travail", en: "Enable and configure local workstation firewalls" },
     { n: 18, group: "endpoint", fr: "Chiffrer les donnees sensibles transmises par voie Internet", en: "Encrypt sensitive data transmitted over the Internet" },
-    // 5. Securiser le reseau
+    // 5. Secure the network
     { n: 19, group: "network", fr: "Segmenter le reseau et mettre en place un cloisonnement entre ces zones", en: "Segment the network and partition between zones" },
     { n: 20, group: "network", fr: "S'assurer de la securite des reseaux d'acces Wi-Fi et de la separation des usages", en: "Ensure Wi-Fi access network security and separation of uses" },
     { n: 21, group: "network", fr: "Utiliser des protocoles reseaux securises des qu'ils existent", en: "Use secure network protocols whenever available" },
@@ -2702,25 +2702,25 @@ var ANSSI_42_RULES = [
     { n: 24, group: "network", fr: "Proteger sa messagerie professionnelle", en: "Protect the corporate email system" },
     { n: 25, group: "network", fr: "Securiser les interconnexions reseau dediees avec les partenaires", en: "Secure dedicated network interconnections with partners" },
     { n: 26, group: "network", fr: "Controler et proteger l'acces aux salles serveurs et aux locaux techniques", en: "Control and protect access to server rooms and technical premises" },
-    // 6. Securiser l'administration
+    // 6. Secure administration
     { n: 27, group: "admin", fr: "Interdire l'acces a Internet depuis les comptes ou depuis les machines utilisees pour l'administration", en: "Forbid Internet access from admin accounts or admin machines" },
     { n: 28, group: "admin", fr: "Utiliser un reseau dedie et cloisonne pour l'administration du systeme d'information", en: "Use a dedicated and partitioned network for IS administration" },
     { n: 29, group: "admin", fr: "Limiter au strict besoin operationnel les droits d'administration sur les postes de travail", en: "Limit workstation admin rights to operational necessity" },
-    // 7. Gerer le nomadisme
+    // 7. Manage mobile working
     { n: 30, group: "mobility", fr: "Prendre des mesures de securisation physique des terminaux nomades", en: "Take physical security measures for mobile devices" },
     { n: 31, group: "mobility", fr: "Chiffrer les donnees sensibles, en particulier sur le materiel potentiellement perdable", en: "Encrypt sensitive data, especially on devices that could be lost" },
     { n: 32, group: "mobility", fr: "Securiser la connexion reseau des postes utilises en situation de nomadisme", en: "Secure the network connection of mobile endpoints" },
     { n: 33, group: "mobility", fr: "Adopter des politiques de securite dediees aux terminaux mobiles", en: "Adopt dedicated security policies for mobile devices" },
-    // 8. Maintenir le SI a jour
+    // 8. Keep the information system up to date
     { n: 34, group: "update", fr: "Definir une politique de mise a jour des composants du systeme d'information", en: "Define an IS component update policy" },
     { n: 35, group: "update", fr: "Anticiper la fin de la maintenance des logiciels et systemes et limiter les adherences logicielles", en: "Anticipate end-of-life of software and systems and limit dependencies" },
-    // 9. Superviser, auditer, reagir
+    // 9. Monitor, audit, react
     { n: 36, group: "monitor", fr: "Activer et configurer les journaux des composants les plus importants", en: "Enable and configure logging for the most important components" },
     { n: 37, group: "monitor", fr: "Definir et appliquer une politique de sauvegarde des composants critiques", en: "Define and apply a backup policy for critical components" },
     { n: 38, group: "monitor", fr: "Proceder a des controles et audits de securite reguliers puis appliquer les actions correctives associees", en: "Carry out regular security checks and audits then apply corrective actions" },
     { n: 39, group: "monitor", fr: "Designer un point de contact en securite des systemes d'information et s'assurer de sa formation", en: "Appoint a security contact and ensure they are trained" },
     { n: 40, group: "monitor", fr: "Definir une procedure de gestion des incidents de securite", en: "Define a security incident management procedure" },
-    // 10. Pour aller plus loin
+    // 10. Going further
     { n: 41, group: "advanced", fr: "Mener une analyse formelle des risques pesant sur le systeme d'information", en: "Conduct a formal risk analysis of the information system" },
     { n: 42, group: "advanced", fr: "Privilegier l'usage de produits et de services qualifies par l'ANSSI", en: "Prefer products and services certified by ANSSI" }
 ];
@@ -2879,9 +2879,9 @@ function renderTemplateEditor(tplId) {
     }
     var kind = tpl.kind || "questionnaire";
     var h = '<div class="tpl-header">';
-    // Bouton de retour : ghost, comme partout ailleurs. En .btn-add il portait
-    // l'aplat accent d'une action primaire, alors qu'il ne fait que sortir de
-    // l'écran — la hiérarchie visuelle annonçait l'inverse de ce qu'il fait.
+    // Back button: ghost, like everywhere else. As .btn-add it carried the
+    // accent fill of a primary action, while all it does is leave the
+    // screen — the visual hierarchy announced the opposite of what it does.
     h += '<button class="ct-btn" data-variant="ghost" data-click="closeTemplateEditor">&laquo; ' + t("template.back") + '</button>';
     h += '<h2>' + esc(tpl.name || "") + '</h2>';
     h += '<span class="ct-ref" data-size="sm">' + esc(t("template.kind_" + kind)) + '</span>';
@@ -2962,8 +2962,8 @@ function _renderTemplateQuestion(tpl, section, q, qi, total) {
     // Type dropdown removed — only free_text is supported now.
     h += '<div class="tpl-question-header">';
     h += '<span class="tpl-question-id">' + esc(q.id) + '</span>';
-    // Le ton passe par data-tone, comme partout ailleurs : la couleur n'est plus
-    // portee par le nom de la classe.
+    // The tone goes through data-tone, like everywhere else: the color is no
+    // longer carried by the class name.
     var critTone = _vendorTone(q.criticality || "major");
     h += '<select class="tpl-criticality" data-tone="' + critTone + '" data-change="_onQuestionFieldChange" data-args=\'' + _da(tpl.id, section.id, q.id, "criticality") + '\' data-pass-value>';
     CRITICALITY_LEVELS.forEach(function (cr) {
@@ -3473,7 +3473,7 @@ function aiSuggestSectionV2(assessId, sectionId) {
     }).catch(function (e) { showStatus(t("measure.ai_error") + ": " + e.message); });
 }
 window.aiSuggestSectionV2 = aiSuggestSectionV2;
-// BUG-17 ménage: migrate a legacy V1 assessment (responses[].answer, no
+// BUG-17 cleanup: migrate a legacy V1 assessment (responses[].answer, no
 // template_snapshot) to the V2 schema (template_snapshot + coverage). V1
 // question ids are "Q01".."Q25" (TPRM_QUESTIONS order); V2 template ids are
 // "Q-001".."Q-025" in the same order, so we match by the numeric part. The
@@ -3605,9 +3605,9 @@ function _renderAssessmentQuestion(a, section, q, resp) {
             });
         }
         h += '<div class="ct-flex ct-gap-2 ct-mt-1 ct-row-wrap">';
-        // La variante porte l'état : primaire quand l'exigence est satisfaite,
-        // avertissement sinon. Un fond posé en style inline ne suit pas le thème
-        // et échappe au data-variant du socle.
+        // The variant carries the state: primary when the requirement is
+        // satisfied, neutral otherwise. A background set inline does not
+        // follow the theme and escapes the base data-variant.
         h += '<button class="ct-btn ct-m-0" data-size="xs" data-variant="' + (satisfied ? "primary" : "neutral") + '" data-click="_addActionPlan" data-args=\'' + _da(a.id, q.id) + '\'>+ ' + esc(_tk(a, "assessment.add_action_plan")) + '</button>';
         h += '</div>';
         // Justification (alternative)
@@ -5792,10 +5792,10 @@ function _initDataAndRender(cb) {
 // ═══════════════════════════════════════════════════════════════
 window.AI_APP_CONFIG = {
     storagePrefix: "tprm",
-    // Le bloc démo se compose ici comme dans Risk et Compliance. Vendor
-    // enregistrait bien ses propres sections (DORA, questionnaire) mais
-    // n'avait jamais ajouté celle-ci : le bouton de chargement des données
-    // de test manquait donc au panneau réglages du seul module Vendor.
+    // The demo block is composed here as in Risk and Compliance. Vendor did
+    // register its own sections (DORA, questionnaire) but had never added
+    // this one: the test-data loading button was therefore missing from the
+    // settings panel of the Vendor module only.
     settingsExtraHTML: function () {
         return _doraSettingsHTML() + _customQuestionnaireHTML()
             + (typeof _demoSettingsHTML === "function" ? _demoSettingsHTML() : "");
