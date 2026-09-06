@@ -1,8 +1,9 @@
 {
   "$comment": "Files replicated from a private upstream repository. Do NOT edit them here: the next propagation overwrites them and CI rejects local edits. See CONTRIBUTING.md, section 'Shared code'.",
-  "generated": "2026-09-05T20:14:29Z",
+  "generated": "2026-09-06T06:05:45Z",
   "checker": "check-replicated-files.py (run it in CI)",
   "files": {
+    "check-replicated-files.py": "sha256:dc673db3a6c15a1e07766588847ca47ba21be77f6b1a6f660c5d3efc33c10da9",
     "css/cisotoolbox.css": "sha256:3143b0ac334266cfbd1878b7d992ee132425a531ce1c52954dfaf6c35c5ded09",
     "fonts/IBMPlexMono-Medium.woff2": "sha256:309f31ec72260a823fc712000504015fe43f2aba3d80835516b63ae10a10a5db",
     "fonts/IBMPlexMono-Regular.woff2": "sha256:0988deb4552a1dddf06df11fcc32dee1a90e2b83e07d041a6884d10d28e66cb0",

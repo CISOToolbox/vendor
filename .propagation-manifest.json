@@ -1,6 +1,6 @@
 {
   "$comment": "Files replicated from a private upstream repository. Do NOT edit them here: the next propagation overwrites them and CI rejects local edits. See CONTRIBUTING.md, section 'Shared code'.",
-  "generated": "2026-09-05T20:14:29Z",
+  "generated": "2026-09-06T06:05:45Z",
   "checker": "check-replicated-files.py (run it in CI)",
   "files": {
     "Dockerfile": "sha256:013fb7e624fb6cb1e5c6a557610a383cb176ab418c3a9e009c70a94195b3714f",
@@ -111,6 +111,7 @@
     "app/ts/types/login.d.ts": "sha256:f8228a0f22d7d96bbece5676f1277f92288ba95f852c0397d37bb0f3201d298f",
     "app/ts/vendor_api.ts": "sha256:3c5eea44d08623550083c7e4cfa680dfde117367eaeb554602aa1775d97efae1",
     "app/tsconfig.json": "sha256:561e6fdbe3b950f5f6f7a8089f8b0cd77439b6b4478c160615bcabffba4c7df3",
+    "check-replicated-files.py": "sha256:dc673db3a6c15a1e07766588847ca47ba21be77f6b1a6f660c5d3efc33c10da9",
     "docker-entrypoint.sh": "sha256:b3b5749eef3caed6b622b7e75d2532287cf98b19ca33592a7d91207ae00987a1",
     "requirements.txt": "sha256:c3bf40945713cc92bb0432ede2a6a51fb7a23db1c8bc1cefa233aca70462fdae",
     "src/__init__.py": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -142,7 +143,6 @@
     "src/routes/dora.py": "sha256:d0f59a6cb32b525e61541c6a9e1bd42fd70116dd5c06533d9ffeaa2a3bf661cf",
     "src/routes/internal.py": "sha256:4571cd4f4de87d747b863b609da1eb5421c3652698a2407a4f630fea710217bf",
     "src/routes/projects.py": "sha256:b6f6643182a13dacf01c8ad02db6631799df15e3fd78476f3bf44b74af92d362",
-    "src/routes/snapshots.py": "sha256:396bf61aa1bb60873cda3853c9b1828265a108092a17de1fac5a161b2d703b1e",
     "src/routes/users.py": "sha256:e884c126c5eb7210a0f0553100df520a8ce1c0f5c7789eafebc8884b49a51f17",
     "src/routes/vendor_assessments.py": "sha256:27d17fe43a286457284cdeb0f4d28b6a261b7947526f29c3cb94d19ad7457058",
     "src/routes/vendor_documents.py": "sha256:3cbf4ae89ba8e2b0247587a43e7e2e99afae8e43b36e2271f72da068056bbb2b",
