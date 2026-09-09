@@ -1,7 +1,7 @@
 /**
  * TPRM (Vendor) — types of the D data model + app globals.
  * Pure type file (no emit). Reference schema:
- * backend-clients/demo-docker/vendor/src/assessment_validation.py
+ * vendor/src/assessment_validation.py
  * ("DATA MODEL CONTRACT" docstring) + actual usage in TPRM_app.js,
  * TPRM_dora.js, TPRM_dora_export.js, VendorPortal_app.js.
  */
@@ -446,7 +446,7 @@ interface Window {
     _appInitCallback?: () => void;
     /** Logged-in user (backend variant only). */
     _currentUser?: { name?: string; email?: string; role?: string };
-    /** Backend API layer (demo-docker variant) — absent in opensource. */
+    /** Backend API layer (backend variant) — absent in opensource. */
     VendorAPI?: any;
     /** DORA section to open (set by TPRM_dora.js). */
     doraSection?: (section: string) => void;

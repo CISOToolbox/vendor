@@ -1,7 +1,7 @@
 /**
  * TPRM (Vendor) — types of the D data model + app globals.
  * Pure type file (no emit). Reference schema:
- * backend-clients/demo-docker/vendor/src/assessment_validation.py
+ * vendor/src/assessment_validation.py
  * (docstring "DATA MODEL CONTRACT") + actual usages in TPRM_app.js,
  * TPRM_dora.js, TPRM_dora_export.js, VendorPortal_app.js.
  */
@@ -415,7 +415,7 @@ declare var getActiveProjectId: (() => string | null) | undefined;
 declare var _isAdmin: (() => boolean) | undefined;
 
 /* ── Backend persistence layer (vendor_api.ts) ──────────────────────
- * Replaces cisotoolbox_local.js (not loaded in demo-docker). The
+ * Replaces cisotoolbox_local.js (not loaded in the backend variant). The
  * _persist/_persistCreate/_persistDelete/_obj contract is set on window
  * by vendor_api.js BEFORE TPRM_app.js; declared here as bare globals. */
 

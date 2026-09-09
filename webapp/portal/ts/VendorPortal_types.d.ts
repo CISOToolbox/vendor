@@ -2,7 +2,7 @@
  * Vendor Portal — types of the questionnaire exchanged with the Vendor app.
  * Pure type file (no emit). Same shapes as TPRM_types.d.ts (separate tsc
  * program — minimal duplication accepted). Reference schema:
- * backend-clients/demo-docker/vendor/src/assessment_validation.py.
+ * vendor/src/assessment_validation.py.
  */
 
 type VpCoverage = "covered" | "partial" | "not_covered" | "not_applicable" | null;

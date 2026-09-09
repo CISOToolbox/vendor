@@ -205,8 +205,8 @@
     // that don't go through _persist (import, undo/redo, template edits)
     // still fall through to _autoSave which does a full blob PUT.
     //
-    // See shared/js/cisotoolbox_local.js for the no-op opensource version
-    // and CLAUDE.md § "Persistence adapter" for the full contract.
+    // See cisotoolbox_local.js for the no-op opensource version
+    // and the persistence adapter contract for the full contract.
     // ═══════════════════════════════════════════════════════════════
     var _dataReady = false;
     window._setDataReady = function () { _dataReady = true; };

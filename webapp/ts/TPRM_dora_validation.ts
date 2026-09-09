@@ -3,7 +3,7 @@
 // ──────────────────────────────────────────────────────────────────
 //
 // Mirrors the rules enforced by the backend in
-// backend-clients/demo-docker/vendor/src/dora_validation.py for the
+// vendor/src/dora_validation.py for the
 // opensource (browser-local) variant where there is no server. The
 // validators are non-blocking: callers decide how to surface the
 // result (red border, tooltip, export cell flag, etc.).

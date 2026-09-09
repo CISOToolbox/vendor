@@ -617,7 +617,7 @@ class DoraArrangementSubcontractor(Base):
 
 # ── Append-only server-side write journal (FEAT-30 P1.6) ──────────────
 # Created by Base.metadata.create_all at startup (no migration needed for
-# a new table). Written via src.audit.log_write — see audit_common master.
+# a new table). Written via src.audit.log_write — see audit_common.
 class AuditLog(Base):
     """Append-only: never UPDATEd/DELETEd (retention purge excepted).
     entity_type/entity_id tie a line to the exact restorable object."""

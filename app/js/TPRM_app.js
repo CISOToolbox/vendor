@@ -76,7 +76,7 @@ window.selectVendorListTab = function (tab) {
     }
     renderPanel();
 };
-// SVG icons: _icon(name) is provided by shared/js/cisotoolbox.js
+// SVG icons: _icon(name) is provided by cisotoolbox.js
 function renderPanel() {
     var c = document.getElementById("content");
     _docsTableCounter = 0;
@@ -6559,7 +6559,7 @@ function _applyAiData(v, data) {
         v.notes = (v.notes ? v.notes + "\n\n" : "") + "Localisation des donnees: " + data.data_location;
     // Persist the AI-applied vendor fields through the granular adapter
     // right away. Relying only on the blob _autoSave fallback loses the
-    // data when nothing else is touched afterwards (see CLAUDE.md
+    // data when nothing else is touched afterwards (see the project conventions
     // persistence-adapter contract — every D mutation must call _persist).
     // The child entities below persist themselves via _persistCreate, same
     // as _verifyAndAddDoc does for documents.
@@ -6683,7 +6683,7 @@ function _applyAiData(v, data) {
 // ═══════════════════════════════════════════════════════════════
 // Install the shared undo hook: every _autoSave() pushes the previous
 // state onto _undoStack so undo/redo work without manual _saveState()
-// calls. Provided by shared/js/cisotoolbox_local.js.
+// calls. Provided by cisotoolbox_local.js.
 if (typeof _installUndoHook === "function")
     _installUndoHook();
 function renderAll() {

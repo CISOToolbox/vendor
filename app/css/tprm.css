@@ -60,7 +60,7 @@ details.dora-arrangement[open] summary { border-bottom: 1px solid var(--ct-line)
 /* ── Forms ─────────────────────────────────────────────── */
 .form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--ct-line); }
 
-/* Table inline editors and .ct-icon are defined in shared/css/cisotoolbox.css */
+/* Table inline editors and .ct-icon are defined in cisotoolbox.css */
 
 /* ── Questionnaire templates ──────────────────────────── */
 /* Accessibility: all text colors target WCAG AA (4.5:1) or AAA (7:1).
@@ -70,7 +70,7 @@ details.dora-arrangement[open] summary { border-bottom: 1px solid var(--ct-line)
 .tpl-header h2 { margin: 0; flex: 1; }
 .tpl-meta { font-size: 0.78em; color: var(--ct-ink-1); font-weight: 600; }
 
-/* .ct-icon is defined in shared/css/cisotoolbox.css (1em square, inherits currentColor) */
+/* .ct-icon is defined in cisotoolbox.css (1em square, inherits currentColor) */
 
 /* Harmonized template-list header action buttons: identical size and
    height, SVG icon + label. Only the background color varies per action. */

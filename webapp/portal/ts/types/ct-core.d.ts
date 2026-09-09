@@ -9,7 +9,7 @@
  * `_ASSET_BASE`, `ensureKeys()`, `renderAll()`, `renderHistory()`,
  * `selectPanel()`, `toggleMenu()`…
  *
- * Generated/maintained by hand — see frontend-ts/docs/PLAN.md.
+ * Maintained by hand.
  */
 
 /* ── Config app → libs shared ──────────────────────────────────── */

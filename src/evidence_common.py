@@ -1,12 +1,11 @@
 # -----------------------------------------------------------------------------
-# REPLICATED from the private shared repository (shared/python/evidence_common.py).
-# DO NOT EDIT HERE - changes will be overwritten by the next propagation run.
-# Fix the master in the shared repository and re-propagate. See CONTRIBUTING.md.
+# Generated file - do not edit.
+# It is overwritten at every release; a change made here is lost.
+# See CONTRIBUTING.md.
 # -----------------------------------------------------------------------------
 """Shared evidence helpers (FEAT-08).
 
-Master in shared/python/ — copied BY HAND into each module's src/ (no
-auto-sync), like connectors_common.py. Centralises the cross-module
+Identical copy in every module's src/, like connectors_common.py. Centralises the cross-module
 evidence-expiration classification and the uniform payload pushed to
 Pilot's EvidenceCache, so every module agrees on what "expired / soon /
 valid" means and Pilot can consolidate proofs across the whole suite.
