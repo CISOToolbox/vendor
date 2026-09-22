@@ -80,6 +80,10 @@ async function _fetch(url: string, opts?: VFetchOpts): Promise<any> {
 // API — project-level (legacy + blob fallback)
 // ═══════════════════════════════════════════════════════════════
 
+// FEAT-45 — the register's routes are module-wide; every record carries the
+// project it was declared in, so a user only ever sees their own perimeter.
+function _pid(): string { return _activeId || ""; }
+
 window.VendorAPI = {
     list: function() { return _fetch("/projects"); },
     get: function(id) { return _fetch("/projects/" + id); },
@@ -203,7 +207,32 @@ window.VendorAPI = {
     // Subcontractor ↔ arrangement junction (per-link RoI fields)
     linkDoraSub: function(p, aid, d) { return _fetch("/projects/" + p + "/dora/arrangements/" + aid + "/subcontractors", { method: "POST", body: d }); },
     patchDoraSubLink: function(p, aid, sid, f) { return _fetch("/projects/" + p + "/dora/arrangements/" + aid + "/subcontractors/" + sid, { method: "PATCH", body: f }); },
-    unlinkDoraSub: function(p, aid, sid) { return _fetch("/projects/" + p + "/dora/arrangements/" + aid + "/subcontractors/" + sid, { method: "DELETE" }); }
+    unlinkDoraSub: function(p, aid, sid) { return _fetch("/projects/" + p + "/dora/arrangements/" + aid + "/subcontractors/" + sid, { method: "DELETE" }); },
+
+    // ── Non-conformities and derogations (FEAT-45) ──
+    listNonconformities: function(status?: string) {
+        var q = [];
+        if (status) q.push("status=" + encodeURIComponent(status));
+        if (_pid()) q.push("project_id=" + encodeURIComponent(_pid()));
+        return _fetch("/nonconformities" + (q.length ? "?" + q.join("&") : ""));
+    },
+    createNonconformity: function(body) { return _fetch("/nonconformities", { method: "POST", body: Object.assign({ project_id: _pid() }, body) }); },
+    patchNonconformity: function(id, body) { return _fetch("/nonconformities/" + id, { method: "PATCH", body: body }); },
+    qualifyNonconformity: function(id, body) { return _fetch("/nonconformities/" + id + "/qualify", { method: "POST", body: body }); },
+    rejectNonconformity: function(id, note) { return _fetch("/nonconformities/" + id + "/reject", { method: "POST", body: { note: note } }); },
+    closeNonconformity: function(id, evidence) { return _fetch("/nonconformities/" + id + "/close", { method: "POST", body: { closure_evidence: evidence } }); },
+    listDerogations: function(filters) {
+        var parts = [];
+        var f = filters || {};
+        Object.keys(f).forEach(function(k) { if (f[k]) parts.push(k + "=" + encodeURIComponent(f[k])); });
+        if (_pid()) parts.push("project_id=" + encodeURIComponent(_pid()));
+        return _fetch("/derogations" + (parts.length ? "?" + parts.join("&") : ""));
+    },
+    createDerogation: function(body) { return _fetch("/derogations", { method: "POST", body: Object.assign({ project_id: _pid() }, body) }); },
+    decideDerogation: function(id, approve, note) { return _fetch("/derogations/" + id + "/decision", { method: "POST", body: { approve: approve, note: note } }); },
+    revokeDerogation: function(id, reason) { return _fetch("/derogations/" + id + "/revoke", { method: "POST", body: { reason: reason } }); },
+    nonconformitySettings: function() { return _fetch("/nonconformities-settings"); },
+    saveNonconformitySettings: function(days) { return _fetch("/nonconformities-settings", { method: "PUT", body: { max_derogation_days: days } }); }
 } satisfies VendorApiClient;
 
 // ═══════════════════════════════════════════════════════════════
@@ -514,7 +543,9 @@ window._appInitCallback = function() {
 // ─── Toolbar user pill (name + admin + logout) ──────────────────
 function _initAuth() {
     fetch("auth/providers").then(function(r) { return r.json(); }).then(function(data: { auth_enabled?: boolean }) {
-        if (!data.auth_enabled) return;
+        // No auth = full access, the server's own contract: publish the role
+        // the gates would read, so the UI offers what the API accepts.
+        if (!data.auth_enabled) { window._moduleRole = "admin"; document.dispatchEvent(new CustomEvent("ct-role-ready")); return; }
         fetch("auth/me", { credentials: "same-origin" }).then(function(r): Promise<VendorApiUser | undefined> | undefined {
             if (!r.ok) { var _rp = window.location.pathname.replace(/[^/]*$/, ""); window.location.href = "/login.html?redirect=" + encodeURIComponent(_rp); return; }
             return r.json();
@@ -536,6 +567,7 @@ function _initAuth() {
             }).then(function(roleInfo: { role?: string }) {
                 var role = roleInfo.role || "";
                 window._moduleRole = role;
+                document.dispatchEvent(new CustomEvent("ct-role-ready"));
                 if (role) document.body.classList.add("ct-role-" + role);
                 if (user.role === "admin") document.body.classList.add("ct-role-admin");
             }).catch(function() {});

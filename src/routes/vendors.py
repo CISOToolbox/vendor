@@ -119,6 +119,15 @@ async def delete_vendor(
     if not vendor:
         raise HTTPException(status_code=404, detail="Vendor not found")
 
+    # FEAT-45 — nothing is left to accept: the acceptances granted on this
+    # third party fall with it, like every module settles its own items.
+    from src.models import Derogation
+    from src.nonconformity_common import revoke_for_subject
+    from src.routes.nonconformities import SUBJECT_TYPE as NC_SUBJECT
+
+    await revoke_for_subject(db, Derogation, NC_SUBJECT, f"{project_id}:{vendor_id}",
+                             "the third party was removed from the register",
+                             actor=(user.email if user is not None else "") or "system")
     await db.delete(vendor)
     project.updated_at = datetime.now(timezone.utc)
     await db.commit()

@@ -18,7 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.calculations import compute_threat_level, compute_tier
 from src.database import get_db
-from src.models import Project, ProjectMetadata, Vendor, VendorAssessment, VendorMeasure
+from src.models import Derogation, Project, ProjectMetadata, Vendor, VendorAssessment, VendorMeasure
 
 router = APIRouter(prefix="/api", tags=["internal"])
 logger = logging.getLogger("vendor-internal")
@@ -331,7 +331,35 @@ async def internal_stats(request: Request, db: AsyncSession = Depends(get_db)):
             "url": "/vendor/",
         })
 
+    # FEAT-45 — the register's view of the relationship. What this module
+    # detects on its own is a third party we work with that carries no
+    # validated assessment; under derogation is a category of its own, and no
+    # score moves because of it.
+    from src.routes.nonconformities import SUBJECT_TYPE as _NC_SUBJECT, unassessed_vendors
+
+    detected = await unassessed_vendors(db)
+    derogated_subjects = set((await db.execute(
+        select(Derogation.subject_id)
+        .where(Derogation.subject_type == _NC_SUBJECT, Derogation.status == "approved")
+    )).scalars().all())
+    # A third party carrying an unfinished measure is being worked on.
+    with_measures = {f"{pid}:{vid}" for pid, vid in (await db.execute(
+        select(VendorMeasure.project_id, VendorMeasure.vendor_id)
+        .where(VendorMeasure.statut.notin_(("termine", "annule"))).distinct()
+    )).all()}
+    declared = await _declared_counts(db)
+    register = {
+        # Every acceptance granted on a third party counts here, not only the
+        # ones covering what the module detects: a derogation is a decision,
+        # and the console must see all of them.
+        "derogated": len(derogated_subjects) + declared.pop("derogated", 0),
+        "detected_open": len(detected - derogated_subjects),
+        "with_measure": len((detected & with_measures) - derogated_subjects),
+        **declared,
+    }
+
     return {
+        "nonconformities": register,
         "entity_count": total_vendors,
         "entity_label": "Fournisseurs",
         # Semantic critical count so Pilot doesn't parse localized breakdown
@@ -873,3 +901,13 @@ async def internal_journal(request: Request, entity_id: str = "", limit: int = 3
         "entity_id": getattr(r, "entity_id", "") or "",
         "details": (r.details or "")[:300],
     } for r in rows]
+
+
+async def _declared_counts(db: AsyncSession) -> dict:
+    try:
+        from src.models import Nonconformity
+        from src.nonconformity_common import declared_counts
+        return await declared_counts(db, Nonconformity)
+    except Exception as e:  # noqa: BLE001 — the register is optional in the envelope
+        logger.warning("nonconformities block unavailable: %s", e)
+        return {"to_qualify": 0, "open": 0, "derogated": 0}

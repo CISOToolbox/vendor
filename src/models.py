@@ -632,3 +632,9 @@ class AuditLog(Base):
     entity_id = Column(String(64), nullable=False, default="", index=True)
     details = Column(Text, nullable=False, default="")
     ip_address = Column(String(64), nullable=False, default="")
+
+
+# FEAT-45 — declared non-conformities and derogations (shared mechanics).
+from src.nonconformity_common import define_models as _define_nc_models  # noqa: E402
+
+Nonconformity, Derogation = _define_nc_models(Base)

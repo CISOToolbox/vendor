@@ -548,6 +548,21 @@ interface VendorApiClient {
     linkDoraSub(p: string, aid: string, d: VendorApiPayload): Promise<unknown>;
     patchDoraSubLink(p: string, aid: string, sid: string, f: VendorApiPayload): Promise<unknown>;
     unlinkDoraSub(p: string, aid: string, sid: string): Promise<null>;
+
+    /* non-conformities and derogations (FEAT-45) — module-wide routes,
+       every record carrying the project it was declared in */
+    listNonconformities(status?: string): Promise<{ items: CtNcRecord[] }>;
+    createNonconformity(body: Record<string, unknown>): Promise<CtNcRecord>;
+    patchNonconformity(id: string, body: Record<string, unknown>): Promise<CtNcRecord>;
+    qualifyNonconformity(id: string, body: Record<string, unknown>): Promise<CtNcRecord>;
+    rejectNonconformity(id: string, note: string): Promise<CtNcRecord>;
+    closeNonconformity(id: string, evidence: string): Promise<CtNcRecord>;
+    listDerogations(filters?: Record<string, string>): Promise<{ items: CtDerRecord[] }>;
+    createDerogation(body: Record<string, unknown>): Promise<CtDerRecord>;
+    decideDerogation(id: string, approve: boolean, note: string): Promise<CtDerRecord>;
+    revokeDerogation(id: string, reason: string): Promise<CtDerRecord>;
+    nonconformitySettings(): Promise<{ max_derogation_days: number }>;
+    saveNonconformitySettings(days: number): Promise<unknown>;
 }
 
 /* ── Misc ───────────────────────────────────────────────────────── */
@@ -595,6 +610,9 @@ interface Window {
     getActiveProjectId?: () => string | null;
     /** Module role (auth/role) set by _initAuth of vendor_api.ts. */
     _moduleRole?: string;
+    /* FEAT-45 — the register's gestures on an assessment gap */
+    _declareNcGap?: (assessId: string, questionId: string) => void;
+    _requestDerogGap?: (assessId: string, questionId: string) => void;
     _logout?: () => void;
     /** DORA section to open (set by TPRM_dora.js). */
     doraSection?: (section: string) => void;

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 
@@ -24,6 +25,7 @@ from src.routes.vendor_risks import router as vendor_risks_router
 from src.routes.vendor_documents import router as vendor_documents_router
 from src.routes.vendor_assessments import router as vendor_assessments_router
 from src.routes.dora import router as dora_router
+from src.routes.nonconformities import router as nonconformities_router, internal_router as nonconformities_internal_router  # FEAT-45
 from src.version_common import version_payload
 
 logging.basicConfig(level=logging.INFO)
@@ -90,6 +92,8 @@ app.include_router(users_router)
 app.include_router(verify_router)
 app.include_router(directory_router)
 app.include_router(internal_router)
+app.include_router(nonconformities_router)
+app.include_router(nonconformities_internal_router)
 
 
 @app.get("/api/health")
@@ -114,6 +118,9 @@ async def on_startup():
         await conn.run_sync(Base.metadata.create_all)
     logger.info("Database tables created")
     await _ensure_default_project()
+    # FEAT-45 — a derogation ends on its date, not on a user action.
+    from src.derogation_expiry import start as start_derogation_expiry
+    start_derogation_expiry()
 
 
 async def _ensure_default_project():

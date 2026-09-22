@@ -63,6 +63,7 @@ function _vendorTone(v) {
 function selectPanel(id) {
     _panel = id;
     _selectedVendor = null;
+    _derogLoaded = false; // FEAT-45: an expiry must show without a page reload
     document.querySelector(".ct-rail, .sidebar")?.classList.remove("open");
     _updateSidebarAccordion(id);
     renderPanel();
@@ -112,6 +113,9 @@ function renderPanel() {
             break;
         case "documents":
             c.innerHTML = renderDocList();
+            break;
+        case "nonconformities":
+            renderNonconformities();
             break;
         case "templates":
             if (_editingTemplateId) {
@@ -205,6 +209,11 @@ function _scopedRisks() {
     return (D.risks || []).filter(function (r) { return ok[r.vendor_id]; });
 }
 function renderDashboard() {
+    // FEAT-45 — the gaps under derogation are read once and the board redraws
+    // when they arrive; an expiry therefore shows without a page reload.
+    if (!_derogLoaded)
+        _loadDerogations(function () { if (_panel === "dashboard")
+            renderPanel(); });
     // The total vendor count stays global — it is an inventory.
     // Everything else is computed on the managed scope.
     var v = _scopedVendors(), r = _scopedRisks();
@@ -228,6 +237,9 @@ function renderDashboard() {
     h += _card(pendingAssess, t("dashboard.pending_assessments"), _kpiTone(pendingAssess, { warn: 1 }));
     h += _card(openRisks, t("dashboard.open_risks"), _kpiTone(openRisks, { bad: 1 }));
     h += _card(expiring, t("dashboard.expiring_soon", { days: _deadlineDays }), _kpiTone(expiring, { warn: 1 }));
+    // Under derogation: accepted for a while, neither covered nor to remediate.
+    var derogated = Object.keys(_derogByVendor).length;
+    h += _card(derogated, t("tprm.nc.dash_derogated"), _kpiTone(derogated, { warn: 1 }));
     h += '</div>';
     // Row 1: Two matrices side by side
     h += '<div class="dash-risk-row">';
@@ -881,6 +893,11 @@ function renderVendorDetail() {
     var v = D.vendors[_selectedVendor];
     if (!v)
         return renderVendorList();
+    // FEAT-45 — an acceptance granted on this third party is read once; the
+    // page redraws when it arrives, so an expiry shows without a reload.
+    if (!_derogLoaded)
+        _loadDerogations(function () { if (_panel === "vendors" && _selectedVendor !== null)
+            renderPanel(); });
     var tier = _getTier(v);
     // Compute risk scores for header
     var _hdrRisks = D.risks.filter(function (r) { return r.vendor_id === v.id; });
@@ -905,7 +922,18 @@ function renderVendorDetail() {
         h += '<span class="ct-ref" data-size="sm">DORA</span>';
     if (v.classification && v.classification.gdpr_subprocessor)
         h += '<span class="ct-ref" data-size="sm">PII</span>';
+    // FEAT-45 — the relationship with this third party: what is accepted, and
+    // the two gestures of the register. Clicking the badge opens the
+    // derogation that covers it.
+    var _der = _vendorDerogation(v.id);
+    if (_der) {
+        h += '<span class="ct-badge ct-clickable" data-tone="neutral" data-click="_requestDerogVendor" data-args=\'' + _da(v.id) + '\' title="' + esc(_der.title || "") + '">'
+            + esc(t("tprm.nc.derogated", { ref: _der.reference }) + (_der.valid_until ? " → " + _der.valid_until : "")) + '</span>';
+    }
     h += '<span class="ct-flex-1"></span>';
+    h += '<button class="ct-btn" data-write data-size="sm" data-click="_declareNcVendor" data-args=\'' + _da(v.id) + '\'>' + esc(t("tprm.nc.declare")) + '</button>';
+    if (!_der)
+        h += '<button class="ct-btn" data-write data-size="sm" data-click="_requestDerogVendor" data-args=\'' + _da(v.id) + '\'>' + esc(t("der.request_btn")) + '</button>';
     h += '<button class="ct-btn" data-variant="danger" data-size="sm" data-click="deleteVendor" data-args=\'' + _da(_selectedVendor) + '\'>' + t("vendor.delete") + '</button>';
     h += '</div>';
     // Info bar: threat level + risk scores
@@ -6686,6 +6714,269 @@ function _applyAiData(v, data) {
 // calls. Provided by cisotoolbox_local.js.
 if (typeof _installUndoHook === "function")
     _installUndoHook();
+// ── Non-conformities and derogations (FEAT-45) ─────────────────────────
+// The register is the shared ct_nonconformity component; Vendor supplies its
+// transport and names the object a record covers: a **third party**, keyed
+// "<project>:<vendor>".
+//
+// What deserves a record here is the relationship, not the questionnaire:
+// contracting before assessing, working with a third party nobody registered,
+// keeping one past a lapsed certification. A gap inside an assessment is
+// answered by its action plan and its corrective measure — the module already
+// carries both, and a record of its own would only weigh the review down.
+//
+// Nothing is written on the third party: its tier and its score come from its
+// exposure and its assessments. The "under derogation" state is derived here
+// from the approved derogations, as Compliance does for a requirement.
+var _derogByVendor = {};
+var _derogLoaded = false;
+function _loadDerogations(then) {
+    VendorAPI.listDerogations({ status: "approved", subject_type: "vendor" }).then(function (r) {
+        _derogByVendor = {};
+        ((r && r.items) || []).forEach(function (d) { _derogByVendor[d.subject_id] = d; });
+        _derogLoaded = true;
+        if (then)
+            then();
+    }).catch(function () { _derogLoaded = true; if (then)
+        then(); });
+}
+/** The key the register uses for an object of this module, always inside the
+ *  project: a third party ("<project>:<vendor>") or one of its corrective
+ *  measures ("<project>:<vendor>:<measure>"). */
+function _scopedKey(vendorId, measureId) {
+    var pid = window.getActiveProjectId ? window.getActiveProjectId() || "" : "";
+    return pid + ":" + vendorId + (measureId ? ":" + measureId : "");
+}
+/** "<project>:<vendor>:<measure>" — the measure id carries a colon of its
+ *  own ("PP-001:MES-01"), so only the first two separators are structural. */
+function _splitMeasureKey(key) {
+    var i1 = (key || "").indexOf(":");
+    var i2 = i1 < 0 ? -1 : key.indexOf(":", i1 + 1);
+    if (i1 < 0 || i2 < 0)
+        return null;
+    return { vendorId: key.substring(i1 + 1, i2), measureId: key.substring(i2 + 1) };
+}
+// A corrective measure of a record, created where it belongs: on the third
+// party the record is about. The module's own measure modal, so a measure
+// born here is a measure like any other.
+function _createMeasureForNc(draft) {
+    if (!window.ct_measure_modal)
+        return Promise.resolve(null);
+    var vendors = (D.vendors || []);
+    if (!vendors.length) {
+        showStatus(t("tprm.nc.no_vendor"), true);
+        return Promise.resolve(null);
+    }
+    var first = (draft.subjects || [])[0] || "";
+    var wanted = first ? first.split(":")[1] : "";
+    var target = vendors.filter(function (v) { return v.id === wanted; })[0] || vendors[0];
+    var opts = _vendorMeasureModalOpts();
+    return window.ct_measure_modal.open({ mesure: draft.title || "", details: draft.description || "", type: "Contractuelle",
+        statut: "planifie", responsable: "", echeance: "", ref_socle: "", effet: "" }, {
+        title: t("measure.new_title"),
+        fieldMap: { title: "mesure", description: "details" },
+        typeOptions: opts.typeOptions,
+        statusOptions: opts.statusOptions,
+        defaultStatus: "planifie",
+        ownerPicker: { pickerId: "vendor-nc-measure-owner", directoryUrl: "api/directory" },
+        // Which third party carries it: the record's own by default. The due
+        // date is already one of the modal's own fields.
+        extraFields: [
+            { key: "vendor_id", label: t("tprm.nc.measure_vendor"), type: "select", value: target.id,
+                options: vendors.map(function (v) { return { value: v.id, label: v.name }; }) }
+        ]
+    }).then(function (result) {
+        if (!result || result.__deleted || !(result.mesure || "").trim())
+            return null;
+        var v = vendors.filter(function (x) { return x.id === (result.vendor_id || target.id); })[0] || target;
+        if (!v.measures)
+            v.measures = [];
+        var m = {
+            id: _nextVendorMeasureId(v), vendor_id: v.id, mesure: result.mesure.trim(),
+            details: result.details || "", type: result.type || "Contractuelle",
+            statut: result.statut || "planifie", responsable: result.responsable || "",
+            echeance: result.echeance || "", ref_socle: "", effet: ""
+        };
+        v.measures.push(m);
+        _persistCreate("measure", m);
+        showStatus(t("measure.saved"));
+        return { id: _scopedKey(v.id, m.id), label: v.name + " · " + m.mesure.substring(0, 60),
+            statusLabel: t("measure." + m.statut) || m.statut, done: false };
+    });
+}
+function _vendorDerogation(vendorId) {
+    return _derogByVendor[_scopedKey(vendorId)] || null;
+}
+function _ncOptions() {
+    return {
+        listNc: function (status) { return VendorAPI.listNonconformities(status); },
+        createNc: function (body) { return VendorAPI.createNonconformity(body); },
+        patchNc: function (id, body) { return VendorAPI.patchNonconformity(id, body); },
+        qualifyNc: function (id, body) { return VendorAPI.qualifyNonconformity(id, body); },
+        rejectNc: function (id, note) { return VendorAPI.rejectNonconformity(id, note); },
+        closeNc: function (id, evidence) { return VendorAPI.closeNonconformity(id, evidence); },
+        listDer: function (filters) { return VendorAPI.listDerogations(filters); },
+        createDer: function (body) { return VendorAPI.createDerogation(body); },
+        decideDer: function (id, approve, note) { return VendorAPI.decideDerogation(id, approve, note); },
+        revokeDer: function (id, reason) { return VendorAPI.revokeDerogation(id, reason); },
+        getSettings: function () { return VendorAPI.nonconformitySettings(); },
+        saveSettings: function (days) { return VendorAPI.saveNonconformitySettings(days); },
+        actor: function () { var u = window._currentUser; return (u && (u.name || u.email)) || ""; },
+        subjectTypes: ["vendor"],
+        directoryUrl: "api/directory",
+        // The third parties of the project: a record's objects, a derogation's
+        // subject. One that was never registered is created from the form —
+        // that is the point of the "working with an unregistered third party"
+        // record. Each opens its own page in a new tab.
+        items: {
+            options: function () {
+                if (!(window.getActiveProjectId && window.getActiveProjectId()))
+                    return [];
+                return (D.vendors || []).map(function (v) {
+                    return { id: _scopedKey(v.id), label: v.name + (v.country ? " · " + v.country : "") };
+                });
+            },
+            create: function (draft) { return _createVendorForNc(draft); },
+            href: function (id) { return "?vendor=" + encodeURIComponent(id.split(":")[1] || ""); },
+        },
+        // The third parties' corrective measures, edited in the module's own
+        // measure modal.
+        measures: {
+            options: function () {
+                var out = [];
+                if (!(window.getActiveProjectId && window.getActiveProjectId()))
+                    return out;
+                (D.vendors || []).forEach(function (v) {
+                    (v.measures || []).forEach(function (m) {
+                        var st = m.statut || "planifie";
+                        out.push({ id: _scopedKey(v.id, m.id),
+                            label: v.name + " · " + (m.mesure || m.id).substring(0, 60),
+                            statusLabel: t("measure." + st) || st, done: st === "termine" });
+                    });
+                });
+                return out;
+            },
+            create: function (draft) { return _createMeasureForNc(draft); },
+            open: function (id) {
+                var k = _splitMeasureKey(id);
+                if (!k)
+                    return;
+                var vendorId = k.vendorId, measureId = k.measureId;
+                var vi = (D.vendors || []).findIndex(function (v) { return v.id === vendorId; });
+                if (vi < 0)
+                    return;
+                var mi = ((D.vendors[vi].measures) || []).findIndex(function (m) { return m.id === measureId; });
+                if (mi < 0)
+                    return;
+                return window._editVendorMeasureRow({ vendorIdx: vi, measureIdx: mi });
+            },
+        },
+        onChange: function () { _loadDerogations(function () { renderPanel(); }); },
+    };
+}
+function renderNonconformities() {
+    var c = document.getElementById("content");
+    if (!c || !window.ct_nonconformity)
+        return;
+    c.innerHTML = '<div id="nonconformities-content"></div>';
+    window.ct_nonconformity.renderPanel(document.getElementById("nonconformities-content"), _ncOptions());
+}
+// A third party nobody registered: the record creates it, and it becomes the
+// record's object. Same defaults as the module's own creation.
+function _createVendorForNc(draft) {
+    if (!window.ct_modal)
+        return Promise.resolve(null);
+    var h = '<div class="fs-xs ct-muted ct-mb-3">' + esc(t("tprm.nc.create_vendor_help")) + '</div>';
+    h += '<label class="ct-block ct-mb-2"><span class="fs-xs ct-muted">' + esc(t("vendor.name")) + '</span><input id="ct-cv-name" class="w-full" value="' + esc((draft.title || "").substring(0, 120)) + '" /></label>';
+    h += '<label class="ct-block ct-mb-2"><span class="fs-xs ct-muted">' + esc(t("vendor.country")) + '</span><input id="ct-cv-country" class="w-full" value="" /></label>';
+    return window.ct_modal.open({ title: t("tprm.nc.create_vendor"), body: h, size: "md", buttons: [
+            { id: "cancel", label: t("common.cancel") },
+            { id: "ok", label: t("tprm.nc.create_vendor"), primary: true, result: function () {
+                    var name = (document.getElementById("ct-cv-name").value || "").trim();
+                    if (!name) {
+                        showStatus(t("tprm.nc.create_vendor_missing"), true);
+                        return false;
+                    }
+                    return { name: name, country: (document.getElementById("ct-cv-country").value || "").trim() };
+                } }
+        ] }).then(function (res) {
+        if (!res)
+            return null;
+        var v = {
+            id: _nextSeqId("PP", D.vendors), name: res.name, legal_entity: "", country: res.country,
+            sector: "", website: "", siret: "", logo: "",
+            contact: { name: "", email: "", phone: "" },
+            internal_contact: { name: "", email: "" },
+            contract: { services: "", start_date: "", end_date: "", review_date: "" },
+            classification: { ops_impact: 0, processes: 0, replace_difficulty: 0,
+                data_sensitivity: 0, integration: 0, regulatory_impact: 0, gdpr_subprocessor: false },
+            exposure: { dependance: 0, penetration: 0, maturite: 1, confiance: 1 },
+            certifications: [], dpa_signed: false, sub_contractors: [], status: "prospect",
+            measures: [], notes: ""
+        };
+        D.vendors.push(v);
+        _persistCreate("vendor", v);
+        showStatus(t("tprm.nc.vendor_created", { name: v.name }));
+        return { id: _scopedKey(v.id), label: v.name + (v.country ? " · " + v.country : "") };
+    });
+}
+function _vendorIndex(vendorId) {
+    return (D.vendors || []).findIndex(function (v) { return v.id === vendorId; });
+}
+// A third party by its id: its own page. Also the `?vendor=` deep link (a
+// record's object, opened in a new tab).
+function _openVendorPage(vendorId) {
+    var vi = _vendorIndex(vendorId);
+    if (vi < 0) {
+        showStatus(t("tprm.nc.vendor_gone"), true);
+        return false;
+    }
+    _panel = "vendors";
+    openVendor(vi);
+    return true;
+}
+window._declareNcVendor = function (vendorId) {
+    var vi = _vendorIndex(vendorId);
+    if (vi < 0 || !window.ct_nonconformity)
+        return;
+    var v = D.vendors[vi];
+    window.ct_nonconformity.declare(_ncOptions(), {
+        subject_type: "vendor", subject_id: _scopedKey(v.id),
+        subject_label: v.name + (v.country ? " · " + v.country : ""),
+    });
+};
+window._requestDerogVendor = function (vendorId) {
+    var vi = _vendorIndex(vendorId);
+    if (vi < 0 || !window.ct_nonconformity)
+        return;
+    var v = D.vendors[vi];
+    window.ct_nonconformity.requestDerogation(_ncOptions(), {
+        subject_type: "vendor", subject_id: _scopedKey(v.id),
+        subject_label: v.name + (v.country ? " · " + v.country : ""),
+        title: v.name,
+    });
+};
+// FEAT-45 — the deep links: a record's third party (?vendor=), the register
+// itself (#nonconformities, the link the console builds).
+var _deepLinkHandled = false;
+function _handleRegisterDeepLink() {
+    if (_deepLinkHandled)
+        return;
+    _deepLinkHandled = true;
+    var id = "";
+    try {
+        id = new URLSearchParams(location.search).get("vendor") || "";
+    }
+    catch (e) {
+        return;
+    }
+    if (id) {
+        _openVendorPage(id);
+        return;
+    }
+    if (location.hash === "#nonconformities")
+        selectPanel("nonconformities");
+}
 function renderAll() {
     var tr = document.getElementById("toolbar-right");
     if (tr) {
@@ -6701,6 +6992,7 @@ function renderAll() {
     renderPanel();
     if (typeof _updateUndoButtons === "function")
         _updateUndoButtons();
+    _handleRegisterDeepLink();
 }
 // Init: if catalog is present, defer to _appInitCallback; otherwise render directly
 window.selectPanel = selectPanel;
