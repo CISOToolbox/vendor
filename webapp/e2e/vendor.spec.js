@@ -121,10 +121,9 @@ test.describe('Vendor (TPRM) — local frontend journeys', () => {
         await expect(page.locator('#file-input')).toHaveCount(1);
         await expect(page.locator('#file-input')).toBeHidden();
 
-        // Known issue: this module's input has no `data-change="loadJSON"`
-        // handler, so the non-File-System-Access-API fallback is inert.
-        // See the `test.fixme` below.
-        expect(await page.locator('#file-input').getAttribute('data-change')).toBeNull();
+        // The fallback path used when the File System Access API is absent:
+        // the input carries its own handler.
+        expect(await page.locator('#file-input').getAttribute('data-change')).toBe('loadJSON');
     });
 
     // ── 5. Language preference persists locally ────────────────────────
@@ -132,7 +131,12 @@ test.describe('Vendor (TPRM) — local frontend journeys', () => {
         await openApp(page);
 
         const before = await page.evaluate(() => localStorage.getItem('ct_lang'));
+        // The globe opens the list of deployed languages; picking the one that
+        // is not current is what stores the preference.
         await page.locator('[data-click="ct_toggleLang"]').click();
+        const menu = page.locator('#ct-lang-menu');
+        await expect(menu).toBeVisible();
+        await menu.locator('.ct-lang-item:not(.active)').first().click();
         await page.waitForTimeout(400);
 
         const after = await page.evaluate(() => localStorage.getItem('ct_lang'));
@@ -186,15 +190,10 @@ test.describe('Vendor (TPRM) — local frontend journeys', () => {
         expect(errors, `uncaught page errors: ${errors.join(' | ')}`).toEqual([]);
     });
 
-    // ── Known issue ────────────────────────────────────────────────────
-    // `index.html` declares `<input type="file" id="file-input">` with no
-    // `data-change="loadJSON"` handler, and no listener is attached in JS.
-    // `openFile()` falls back to clicking that input when the File System
-    // Access API is unavailable (Firefox, Safari, older browsers), so
-    // "File > Open" silently does nothing there. Remove the `fixme` once the
-    // handler is wired, and this becomes a real regression test.
+    // `openFile()` falls back to the file input when the File System Access
+    // API is unavailable (Firefox, Safari, older browsers): the journey holds
+    // that path, which the input's own handler now serves.
     test('File > Open works without the File System Access API', async ({ page }) => {
-        test.fixme(true, '#file-input has no change handler in this module');
         await openApp(page);
 
         // The payload is built here on purpose: the suite ships no fixture.
@@ -233,6 +232,111 @@ test.describe('Vendor (TPRM) — local frontend journeys', () => {
 
         await page.locator(NAV_ITEMS, { hasText: /Tiers|Vendors|Fournisseurs/i }).first().click();
         await expect(page.locator('#content')).toContainText(name);
+    });
+
+    // ── Module-specific: non-conformities and derogations ──────────────
+    //
+    // The register works here as in the server-backed module, except that
+    // there is nobody else to ask: whoever holds the file declares, requests
+    // and approves. The journey walks that path on a third party and checks
+    // the acceptance shows on its page and survives a reload.
+    test('a third party can be derogated, approved locally, and it survives a reload', async ({ page }) => {
+        const errors = trackErrors(page);
+        await openApp(page);
+        const name = await seedVendor(page);
+
+        // The third party's page carries the two gestures of the register.
+        await expect(page.locator('[data-click="_declareNcVendor"]')).toBeVisible();
+        await page.locator('[data-click="_requestDerogVendor"]').first().click();
+        const modal = page.locator('.ct-modal-box').first();
+        await expect(modal.locator('#ct-der-subject .ct-ref-tag')).toContainText(name);
+        await modal.locator('#ct-der-just').fill('Contract signed before the assessment; assessment booked.');
+        await expect(modal.locator('#ct-der-owner-plain')).toBeVisible();     // no directory in a file
+        await modal.locator('#ct-der-owner-plain').fill('Purchasing');
+        await modal.locator('#ct-der-approver-plain').fill('Security lead');
+        const until = new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10);
+        await modal.locator('#ct-der-until').fill(until);
+        await modal.getByRole('button', { name: /^(Soumettre la demande|Submit request)$/ }).click();
+        await expect(page.locator('.ct-modal-box')).toHaveCount(0);
+
+        // The register lists it, pending; approving it is a local decision.
+        await page.locator(NAV_ITEMS, { hasText: /Non-conformit/i }).first().click();
+        const register = page.locator('#nonconformities-content');
+        await expect(register).toContainText(/DER-\d{4}-\d{3}/);
+        await register.getByText(/DER-\d{4}-\d{3}/).first().click();
+        await page.locator('.ct-modal-box').first().getByRole('button', { name: /^(Approuver|Approve)$/ }).click();
+        await page.locator('.ct-modal-box').first().getByRole('button', { name: /^(Confirmer|Confirm)$/ }).click();
+        await expect(page.locator('.ct-modal-box')).toHaveCount(0);
+        await expect(register).toContainText(/Approuvée|Approved/);
+
+        // The third party's page says so, and the file keeps it.
+        await page.locator(NAV_ITEMS, { hasText: /Fournisseurs|Vendors|Tiers/i }).first().click();
+        await page.locator('#content').getByText(name).first().click();
+        await expect(page.locator('#content')).toContainText(/Dérogation DER-|Derogation DER-/);
+
+        await page.reload();
+        await expect(page.locator('.ct-appbar')).toBeVisible();
+        const saved = await page.evaluate((k) => localStorage.getItem(k), AUTOSAVE_KEY);
+        expect(saved).toContain('"status":"approved"');
+        expect(errors, `uncaught page errors: ${errors.join(' | ')}`).toEqual([]);
+    });
+
+    test('removing a third party settles what covered it', async ({ page }) => {
+        const errors = trackErrors(page);
+        await openApp(page);
+        const name = await seedVendor(page);
+
+        // An acceptance granted on that third party…
+        await page.locator('[data-click="_requestDerogVendor"]').first().click();
+        const modal = page.locator('.ct-modal-box').first();
+        await modal.locator('#ct-der-just').fill('Accepted until the next assessment.');
+        await modal.locator('#ct-der-owner-plain').fill('Purchasing');
+        await modal.locator('#ct-der-approver-plain').fill('Security lead');
+        await modal.locator('#ct-der-until').fill(new Date(Date.now() + 60 * 86400000).toISOString().slice(0, 10));
+        await modal.getByRole('button', { name: /^(Soumettre la demande|Submit request)$/ }).click();
+        await page.locator(NAV_ITEMS, { hasText: /Non-conformit/i }).first().click();
+        const register = page.locator('#nonconformities-content');
+        await register.getByText(/DER-\d{4}-\d{3}/).first().click();
+        await page.locator('.ct-modal-box').first().getByRole('button', { name: /^(Approuver|Approve)$/ }).click();
+        await page.locator('.ct-modal-box').first().getByRole('button', { name: /^(Confirmer|Confirm)$/ }).click();
+        await expect(register).toContainText(/Approuvée|Approved/);
+
+        // …falls when the third party leaves the file.
+        await page.locator(NAV_ITEMS, { hasText: /Fournisseurs|Vendors|Tiers/i }).first().click();
+        await page.locator('#content').getByText(name).first().click();
+        page.once('dialog', (d) => d.accept());
+        await page.locator('[data-click="deleteVendor"]').first().click();
+        await page.locator(NAV_ITEMS, { hasText: /Non-conformit/i }).first().click();
+        await expect(register).toContainText(/Révoquée|Revoked/);
+
+        expect(errors, `uncaught page errors: ${errors.join(' | ')}`).toEqual([]);
+    });
+
+    test('a third party nobody registered is created from the declaration', async ({ page }) => {
+        const errors = trackErrors(page);
+        await openApp(page);
+        await page.locator(NAV_ITEMS, { hasText: /Non-conformit/i }).first().click();
+        await page.locator('[data-click="_ctNcDeclare"]').click();
+        const modal = page.locator('.ct-modal-box').first();
+        await modal.locator('#ct-nc-title').fill('Invoices from a provider in no register');
+        await modal.locator('#ct-nc-items .ct-ref-tags').first().click();
+        await modal.locator('#ct-nc-items .ct-ref-create').click();
+        await expect(page.locator('#ct-cv-name')).toBeVisible();
+        const created = `Ghost Consulting ${Date.now()}`;
+        await page.locator('#ct-cv-name').fill(created);
+        await page.locator('.ct-modal-box').first().getByRole('button', { name: /^(Créer le tiers|Create the third party)$/ }).click();
+
+        // Back on the declaration, with the third party selected.
+        const back = page.locator('.ct-modal-box').first();
+        await expect(back.locator('#ct-nc-items .ct-ref-tag').first()).toContainText(created);
+        await back.getByRole('button', { name: /^(Déclarer|Declare)$/ }).click();
+        await expect(page.locator('.ct-modal-box')).toHaveCount(0);
+        await expect(page.locator('#nonconformities-content')).toContainText(/NC-\d{4}-\d{3}/);
+
+        // And it is now a third party of the file.
+        await page.locator(NAV_ITEMS, { hasText: /Fournisseurs|Vendors|Tiers/i }).first().click();
+        await expect(page.locator('#content')).toContainText(created);
+        expect(errors, `uncaught page errors: ${errors.join(' | ')}`).toEqual([]);
     });
 
     // ── Module-specific: the standalone vendor portal page ─────────────

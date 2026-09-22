@@ -337,6 +337,10 @@ interface TprmData {
     maturity_config: TprmMaturityConfig;
     dora: DoraTree;
     metadata: { organization: string; created: string; [k: string]: any };
+    /* FEAT-45 — the register, seeded on load. English keys: the same two
+       collections in every module that carries a register. */
+    nonconformities?: CtNcRecord[];
+    derogations?: CtDerRecord[];
     [k: string]: any;
 }
 
@@ -431,6 +435,9 @@ interface TprmAiSuggestion {
 }
 
 interface Window {
+    /* FEAT-45 — the register's gestures on a third party */
+    _declareNcVendor?: (vendorId: string) => void;
+    _requestDerogVendor?: (vendorId: string) => void;
     /** DORA informal subcontractors (TPRM_app.js) — pick/attach and removal. */
     vendorOpenInformalSubModal?: (vendorId: string) => void;
     vendorRemoveInformalSub?: (vendorId: string, idx: number) => void;
