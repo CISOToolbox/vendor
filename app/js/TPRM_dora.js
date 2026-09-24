@@ -289,7 +289,7 @@
         // toggles a hidden blue help paragraph. Hints are off by default to
         // keep the form lean.
         function _hint(key, s) {
-            return '<p class="ct-panel-desc dora-hint" id="dora-hint-' + key + '" style="display:none;margin:0 0 var(--ct-s2)">' + esc(s) + '</p>';
+            return '<p class="tprm-panel-desc dora-hint" id="dora-hint-' + key + '" style="display:none;margin:0 0 var(--ct-s2)">' + esc(s) + '</p>';
         }
         function _helpBtn(key) {
             return '<button type="button" class="ct-btn" data-variant="ghost" data-size="sm" data-click="doraToggleHint" data-args=\'["' + key + '"]\' title="' + esc(_doraT("dora.help.toggle", "Afficher / masquer l'aide")) + '" aria-label="' + esc(_doraT("dora.help.toggle", "Afficher / masquer l'aide")) + '">?</button>';
@@ -314,7 +314,7 @@
             return '<div class="dora-overview-grid">' + inner + '</div></article>';
         }
         var h = '';
-        h += '<p class="ct-panel-desc dora-hint ct-hidden" id="dora-hint-intro">' + esc(_doraT("dora.overview.intro", "Saisie centralisée des informations générales de votre entité financière : entités déclarantes, succursales, périmètre de consolidation et fonctions opérationnelles. Les accords contractuels et sous-traitants se gèrent dans les fiches PSTI et sous-traitants.")) + '</p>';
+        h += '<p class="tprm-panel-desc dora-hint ct-hidden" id="dora-hint-intro">' + esc(_doraT("dora.overview.intro", "Saisie centralisée des informations générales de votre entité financière : entités déclarantes, succursales, périmètre de consolidation et fonctions opérationnelles. Les accords contractuels et sous-traitants se gèrent dans les fiches PSTI et sous-traitants.")) + '</p>';
         // ── B_01 — Identity of the reporting financial entity ──
         var b01Body = '';
         // RFE block
@@ -1392,7 +1392,7 @@
             branch: _doraT("dora.valid.kind_branch", "Succursale"),
             consolidation: _doraT("dora.valid.kind_consolidation", "Périmètre de consolidation")
         };
-        var body = '<p class="ct-panel-desc" style="margin:0 0 var(--ct-s3)">'
+        var body = '<p class="tprm-panel-desc" style="margin:0 0 var(--ct-s3)">'
             + esc(_doraT("dora.valid.intro", "Le registre contient des erreurs qui rendront l'export EBA invalide. Corrigez-les, ou exportez malgré tout en connaissance de cause."))
             + '</p><div style="max-height:50vh;overflow-y:auto">';
         errors.forEach(function (e) {
@@ -1425,7 +1425,7 @@
         var open = function () {
             var currencies = (_doraCodelists && _doraCodelists.currency_iso4217) || ["EUR", "USD", "GBP"];
             var rp = _doraDefaultReportingPeriod();
-            var body = '<p class="ct-panel-desc" style="margin:0 0 var(--ct-s3)">'
+            var body = '<p class="tprm-panel-desc" style="margin:0 0 var(--ct-s3)">'
                 + esc(_doraT("dora.export.modal_intro", "Génère un classeur XLSX au format EBA RoI ITS (un onglet par table B_xx). La période de reporting est enregistrée sur chaque entité déclarante avant export."))
                 + '</p>';
             body += '<div class="ct-form-row">'
