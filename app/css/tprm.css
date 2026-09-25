@@ -5,11 +5,6 @@
      through its two components. Screen only (no SVG export here). */
   --tprm-extreme: var(--ct-critical);
 }
-/* NOT the socle's .ct-panel-desc (a bordered callout): vendor wants a plain
-   muted line, and used to win that by overriding the primitive from here.
-   Named for what it is, so the divergence is visible instead of silent.
-   Whether vendor should adopt the socle callout is BUG-38. */
-.tprm-panel-desc { font-size: 0.85em; color: var(--ct-ink-2); margin-bottom: 16px; }
 
 /* ── Vendor list ──────────────────────────────────────── */
 .vendor-card { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--ct-surface); border: 1px solid var(--ct-line); border-radius: 6px; margin-bottom: 6px; cursor: pointer; transition: all 0.15s; font-size: 0.85em; }

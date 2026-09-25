@@ -696,7 +696,7 @@ function renderSubcontractorList() {
     h += '<button class="ct-btn" data-variant="primary" data-size="xs" data-click="doraAddSub">' + t("dora.add_subcontractor") + '</button>';
     h += '</div></div>';
 
-    h += '<p class="tprm-panel-desc" style="margin:0 0 var(--ct-s3) 0">' + esc(t("dora.subs.intro")) + '</p>';
+    h += '<p class="ct-panel-desc" style="margin:0 0 var(--ct-s3) 0">' + esc(t("dora.subs.intro")) + '</p>';
 
     // Search bar (mirrors vendor list).
     h += '<div class="ct-flex ct-gap-2 ct-mb-3 ct-row-wrap">';
@@ -1519,7 +1519,7 @@ function _renderVendorRisks(v: any) {
     // Align header styling with the Assessments and Documents tabs:
     // single flex row with the title count on the left and the action
     // buttons on the right. The contextual help previously shown as a
-    // <p class="tprm-panel-desc"> is reachable from the sidebar Help item.
+    // <p class="ct-panel-desc"> is reachable from the sidebar Help item.
     var h = '<div class="ct-flex ct-items-center ct-gap-2 ct-mb-2">';
     h += '<strong>' + t("risk.title") + ' (' + risks.length + ')</strong>';
     h += '<span class="ct-flex-1"></span>';
@@ -3152,7 +3152,7 @@ function renderTemplateList() {
     h += '<button class="ct-btn" data-variant="ghost" data-size="sm" data-click="downloadTemplateExcelExample" title="' + esc(t("template.download_example_hint")) + '">' + _icon("download") + '<span>' + t("template.download_example") + '</span></button>';
     h += '</div>';
     h += '</div>';
-    h += '<p class="tprm-panel-desc">' + t("template.intro") + '</p>';
+    h += '<p class="ct-panel-desc">' + t("template.intro") + '</p>';
 
     if (!templates.length) {
         return h + '<div class="ct-empty-state">' + t("template.empty") + '</div>';

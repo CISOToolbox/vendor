@@ -5,7 +5,6 @@
      through its two components. Screen only (no SVG export here). */
   --tprm-extreme: var(--ct-critical);
 }
-.ct-panel-desc { font-size: 0.85em; color: var(--ct-ink-2); margin-bottom: 16px; }
 
 /* ── Dashboard cards ──────────────────────────────────── */
 .tprm-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 16px; }
