@@ -207,7 +207,6 @@ select.tpl-criticality[data-tone="critical"] { background: var(--ct-critical-tin
 
 /* ── Responsive ───────────────────────────────────────── */
 @media (max-width: 768px) {
-    .ct-form-grid { grid-template-columns: 1fr; }
     .cls-columns { grid-template-columns: 1fr; }
 
     .vendor-tabs { flex-direction: column; }
@@ -231,7 +230,6 @@ select.tpl-criticality[data-tone="critical"] { background: var(--ct-critical-tin
 
     .question-card { padding: 10px; }
     .answer-pills { flex-wrap: wrap; }
-    .ct-tprm-form { padding: 12px; }
     .form-actions { flex-wrap: wrap; }
     .form-actions .btn-primary, .form-actions .btn-secondary { flex: 1; min-width: 120px; text-align: center; }
     .exposure-result { font-size: 0.82em; }
