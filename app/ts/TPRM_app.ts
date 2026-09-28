@@ -5893,7 +5893,13 @@ window.editMeasure = editMeasure;
 
 var _assessReturnToVendor: number | null = null;
 
-function setVendorTab(tab: any) { _vendorTab = tab; renderPanel(); }
+/** On a narrow screen the tab bar scrolls sideways (BUG-53) and re-rendering
+ *  resets it to the start: bring the active tab back into view. */
+function _revealActiveTab(): void {
+    var active = document.querySelector(".vendor-tabs .vendor-tab.active") as HTMLElement | null;
+    if (active && active.scrollIntoView) active.scrollIntoView({ inline: "nearest", block: "nearest" });
+}
+function setVendorTab(tab: any) { _vendorTab = tab; renderPanel(); _revealActiveTab(); }
 window.setVendorTab = setVendorTab;
 
 // ═══════════════════════════════════════════════════════════════

@@ -254,8 +254,10 @@ select.tpl-criticality.crit-info, select.tpl-criticality.crit-major, select.tpl-
     .tprm-card .card-lbl { font-size: 0.7em; }
     .cls-columns { grid-template-columns: 1fr; }
 
-    .vendor-tabs { flex-direction: column; }
-    .vendor-tab { padding: 10px; font-size: 0.85em; }
+    /* One scrollable row, never a stack: stacked tabs read as a list of
+       buttons, not as the sections of one record (BUG-53). */
+    .vendor-tabs { overflow-x: auto; flex-wrap: nowrap; scrollbar-width: thin; }
+    .vendor-tab { flex: 0 0 auto; white-space: nowrap; padding: 10px 12px; font-size: 0.85em; }
     .dash-risk-row { flex-direction: column; }
     /* flex:1 1 0 (the base rule) spreads the matrices into equal columns as
        long as .dash-risk-row is a row. In a column, that flex-basis:0 applies
