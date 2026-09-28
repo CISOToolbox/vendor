@@ -252,7 +252,6 @@ select.tpl-criticality.crit-info, select.tpl-criticality.crit-major, select.tpl-
     .tprm-card { padding: 10px 8px; }
     .tprm-card .card-val { font-size: 1.5em; }
     .tprm-card .card-lbl { font-size: 0.7em; }
-    .ct-form-grid { grid-template-columns: 1fr; }
     .cls-columns { grid-template-columns: 1fr; }
 
     .vendor-tabs { flex-direction: column; }
@@ -276,7 +275,6 @@ select.tpl-criticality.crit-info, select.tpl-criticality.crit-major, select.tpl-
 
     .question-card { padding: 10px; }
     .answer-pills { flex-wrap: wrap; }
-    .ct-tprm-form { padding: 12px; }
     .form-actions { flex-wrap: wrap; }
     .form-actions .btn-primary, .form-actions .btn-secondary { flex: 1; min-width: 120px; text-align: center; }
     .exposure-result { font-size: 0.82em; }

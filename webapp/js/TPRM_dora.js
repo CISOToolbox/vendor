@@ -1575,7 +1575,7 @@
         if (!f)
             return;
         function _fld(label, controlHtml, span) {
-            return '<div' + (span ? ' style="grid-column:span ' + span + '"' : '') + '><div class="ct-mb-1">' + label + '</div>' + controlHtml + '</div>';
+            return '<div' + (span ? ' class="ct-col-span-2"' : '') + '><div class="ct-mb-1">' + label + '</div>' + controlHtml + '</div>';
         }
         var bodyHtml = ''
             + '<div class="ct-form-2col">'
@@ -1768,7 +1768,7 @@
             ? ((window.D && D.vendors) || []).find(function (v) { return v.id === a.vendor_id; })
             : null;
         function _fld(label, controlHtml, span) {
-            return '<div' + (span ? ' style="grid-column:span ' + span + '"' : '') + '><div class="ct-mb-1">' + label + '</div>' + controlHtml + '</div>';
+            return '<div' + (span ? ' class="ct-col-span-2"' : '') + '><div class="ct-mb-1">' + label + '</div>' + controlHtml + '</div>';
         }
         var rfeIdsCsv = (a.rfe_ids || []).join(",");
         function _section(titleKey, fallback, gridHtml) {
@@ -2068,7 +2068,7 @@
         if (!s)
             return;
         function _fld(label, controlHtml, span) {
-            return '<div' + (span ? ' style="grid-column:span ' + span + '"' : '') + '><div class="ct-mb-1">' + label + '</div>' + controlHtml + '</div>';
+            return '<div' + (span ? ' class="ct-col-span-2"' : '') + '><div class="ct-mb-1">' + label + '</div>' + controlHtml + '</div>';
         }
         // Build read-only "Linked arrangements" listing.
         var links = window.DoraData.arrangementsForSubcontractor(s.id);
@@ -2164,7 +2164,7 @@
         if (!l)
             return;
         function _fld(label, controlHtml, span) {
-            return '<div' + (span ? ' style="grid-column:span ' + span + '"' : '') + '><div class="ct-mb-1">' + label + '</div>' + controlHtml + '</div>';
+            return '<div' + (span ? ' class="ct-col-span-2"' : '') + '><div class="ct-mb-1">' + label + '</div>' + controlHtml + '</div>';
         }
         // Sub picker (only when adding a new link): global subs not yet linked to this arrangement.
         var alreadyLinked = {};

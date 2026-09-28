@@ -1662,7 +1662,7 @@ window.doraOpenFunctionModal = function(functionId: string | null, opts: any) {
     if (!f) return;
 
     function _fld(label: string, controlHtml: string, span?: number) {
-        return '<div' + (span ? ' style="grid-column:span ' + span + '"' : '') + '><div class="ct-mb-1">' + label + '</div>' + controlHtml + '</div>';
+        return '<div' + (span ? ' class="ct-col-span-2"' : '') + '><div class="ct-mb-1">' + label + '</div>' + controlHtml + '</div>';
     }
     var bodyHtml = ''
         + '<div class="ct-form-2col">'
@@ -1841,7 +1841,7 @@ window.doraOpenArrangementModal = function(arrangementId: string, vendorIdHint: 
         : null;
 
     function _fld(label: string, controlHtml: string, span?: number) {
-        return '<div' + (span ? ' style="grid-column:span ' + span + '"' : '') + '><div class="ct-mb-1">' + label + '</div>' + controlHtml + '</div>';
+        return '<div' + (span ? ' class="ct-col-span-2"' : '') + '><div class="ct-mb-1">' + label + '</div>' + controlHtml + '</div>';
     }
     var rfeIdsCsv = (a.rfe_ids || []).join(",");
 
@@ -2147,7 +2147,7 @@ window.doraOpenSubIdentityModal = function(subId: string | null) {
     var s = (_doraTree!.subcontractors || []).find(function(x) { return x.id === subId; });
     if (!s) return;
     function _fld(label: string, controlHtml: string, span?: number) {
-        return '<div' + (span ? ' style="grid-column:span ' + span + '"' : '') + '><div class="ct-mb-1">' + label + '</div>' + controlHtml + '</div>';
+        return '<div' + (span ? ' class="ct-col-span-2"' : '') + '><div class="ct-mb-1">' + label + '</div>' + controlHtml + '</div>';
     }
     // Build read-only "Linked arrangements" listing.
     var links = window.DoraData!.arrangementsForSubcontractor(s.id);
@@ -2237,7 +2237,7 @@ window.doraOpenSubcontractorModal = function(arrangementId: string, subId: strin
     if (!l) return;
 
     function _fld(label: string, controlHtml: string, span?: number) {
-        return '<div' + (span ? ' style="grid-column:span ' + span + '"' : '') + '><div class="ct-mb-1">' + label + '</div>' + controlHtml + '</div>';
+        return '<div' + (span ? ' class="ct-col-span-2"' : '') + '><div class="ct-mb-1">' + label + '</div>' + controlHtml + '</div>';
     }
     // Sub picker (only when adding a new link): global subs not yet linked to this arrangement.
     var alreadyLinked: Record<string, any> = {}; allLinks.forEach(function(x) { alreadyLinked[x.subcontractor_id] = true; });
