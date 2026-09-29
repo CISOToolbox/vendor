@@ -207,7 +207,6 @@ select.tpl-criticality[data-tone="critical"] { background: var(--ct-critical-tin
 
 /* ── Responsive ───────────────────────────────────────── */
 @media (max-width: 768px) {
-    .cls-columns { grid-template-columns: 1fr; }
 
     /* One scrollable row, never a stack: stacked tabs read as a list of
        buttons, not as the sections of one record (BUG-53). */
@@ -244,7 +243,6 @@ select.tpl-criticality[data-tone="critical"] { background: var(--ct-critical-tin
 .matrix-tooltip { display: none; position: fixed; background: var(--ct-surface); border: 1px solid var(--ct-line); border-radius: 6px; padding: 8px 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); font-size: 0.8em; max-width: 320px; z-index: 100; pointer-events: none; }
 
 /* ── Classification columns ──────────────────────────── */
-.cls-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .cls-col { background: var(--ct-canvas); border-radius: 6px; padding: 10px 12px; }
 .cls-col-title { font-size: 0.75em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--ct-ink-2); margin-bottom: 6px; }
 

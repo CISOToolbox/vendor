@@ -1295,7 +1295,7 @@ function _renderVendorForm(v: any) {
 
     // ── Classification (2 columns: Dependency | Penetration) ──
     h += '<div class="form-section">' + t("vendor.section_classification") + '</div>';
-    h += '<div class="cls-columns">';
+    h += '<div class="ct-form-grid">';
     h += '<div class="cls-col">';
     h += '<div class="cls-col-title">' + t("vendor.dependance") + '</div>';
     h += _slider("vendor.cls_ops_impact", "v-cls-ops", c.ops_impact || 0, 4);
@@ -3269,7 +3269,6 @@ function renderTemplateEditor(tplId: string) {
     h += '<option value="fr"' + (tpl.language === "fr" ? " selected" : "") + '>Francais</option>';
     h += '<option value="en"' + (tpl.language === "en" ? " selected" : "") + '>English</option>';
     h += '</select></div>';
-    h += '<div class="ct-form-row"></div>'; // spacer for grid
     h += '</div>';
     h += '<div class="ct-form-row"><label>' + t("template.description") + '</label>';
     h += '<textarea rows="3" data-input="_onTemplateFieldChange" data-args=\'' + _da(tpl.id, "description") + '\' data-pass-value>' + esc(tpl.description || "") + '</textarea></div>';

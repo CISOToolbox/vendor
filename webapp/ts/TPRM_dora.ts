@@ -1544,20 +1544,20 @@ window.doraOpenFunctionModal = function(functionId: string | null, opts: any) {
         : ((_doraTree!.functions || []).find(function(x) { return x.id === functionId; }) || null);
     if (!f) return;
 
-    function _fld(label: string, controlHtml: string, span?: number) {
-        return '<div' + (span ? ' class="ct-col-span-2"' : '') + '><div class="ct-mb-1">' + label + '</div>' + controlHtml + '</div>';
+    function _fld(label: string, controlHtml: string, wide?: boolean) {
+        return '<div' + (wide ? ' class="ct-col-span-2"' : '') + '><div class="ct-mb-1">' + label + '</div>' + controlHtml + '</div>';
     }
     var bodyHtml = ''
         + '<div class="ct-form-2col">'
-        + _fld(_doraT("dora.fn.code", "Function identifier (B_06.01.0010)"), '<input id="fn-code" value="' + esc(f.code || "") + '" maxlength="50" pattern="[A-Za-z0-9_\\-]{1,50}" placeholder="' + esc(_doraT("dora.fn.code_placeholder", "Free identifier, e.g. F-PAY-001")) + '" class="ct-w-full">', 2)
-        + _fld(_doraT("dora.fn.name", "Function name (B_06.01.0030)"), '<input id="fn-name" value="' + esc(f.name || "") + '" required class="ct-w-full">', 2)
-        + _fld(_doraT("dora.fn.description", "Description"), '<textarea id="fn-desc" rows="2" class="ct-w-full">' + esc(f.description || "") + '</textarea>', 2)
+        + _fld(_doraT("dora.fn.code", "Function identifier (B_06.01.0010)"), '<input id="fn-code" value="' + esc(f.code || "") + '" maxlength="50" pattern="[A-Za-z0-9_\\-]{1,50}" placeholder="' + esc(_doraT("dora.fn.code_placeholder", "Free identifier, e.g. F-PAY-001")) + '" class="ct-w-full">', true)
+        + _fld(_doraT("dora.fn.name", "Function name (B_06.01.0030)"), '<input id="fn-name" value="' + esc(f.name || "") + '" required class="ct-w-full">', true)
+        + _fld(_doraT("dora.fn.description", "Description"), '<textarea id="fn-desc" rows="2" class="ct-w-full">' + esc(f.description || "") + '</textarea>', true)
         + '<label class="ct-col-span-2 ct-inline-flex ct-items-center ct-gap-1"><input type="checkbox" id="fn-crit"' + (f.is_critical_or_important ? " checked" : "") + '> ' + _doraT("dora.fn.critical", "Critical or important function (B_06.01.0050)") + '</label>'
-        + _fld(_doraT("dora.fn.crit_rationale", "Reasons for criticality or importance (B_06.01.0060)"), '<textarea id="fn-crit-rat" rows="2" class="ct-w-full">' + esc(f.criticality_rationale || "") + '</textarea>', 2)
+        + _fld(_doraT("dora.fn.crit_rationale", "Reasons for criticality or importance (B_06.01.0060)"), '<textarea id="fn-crit-rat" rows="2" class="ct-w-full">' + esc(f.criticality_rationale || "") + '</textarea>', true)
         + _fld(_doraT("dora.fn.business_line", "Licenced activity / Business line (B_06.01.0020)"), _doraRefSelect("fn-bl", f.business_line, _doraCodeItems("licenced_activity")))
         + _fld(_doraT("dora.fn.rto", "RTO hours (B_06.01.0080)"), '<input id="fn-rto" type="number" step="0.5" value="' + esc(f.recovery_time_objective_h != null ? f.recovery_time_objective_h : "") + '" class="ct-w-full">')
         + _fld(_doraT("dora.fn.rpo", "RPO hours (B_06.01.0090)"), '<input id="fn-rpo" type="number" step="0.5" value="' + esc(f.recovery_point_objective_h != null ? f.recovery_point_objective_h : "") + '" class="ct-w-full">')
-        + _fld(_doraT("dora.fn.impact_tolerance", "Impact of discontinuing the function (B_06.01.0100)"), _doraRefSelect("fn-impact", f.impact_tolerance_description, _doraCodeItems("impact_level")), 2)
+        + _fld(_doraT("dora.fn.impact_tolerance", "Impact of discontinuing the function (B_06.01.0100)"), _doraRefSelect("fn-impact", f.impact_tolerance_description, _doraCodeItems("impact_level")), true)
         + _fld(_doraT("dora.fn.last_assessment", "Date of last assessment (B_06.01.0070)"), '<input id="fn-last-assess" type="date" value="' + esc(f.last_assessment_date || "") + '" class="ct-w-full">')
         + '</div>';
 
@@ -1723,8 +1723,8 @@ window.doraOpenArrangementModal = function(arrangementId: string, vendorIdHint: 
         ? ((window.D && D.vendors) || []).find(function(v) { return v.id === a!.vendor_id; })
         : null;
 
-    function _fld(label: string, controlHtml: string, span?: number) {
-        return '<div' + (span ? ' class="ct-col-span-2"' : '') + '><div class="ct-mb-1">' + label + '</div>' + controlHtml + '</div>';
+    function _fld(label: string, controlHtml: string, wide?: boolean) {
+        return '<div' + (wide ? ' class="ct-col-span-2"' : '') + '><div class="ct-mb-1">' + label + '</div>' + controlHtml + '</div>';
     }
     var rfeIdsCsv = (a.rfe_ids || []).join(",");
 
@@ -1747,7 +1747,7 @@ window.doraOpenArrangementModal = function(arrangementId: string, vendorIdHint: 
             vendorLocked
                 ? '<input type="hidden" id="arr-vendor-locked" value="' + esc(a.vendor_id) + '"><div class="ct-py-1 ct-px-2 ct-bg-alt ct-bordered ct-r-sm ct-muted" title="' + esc(_doraT("dora.modal.vendor_locked", "Vendor cannot be changed from a vendor context")) + '">' + esc((vendorObjLocked && vendorObjLocked.name) || a.vendor_id) + '</div>'
                 : _doraRefSelect("arr-vendor", a.vendor_id, _doraVendorItems()))
-        + _fld(_doraT("dora.modal.arr_type", "Type of contractual arrangement (B_02.01.0020)"), _doraRefSelect("arr-type", a.arrangement_type, _doraCodeItems("arrangement_type")), 2);
+        + _fld(_doraT("dora.modal.arr_type", "Type of contractual arrangement (B_02.01.0020)"), _doraRefSelect("arr-type", a.arrangement_type, _doraCodeItems("arrangement_type")), true);
 
     // ── Section 2: Scope (functions + nature) ──
     var sectionScope = ''
@@ -1756,15 +1756,15 @@ window.doraOpenArrangementModal = function(arrangementId: string, vendorIdHint: 
                 + ' <button type="button" class="ct-btn mt-8 ct-text-label ct-py-1 ct-px-2 ct-ml-1" data-write data-variant="primary" data-size="xs" data-click="doraOpenFunctionModalForArr" data-args=\'[null]\'>+ ' + esc(_doraT("dora.modal.arr_function_create", "New function")) + '</button>',
             '<div id="arr-fn-slot">' + _doraRefSelect("arr-fn", (a.function_ids || []).join(","), _doraFunctionItems(), { multi: true }) + '</div>'
               + '<div class="ct-mt-1 ct-text-label ct-muted">' + esc(_doraT("dora.modal.arr_function_hint", "Pick existing functions or click + New function to declare one with full ITS fields (RTO, RPO, business line…).")) + '</div>',
-            2
+            true
         )
         + _fld(
             _doraT("dora.modal.arr_services", "Type of ICT services (B_02.02.0060)"),
             _doraRefSelect("arr-services", (a.service_codes || []).join(","), _doraCodeItems("ict_service_type"), { multi: true })
               + '<div class="ct-mt-1 ct-text-label ct-muted">' + esc(_doraT("dora.modal.arr_services_hint", "Pick one or more ICT service types — one B_02.02 row will be emitted per service.")) + '</div>',
-            2
+            true
         )
-        + _fld(_doraT("dora.modal.arr_rfes", "Reporting financial entities (B_02.02.0020)"), _doraRefSelect("arr-rfes", rfeIdsCsv, _doraRfeItems(), { multi: true, hideId: true }), 2);
+        + _fld(_doraT("dora.modal.arr_rfes", "Reporting financial entities (B_02.02.0020)"), _doraRefSelect("arr-rfes", rfeIdsCsv, _doraRfeItems(), { multi: true, hideId: true }), true);
 
     // ── Section 3: Lifecycle ──
     // B_02.01.0030 parent arrangement picker — only meaningful when this
@@ -1783,7 +1783,7 @@ window.doraOpenArrangementModal = function(arrangementId: string, vendorIdHint: 
         + '<div><div class="ct-mb-1">' + _doraT("dora.modal.arr_notice_tpsp", "TPSP notice period in days (B_02.02.0110)") + '</div><input id="arr-notice-tpsp" type="number" value="' + esc(a.notice_period_tpsp_days != null ? a.notice_period_tpsp_days : "") + '" class="ct-w-full"></div>'
         + '<div><div class="ct-mb-1">' + _doraT("dora.modal.arr_last_audit", "Last audit (B_07.01.0070)") + '</div><input id="arr-audit" type="date" value="' + esc(a.last_audit_date || "") + '" class="ct-w-full"></div>'
         + _fld(_doraT("dora.modal.arr_termination", "Termination reason (B_02.02.0090)"), _doraRefSelect("arr-term", a.termination_reason, _doraCodeItems("termination_reason")))
-        + _fld(_doraT("dora.modal.arr_parent", "Overarching arrangement (B_02.01.0030)"), '<select id="arr-parent" class="ct-w-full">' + _parentOpts + '</select>', 2)
+        + _fld(_doraT("dora.modal.arr_parent", "Overarching arrangement (B_02.01.0030)"), '<select id="arr-parent" class="ct-w-full">' + _parentOpts + '</select>', true)
         + _fld(_doraT("dora.modal.arr_gov", "Governing law country (B_02.02.0120)"), _doraRefSelect("arr-gov", a.governing_law_country, _doraCodeItems("country_iso3166_1")))
         + _fld(_doraT("dora.modal.arr_juris", "Country of provision of the ICT services (B_02.02.0130)"), _doraRefSelect("arr-juris", a.jurisdiction_country, _doraCodeItems("country_iso3166_1")));
 
@@ -2029,8 +2029,8 @@ window.doraOpenSubIdentityModal = function(subId: string | null) {
     if (typeof window.ct_modal === "undefined") return;
     var s = (_doraTree!.subcontractors || []).find(function(x) { return x.id === subId; });
     if (!s) return;
-    function _fld(label: string, controlHtml: string, span?: number) {
-        return '<div' + (span ? ' class="ct-col-span-2"' : '') + '><div class="ct-mb-1">' + label + '</div>' + controlHtml + '</div>';
+    function _fld(label: string, controlHtml: string, wide?: boolean) {
+        return '<div' + (wide ? ' class="ct-col-span-2"' : '') + '><div class="ct-mb-1">' + label + '</div>' + controlHtml + '</div>';
     }
     // Build read-only "Linked arrangements" listing.
     var links = window.DoraData!.arrangementsForSubcontractor(s.id);
@@ -2119,8 +2119,8 @@ window.doraOpenSubcontractorModal = function(arrangementId: string, subId: strin
         : (allLinks.find(function(x) { return x.subcontractor_id === subId; }) || null);
     if (!l) return;
 
-    function _fld(label: string, controlHtml: string, span?: number) {
-        return '<div' + (span ? ' class="ct-col-span-2"' : '') + '><div class="ct-mb-1">' + label + '</div>' + controlHtml + '</div>';
+    function _fld(label: string, controlHtml: string, wide?: boolean) {
+        return '<div' + (wide ? ' class="ct-col-span-2"' : '') + '><div class="ct-mb-1">' + label + '</div>' + controlHtml + '</div>';
     }
     // Sub picker (only when adding a new link): global subs not yet linked to this arrangement.
     var alreadyLinked: Record<string, any> = {}; allLinks.forEach(function(x) { alreadyLinked[x.subcontractor_id] = true; });
