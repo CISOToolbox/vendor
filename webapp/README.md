@@ -168,7 +168,7 @@ sent to a server — there is no server.
 css/                  # 2 files
 e2e/                  # 4 files
 js/                   # 22 files
-portal/               # 16 files
+portal/               # 14 files
 skill/                # 1 file
 ts/                   # 23 files
 .replicated-files
