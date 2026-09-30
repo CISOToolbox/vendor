@@ -23,7 +23,7 @@
 .vendor-card-sep { color: var(--ct-ink-2); }
 .vendor-name { font-weight: 700; }
 .vendor-logo-img { width: 24px; height: 24px; border-radius: 4px; object-fit: contain; flex-shrink: 0; }
-.vendor-initials { width: 24px; height: 24px; border-radius: 4px; background: var(--ct-accent); color: white; font-size: 0.65em; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; letter-spacing: 0.5px; }
+.vendor-initials { width: 24px; height: 24px; border-radius: 4px; background: var(--ct-accent); color: var(--ct-onaccent); font-size: 0.65em; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; letter-spacing: 0.5px; }
 
 /* ── Tier badges ──────────────────────────────────────── */
 .tier-badge { padding: 2px 10px; border-radius: 10px; font-size: 0.72em; font-weight: 700; color: var(--ct-ink-1); }
@@ -88,28 +88,12 @@ details.dora-arrangement[open] summary { border-bottom: 1px solid var(--ct-line)
 
 /* .ct-icon is defined in cisotoolbox.css (1em square, inherits currentColor) */
 
-/* Harmonized template-list header action buttons: identical size and
-   height, SVG icon + label. Only the background color varies per action. */
+/* Template-list header actions row. */
 .tpl-header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-.tpl-header-btn {
-    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-    min-width: 180px; height: 36px; padding: 0 14px; margin: 0;
-    border: 1px solid transparent; border-radius: 6px;
-    font-size: 0.85em; font-weight: 600; line-height: 1;
-    cursor: pointer; transition: all 0.15s; white-space: nowrap;
-    background: var(--ct-surface); color: var(--ct-ink);
-}
-.tpl-header-btn:hover { filter: brightness(1.05); transform: translateY(-1px); }
-.tpl-header-btn:active { transform: translateY(0); }
-.tpl-header-btn .ct-icon { width: 16px; height: 16px; }
-.tpl-header-btn--primary { background: var(--ct-accent); color: #fff; border-color: var(--ct-accent); }
-.tpl-header-btn--violet  { background: var(--ct-accent); color: #fff; border-color: var(--ct-accent); }
-.tpl-header-btn--ghost   { background: var(--ct-surface); color: var(--ct-ink-1); border-color: var(--ct-line-strong); }
-.tpl-header-btn--ghost:hover { background: var(--ct-accent-tint); color: #1d4ed8; border-color: var(--ct-accent); }
 
 .tpl-card { background: var(--ct-surface); border: 1px solid var(--ct-line); border-radius: 8px; padding: 14px 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 14px; transition: all 0.15s; cursor: pointer; }
 .tpl-card:hover { border-color: var(--ct-accent); box-shadow: 0 0 0 1px var(--ct-accent); }
-.tpl-card-icon { width: 40px; height: 40px; border-radius: 8px; background: var(--ct-accent-tint); color: #1d4ed8; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.tpl-card-icon { width: 40px; height: 40px; border-radius: 8px; background: var(--ct-accent-tint); color: var(--ct-info); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .tpl-card-icon .ct-icon { width: 22px; height: 22px; }
 .tpl-card-body { flex: 1; min-width: 0; }
 .tpl-card-name { font-weight: 700; font-size: 0.95em; color: var(--ct-ink); }
@@ -139,8 +123,8 @@ details.dora-arrangement[open] summary { border-bottom: 1px solid var(--ct-line)
     bottom: calc(100% + 6px);
     left: 50%;
     transform: translateX(-50%);
-    background: var(--ct-ink);
-    color: white;
+    background: var(--ct-accent);
+    color: var(--ct-onaccent);
     font-size: 0.72em;
     font-weight: 600;
     padding: 4px 8px;
@@ -206,7 +190,7 @@ details.dora-arrangement[open] summary { border-bottom: 1px solid var(--ct-line)
 .tpl-question-expected:focus { outline: none; border-color: var(--ct-accent); color: var(--ct-ink); box-shadow: 0 0 0 2px var(--ct-accent-tint); }
 
 .tpl-icon-btn { padding: 4px 9px; background: var(--ct-surface); border: 1px solid var(--ct-line-strong); border-radius: 4px; cursor: pointer; font-size: 0.9em; color: var(--ct-ink-1); transition: all 0.15s; line-height: 1; }
-.tpl-icon-btn:hover:not(:disabled) { background: var(--ct-accent-tint); color: #1d4ed8; border-color: var(--ct-accent); }
+.tpl-icon-btn:hover:not(:disabled) { background: var(--ct-accent-tint); color: var(--ct-accent-ink); border-color: var(--ct-accent); }
 .tpl-icon-btn:focus-visible { outline: 2px solid var(--ct-accent); outline-offset: 1px; }
 .tpl-icon-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .tpl-icon-btn.danger:hover:not(:disabled) { background: var(--ct-critical-tint); color: var(--ct-critical-ink); border-color: var(--ct-critical); }
@@ -228,15 +212,11 @@ select.tpl-criticality { font-weight: 700; border-width: 1px; }
 select.tpl-criticality.crit-info, select.tpl-criticality.crit-major, select.tpl-criticality.crit-blocker { border-color: currentColor; }
 
 /* ── Risk score colors ────────────────────────────────── */
-.score-low { color: #166534; }
-.score-medium { color: #854d0e; }
-.score-high { color: #9a3412; }
-.score-critical { color: #991b1b; }
+.score-low { color: var(--ct-low-ink); }
+.score-medium { color: var(--ct-medium-ink); }
+.score-high { color: var(--ct-high-ink); }
+.score-critical { color: var(--ct-critical-ink); }
 .score-unknown { color: var(--ct-ink-2); }
-:root[data-theme="dark"] .score-low { color: var(--ct-low-ink); }
-:root[data-theme="dark"] .score-medium { color: var(--ct-medium-ink); }
-:root[data-theme="dark"] .score-high { color: var(--ct-high-ink); }
-:root[data-theme="dark"] .score-critical { color: var(--ct-critical-ink); }
 
 /* ── Dark theme fixes ─────────────────────────────────── */
 /* Risk matrices (SVG generated by shared ctRenderMatrix): the cell
@@ -244,7 +224,6 @@ select.tpl-criticality.crit-info, select.tpl-criticality.crit-major, select.tpl-
    light mode in cisotoolbox.js — repaint them with tokens in dark. */
 :root[data-theme="dark"] .risk-matrix-container svg rect:not(#tl-drag-zone) { stroke: var(--ct-surface); }
 :root[data-theme="dark"] .risk-matrix-container svg circle { fill: var(--ct-accent); stroke: var(--ct-surface); }
-:root[data-theme="dark"] .risk-matrix-container span[style*="#e5e7eb"] { border-color: var(--ct-line) !important; }
 
 /* ── Responsive ───────────────────────────────────────── */
 @media (max-width: 768px) {
@@ -350,8 +329,3 @@ select.tpl-criticality.crit-info, select.tpl-criticality.crit-major, select.tpl-
 
 .dora-overview-id { font-size: 0.78em; color: var(--ct-ink-2); font-weight: 400; }
 .dora-overview-parent { color: var(--ct-ink-2); font-weight: 400; font-size: 0.85em; }
-
-/* Matrix axis labels (light hex baked in by ctRenderMatrix for the
-   exports): re-themed in dark. */
-:root[data-theme="dark"] .risk-matrix-container svg text[fill="#3c4453"] { fill: var(--ct-ink-1); }
-:root[data-theme="dark"] .risk-matrix-container svg text[fill="#6b7488"] { fill: var(--ct-ink-2); }

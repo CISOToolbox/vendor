@@ -1113,7 +1113,7 @@ function _renderVendorForm(v) {
     h += '<button class="ct-btn-add" style="white-space:nowrap;margin:0" data-click="_fetchLogo">' + t("vendor.logo_fetch") + '</button>';
     h += '</div>';
     if (v.logo && v.logo.startsWith("data:")) {
-        h += '<div style="font-size:0.72em;color:var(--ct-low);margin-top:3px">' + t("vendor.logo_stored") + '</div>';
+        h += '<div class="ct-text-label ct-text-low ct-mt-1">' + t("vendor.logo_stored") + '</div>';
     }
     h += '</div>';
     // ── Status ──
@@ -1524,12 +1524,12 @@ function _renderVendorRisks(v) {
     // as the other vendor tabs (flex row, count next to title).
     if (v.measures.length > 0) {
         h += '<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--ct-line)">';
-        h += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">';
+        h += '<div class="ct-flex ct-items-center ct-gap-2 ct-mb-1">';
         h += '<strong>' + t("measure.registry") + ' (' + v.measures.length + ')</strong>';
         h += '<span style="flex:1"></span>';
         h += '</div>';
         h += colsButton("vendor-measures-table");
-        h += '<table id="vendor-measures-table" style="font-size:0.82em;margin-top:6px"><thead><tr>';
+        h += '<table id="vendor-measures-table" class="ct-text-label ct-mt-1"><thead><tr>';
         h += '<th' + hd("id") + ' style="width:70px">ID</th><th' + hd("mesure") + '>' + t("measure.col_mesure") + '</th><th' + hd("type") + '>' + t("measure.col_type") + '</th>';
         h += '<th' + hd("statut") + '>' + t("measure.col_statut") + '</th><th' + hd("resp") + '>' + t("measure.col_responsable") + '</th>';
         h += '<th' + hd("deadline") + '>' + t("measure.col_echeance") + '</th><th style="width:30px"></th></tr></thead><tbody>';
@@ -3681,8 +3681,8 @@ function _renderAnswerInput(assessId, q, resp) {
 }
 function _renderActionPlanForm(a, qId, ap, api) {
     var assessId = a.id;
-    var h = '<div style="background:var(--ct-surface);border:1px solid var(--ct-line);border-radius:4px;padding:8px 10px;margin-bottom:6px">';
-    h += '<div style="display:flex;gap:6px;margin-bottom:6px">';
+    var h = '<div class="ct-bg-surface ct-bordered ct-r-sm ct-py-2 ct-px-2 ct-mb-1">';
+    h += '<div class="ct-flex ct-gap-1 ct-mb-1">';
     h += '<input type="text" value="' + esc(ap.title || "") + '" placeholder="' + esc(_tk(a, "assessment.ap_title")) + '" style="flex:1;padding:4px 8px;border:1px solid var(--ct-line);border-radius:4px;font-size:0.85em" data-input="_updateActionPlanField" data-args=\'' + _da(assessId, qId, api, "title") + '\' data-pass-value>';
     h += '<input type="date" value="' + esc(ap.target_date || "") + '" style="padding:4px 8px;border:1px solid var(--ct-line);border-radius:4px;font-size:0.85em" data-input="_updateActionPlanField" data-args=\'' + _da(assessId, qId, api, "target_date") + '\' data-pass-value>';
     h += '<input type="text" value="' + esc(ap.owner || "") + '" placeholder="' + esc(_tk(a, "assessment.ap_owner")) + '" style="width:120px;padding:4px 8px;border:1px solid var(--ct-line);border-radius:4px;font-size:0.85em" data-input="_updateActionPlanField" data-args=\'' + _da(assessId, qId, api, "owner") + '\' data-pass-value>';
@@ -6067,7 +6067,7 @@ function aiCollectInfo() {
     if (v.contract && v.contract.services)
         query += " — Services: " + v.contract.services;
     // Show loading state
-    _showModal('<div style="text-align:center;padding:30px"><div style="font-size:2em;margin-bottom:10px">&#129302;</div><div style="font-weight:600">' + t("ai.collecting") + '...</div><div style="font-size:0.85em;color:var(--ct-ink-2);margin-top:6px">' + esc(v.name) + '</div></div>');
+    _showModal('<div class="ct-ta-c ct-p-8"><div class="ct-text-page ct-mb-2">&#129302;</div><div class="ct-strong">' + t("ai.collecting") + '...</div><div class="ct-text-meta ct-muted ct-mt-1">' + esc(v.name) + '</div></div>');
     var lang = typeof _locale !== "undefined" ? _locale : "fr";
     var systemPrompt = _AI_SYSTEM_PROMPT;
     if (lang === "en") {
@@ -6158,7 +6158,7 @@ function aiCollectDocs() {
     }
     var existingUrls = D.documents.filter(function (d) { return d.vendor_id === v.id; }).map(function (d) { return d.url; }).filter(Boolean);
     var vendorId = v.id;
-    _showModal('<div style="text-align:center;padding:30px"><div style="font-size:2em;margin-bottom:10px">&#128269;</div><div style="font-weight:600">' + t("ai.collecting_docs") + '</div><div style="font-size:0.85em;color:var(--ct-ink-2);margin-top:6px">' + esc(v.name) + '</div><div id="doc-collect-status" style="font-size:0.78em;color:var(--ct-ink-2);margin-top:12px"></div></div>');
+    _showModal('<div class="ct-ta-c ct-p-8"><div class="ct-text-page ct-mb-2">&#128269;</div><div class="ct-strong">' + t("ai.collecting_docs") + '</div><div class="ct-text-meta ct-muted ct-mt-1">' + esc(v.name) + '</div><div id="doc-collect-status" class="ct-text-label ct-muted ct-mt-3"></div></div>');
     var statusEl = function () { return document.getElementById("doc-collect-status"); };
     var totalAdded = 0;
     // Phase 1: Probe common URL patterns on vendor website (fast, server-side)
@@ -6711,8 +6711,8 @@ window.vendorOpenInformalSubModal = function (vendorId) {
     var available = globalSubs.filter(function (s) {
         return s && s.name && existingLc.indexOf(String(s.name).toLowerCase().trim()) === -1;
     });
-    var bodyHtml = '<div style="display:flex;flex-direction:column;gap:10px;min-width:380px">';
-    bodyHtml += '<div style="font-weight:600">' + esc(t("dora.modal.informal_pick_existing")) + '</div>';
+    var bodyHtml = '<div style="display:flex;flex-direction:column;gap:var(--ct-s2);min-width:380px">';
+    bodyHtml += '<div class="ct-strong">' + esc(t("dora.modal.informal_pick_existing")) + '</div>';
     if (available.length === 0) {
         bodyHtml += '<div style="color:var(--ct-ink-2);font-size:0.9em">' + esc(t("dora.modal.informal_pick_none")) + '</div>';
     }
