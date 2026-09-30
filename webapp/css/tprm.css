@@ -139,11 +139,11 @@ details.dora-arrangement[open] summary { border-bottom: 1px solid var(--ct-line)
 [data-tooltip]::before {
     content: "";
     position: absolute;
-    bottom: calc(100% + 2px);
+    bottom: calc(100% - 2px);   /* triangle in the 4px gap under the bubble */
     left: 50%;
     transform: translateX(-50%);
     border: 4px solid transparent;
-    border-top-color: var(--ct-ink);
+    border-top-color: var(--ct-accent);   /* the arrow of the accent bubble */
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.12s ease-in 0.25s;
