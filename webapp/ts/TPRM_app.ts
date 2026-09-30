@@ -795,7 +795,7 @@ function renderVendorList() {
         h += '<span style="font-size:var(--ct-text-label);font-weight:600;color:' + statusColor + '">' + esc(statusLabel) + '</span>';
         h += '<span class="ct-badge" data-tone="' + _vendorTone(tier) + '">' + t("vendor.tier_" + tier) + '</span>';
         if (_isDoraICTCritical(v.classification)) h += '<span class="ct-ref" data-size="sm">DORA</span>';
-        if (v.classification && v.classification.gdpr_subprocessor) h += '<span class="ct-ref ct-bg-ink-2" data-size="sm">PII</span>';
+        if (v.classification && v.classification.gdpr_subprocessor) h += '<span class="ct-ref" data-size="sm">PII</span>';
         h += '</div>';
 
         // Right: metrics
@@ -872,7 +872,7 @@ function renderVendorDetail() {
     h += '<h2 class="ct-m-0">' + esc(v.name) + '</h2>';
     h += '<span class="ct-badge" data-tone="' + _vendorTone(tier) + '">' + t("vendor.tier_" + tier) + '</span>';
     if (_isDoraICTCritical(v.classification)) h += '<span class="ct-ref" data-size="sm">DORA</span>';
-    if (v.classification && v.classification.gdpr_subprocessor) h += '<span class="ct-ref ct-bg-ink-2" data-size="sm">PII</span>';
+    if (v.classification && v.classification.gdpr_subprocessor) h += '<span class="ct-ref" data-size="sm">PII</span>';
     // FEAT-45 — what is accepted on this third party, and the two gestures of
     // the register. Clicking the badge opens the derogation that covers it.
     var _der = _vendorDerogation(v.id);
