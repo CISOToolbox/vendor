@@ -29,7 +29,6 @@ All application files reside under `vendor/app/`.
 | `js/i18n.js` | 12 KB | Bilingual system: `t()`, `_registerTranslations()`, `switchLang()`, lazy-loading |
 | `js/ai_common.js` | 36 KB | AI providers (Anthropic Claude, OpenAI GPT): API calls, settings panel, key validation |
 | `js/ct_refselect.js` | 6 KB | Multi-select dropdown widget with tags, search, deferred re-render |
-| `js/referentiels_catalog.js` | 3 KB | Compliance frameworks catalog (shared across apps) |
 | `favicon.svg` | 5 KB | App icon |
 
 ---

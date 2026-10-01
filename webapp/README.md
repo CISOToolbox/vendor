@@ -168,7 +168,7 @@ sent to a server — there is no server.
 css/                  # 2 files
 e2e/                  # 5 files
 fonts/                # 6 files (embedded, no external font request)
-js/                   # 27 files
+js/                   # 26 files
 portal/               # 14 files
 skill/                # 1 file
 ts/                   # 28 files
