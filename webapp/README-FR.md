@@ -109,9 +109,8 @@ Le portail fournisseur est accessible sur **https://vendor.cisotoolbox.org/porta
 
 ### Fichier de démonstration
 
-Aucun jeu de données de démonstration n'est fourni avec le dépôt pour le
-moment : les fichiers `demo-*.json` ont été retirés et de nouveaux jeux seront
-générés ultérieurement.
+Le dépôt fournit un jeu de données de démonstration fictif (MedSecure) :
+`demo-fr.json` et `demo-en.json`.
 
 ### Démarrage rapide
 
@@ -156,7 +155,7 @@ L'application n'enferme pas les données. Tout peut être importé et exporté d
 |----------|--------|
 | 100% client-side | Pas de backend, pas de base de données, pas de comptes utilisateurs |
 | Souveraineté des données | Toutes les données restent dans le navigateur (localStorage + fichiers) |
-| Pas d'étape de build | JavaScript vanilla, pas de framework, pas de transpileur, pas de `node_modules` |
+| Pas d'étape de build pour l'exécuter | JavaScript vanilla, pas de framework, pas de bundler, pas de `node_modules` ; le code propre au module est écrit en TypeScript (`ts/`) et le JavaScript compilé (`js/`) est versionné (voir CONTRIBUTING) |
 | Bibliothèques partagées | Code commun (`cisotoolbox.js`, `cisotoolbox_local.js`, `i18n.js`, `ai_common.js`) partagé entre les apps CISO Toolbox |
 | Chargement à la demande | Assets lourds (templates Excel, bibliothèque ExcelJS) chargés uniquement si nécessaire |
 | Conforme CSP | Pas de script inline, pas de `eval`, pas de `unsafe-inline` pour le JS |
@@ -166,46 +165,67 @@ L'application n'enferme pas les données. Tout peut être importé et exporté d
 ```
 index.html                    Point d'entrée (app principale, <body class="ct-app-shell">)
 css/
-  cisotoolbox.css                Styles partagés (toolbar, sidebar, tableaux, dialogues, .ct-icon, .ct-app-shell)
+  cisotoolbox.css                Styles partagés (toolbar, rail, tableaux, dialogues, .ct-icon, .ct-app-shell)
   tprm.css                       Styles spécifiques à Vendor (cartes de modèles, cartes de tier, badges DORA)
+ts/                              Sources TypeScript du code propre au module (compilées vers js/)
 js/
-  i18n.js                        Moteur i18n (t(), switchLang, attributs data-i18n)
-  cisotoolbox.js                 Bibliothèque partagée (événements, esc, _icon, CT_ICONS, undo/redo, AES)
-  cisotoolbox_local.js           Persistance locale (autosave, fichiers, snapshots, _installUndoHook, _renderSnapshotsPanel)
-  ct_refselect.js                Widget multi-sélection partagé
-  referentiels_catalog.js        Catalogue partagé des référentiels
-  ai_common.js                   Module IA partagé (fournisseurs, réglages, appels API)
-  TPRM_data.js                   Données initiales (registre vide)
-  TPRM_i18n_fr.js                Traductions FR (~600 clés + contenu d'aide)
-  TPRM_i18n_en.js                Traductions EN (chargées à la demande)
-  TPRM_questions.js              Catalogue des questions par défaut + règles ANSSI 42
-  TPRM_app.js                    Logique applicative principale (~6200 lignes)
-  TPRM_ai_assistant.js           Suggestions IA (risques, mesures, réponses, collecte d'informations)
+  Partagés :
+  cisotoolbox.js                 Bibliothèque commune (événements, esc, _icon, CT_ICONS, undo/redo, AES)
+  i18n.js, i18n_core_fr.js, i18n_core_en.js   Moteur i18n et clés communes
+  ct_schema.js                   Versionnement et migration du modèle de données
+  cisotoolbox_local.js           Persistance locale (autosave, fichiers, snapshots)
+  ct_refselect.js                Widget multi-sélection
+  ct_modal.js                    Dialogues
+  ct_userpicker.js               Champ « personne » (texte libre dans cette app, sans annuaire)
+  ct_measure_modal.js            Fenêtre de mesure
+  ct_nonconformity.js, ct_nonconformity_local.js   Registre des non-conformités et dérogations
+  ct_table.js, ct_bulkbar.js     Tableaux et actions groupées
+  ai_common.js                   Module IA (fournisseurs, réglages, appels API)
+  ct_settings.js                 Panneau de réglages
+  Propres à Vendor :
+  TPRM_i18n_fr.js, TPRM_i18n_en.js   Traductions
+  TPRM_questions.js              Catalogue des questions par défaut
+  TPRM_app.js                    Logique applicative principale (registre vide, modèle d'audit ANSSI 42 règles)
+  TPRM_dora.js                   Registre d'informations DORA (RoI)
+  TPRM_dora_validation.js        Contrôles de cohérence du RoI
+  TPRM_dora_export.js            Export du RoI au format du classeur EBA
+  dora_codelists.js, dora_codelists_i18n.js   Listes de codes DORA et leurs libellés
+  vendor/exceljs.min.js          ExcelJS (bibliothèque tierce), chargé à la demande pour les imports et exports Excel
 portal/
   index.html                    Portail fournisseur (app autonome, pas de .ct-app-shell)
   css/portal.css                Styles spécifiques au portail (carte d'accueil, drop-zone, badge overdue)
+  ts/                           Sources TypeScript du portail
   js/
-    VendorPortal_app.js         Logique du portail (~1100 lignes)
+    VendorPortal_app.js         Logique du portail
     VendorPortal_i18n_fr.js     Traductions FR du portail
     VendorPortal_i18n_en.js     Traductions EN du portail
+fonts/                          Polices embarquées (aucun chargement externe)
+e2e/                            Tests de bout en bout (Playwright)
 ```
+
+Le portail charge depuis l'app principale le socle partagé, l'i18n (commun et
+du module) et les feuilles de style (`../js/`, `../css/`).
 
 ### Ordre de chargement des scripts
 
 Les scripts sont chargés de manière synchrone dans un ordre strict en bas de `index.html`. L'ordre est important car chaque script dépend de globales définies par les précédents :
 
 ```
-1. i18n.js                   Moteur i18n, doit être disponible avant tout appel à t()
-2. cisotoolbox.js            Bibliothèque partagée (esc, _icon, undo/redo)
-3. cisotoolbox_local.js      Persistance locale (dépend de cisotoolbox.js + D)
-4. ct_refselect.js           Widget multi-select
-5. referentiels_catalog.js   Catalogue des référentiels
-6. TPRM_data.js              Définit D par défaut
-7. TPRM_i18n_fr.js           Enregistre les clés FR
-8. TPRM_questions.js         Catalogue des questions + règles ANSSI 42
-9. TPRM_app.js               App principale (dépend de tous les précédents)
-10. ai_common.js             Lit AI_APP_CONFIG, fournit les fonctions IA partagées
-11. TPRM_ai_assistant.js     Enveloppe les fonctions de rendu avec les hooks IA
+1. cisotoolbox.js            Bibliothèque partagée (esc, _icon, undo/redo)
+2. i18n.js                   Moteur i18n
+3. i18n_core_en.js, i18n_core_fr.js   Clés communes
+4. ct_schema.js              Migration du modèle de données
+5. cisotoolbox_local.js      Persistance locale
+6. TPRM_i18n_fr.js, TPRM_i18n_en.js   Traductions du module
+7. TPRM_questions.js         Catalogue des questions par défaut
+8. dora_codelists.js, dora_codelists_i18n.js   Listes de codes DORA
+9. ct_refselect.js, ct_modal.js, ct_userpicker.js, ct_measure_modal.js,
+   ct_nonconformity.js, ct_nonconformity_local.js, ct_table.js, ct_bulkbar.js
+                             Composants partagés
+10. TPRM_app.js              App principale (dépend de tous les précédents)
+11. TPRM_dora_validation.js, TPRM_dora.js, TPRM_dora_export.js   Registre DORA
+12. ai_common.js             Lit AI_APP_CONFIG, fournit les fonctions IA partagées
+13. ct_settings.js           Panneau de réglages
 ```
 
 ### Patterns clés
@@ -272,17 +292,16 @@ Vendor : URL hash --> base64url decode --> AES-256-GCM decrypt(password) --> gun
 
 ### Architecture de la bibliothèque partagée
 
-Chaque application vit dans son propre dépôt git. Les fichiers partagés sont maintenus à l'identique entre toutes les apps de la suite CISO Toolbox et **répliqués** dans chaque dépôt depuis le dépôt partagé (voir [`.replicated-files`](.replicated-files) et [CONTRIBUTING.md](CONTRIBUTING.md) — ils ne doivent pas être édités ici) :
+Chaque application vit dans son propre dépôt git. Les fichiers partagés sont identiques entre toutes les apps de la suite CISO Toolbox ; ils portent un en-tête « Generated file - do not edit » et sont réécrits à chaque release (voir [CONTRIBUTING.md](CONTRIBUTING.md) — ils ne doivent pas être édités ici) :
 
 | Fichier | Rôle |
 |---------|------|
 | `cisotoolbox.js` | Délégation d'événements, I/O fichiers, chiffrement, undo/redo, icônes SVG (`_icon`, `CT_ICONS`), palette (`CT_COLORS`), sliders |
 | `cisotoolbox_local.js` | Auto-save, ouverture/sauvegarde fichier, bannière de restauration, snapshots CRUD, `_installUndoHook`, `_renderSnapshotsPanel` |
-| `cisotoolbox.css` | Styles partagés (toolbar, sidebar, tableaux, dialogues, `.ct-icon`, normalisation `td > input/select`, opt-in `body.ct-app-shell`) |
-| `i18n.js` | Moteur de traduction : `t(clé)`, `switchLang()`, scan des attributs `data-i18n` |
+| `cisotoolbox.css` | Styles partagés (toolbar, rail, tableaux, dialogues, `.ct-icon`, normalisation `td > input/select`, opt-in `body.ct-app-shell`) |
+| `i18n.js`, `i18n_core_*.js` | Moteur de traduction (`t(clé)`, `switchLang()`, attributs `data-i18n`) et clés communes |
 | `ai_common.js` | Configuration des fournisseurs IA, wrapper d'appel API, panneau de réglages |
-| `ct_refselect.js` | Widget multi-sélection partagé |
-| `referentiels_catalog.js` | Métadonnées des 9 référentiels complémentaires |
+| `ct_*.js` | Composants partagés : schéma et migration (`ct_schema`), modales (`ct_modal`, `ct_measure_modal`), multi-sélection (`ct_refselect`), personne (`ct_userpicker`), non-conformités (`ct_nonconformity*`), tableaux (`ct_table`, `ct_bulkbar`), réglages (`ct_settings`) |
 
 ---
 

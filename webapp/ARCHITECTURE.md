@@ -5,7 +5,7 @@
 **Vendor** is a Third-Party Risk Management (TPRM) application within the CISO Toolbox suite. It enables CISOs and security teams to inventory vendors, classify their exposure, assess their security posture via questionnaires, track risks with mitigation measures, and manage compliance documentation.
 
 - **URL**: https://vendor.cisotoolbox.org
-- **Architecture**: 100% client-side vanilla JavaScript, no framework, no build step
+- **Architecture**: 100% client-side vanilla JavaScript, no framework, no build step to run it (module code is written in TypeScript under `ts/`, the compiled `js/` is committed)
 - **Data storage**: Browser localStorage (autosave) + JSON file download for persistence
 - **Encryption**: AES-256-GCM with PBKDF2 for saved files (provided by cisotoolbox.js)
 

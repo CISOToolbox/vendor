@@ -58,7 +58,7 @@
 
 1. Visit [vendor.cisotoolbox.org](https://vendor.cisotoolbox.org) or clone this repo
 2. Open `index.html` in a browser
-3. Start a new vendor register — the repository ships no demo dataset for now (new ones will be generated later)
+3. Start a new vendor register — the repository also ships a fictional demo dataset (MedSecure): `demo-fr.json`, `demo-en.json`
 4. No backend, no account required
 
 ## Vendor Portal
@@ -70,7 +70,7 @@ The portal is a separate standalone page under `portal/`, served at [vendor.ciso
 
 ## Architecture
 
-- 100% client-side vanilla JS — no framework, no build step, no `node_modules`
+- 100% client-side vanilla JS — no framework, no bundler, no `node_modules`, no build step to run it (module code is written in TypeScript under `ts/`; the compiled `js/` is committed, see CONTRIBUTING)
 - Data in the browser (localStorage autosave + downloadable JSON/Excel for persistence)
 - Event delegation via `data-click` / `data-change` / `data-input` (CSP-compliant, no inline handlers)
 - AES-256-GCM encryption for saved files and snapshots
@@ -166,20 +166,25 @@ sent to a server — there is no server.
 
 ```
 css/                  # 2 files
-e2e/                  # 4 files
-js/                   # 22 files
+e2e/                  # 5 files
+fonts/                # 6 files (embedded, no external font request)
+js/                   # 27 files
 portal/               # 14 files
 skill/                # 1 file
-ts/                   # 23 files
-.replicated-files
+ts/                   # 28 files
+.gitignore
+.htaccess.example
 ARCHITECTURE.md
 CONTRIBUTING.md
 LICENSE
 README-FR.md
 README.md
 SECURITY.md
+demo-en.json
+demo-fr.json
 favicon.svg
 index.html
+nginx-security.conf.example
 tsconfig.json
 ```
 
