@@ -49,6 +49,7 @@ E2E_PORT=9090 npm test
 | 5 | Language | The FR/EN toggle is stored in `localStorage["ct_lang"]` and survives a reload |
 | 6 | Theme | The light/dark toggle is stored in `localStorage["ct_theme"]` and survives a reload |
 | 7 | Local persistence | A vendor created **by the test itself** through "Fournisseurs → Ajouter" autosaves to `localStorage` and is still there after a reload — no fixture file, no server |
+| * | No backend call | In **every** journey, no request to the app's own origin reaches an `/api/` path — the check above only sees other origins |
 | + | Module-specific | See the last test(s) of the spec file |
 
 > The repository ships **no dataset**: the `demo-*.json` files were removed and

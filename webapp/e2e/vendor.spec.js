@@ -33,6 +33,22 @@ async function openApp(page, url = '/') {
     await expect(page.locator('.ct-appbar')).toBeVisible();
 }
 
+// The app has no backend: no journey may call an /api/ path, not even on its
+// own origin (which the external-request check below cannot see).
+let backendCalls = [];
+test.beforeEach(({ page }) => {
+    backendCalls = [];
+    page.on('request', (r) => {
+        const u = new URL(r.url());
+        if (['127.0.0.1', 'localhost'].includes(u.hostname) && u.pathname.includes('/api/')) {
+            backendCalls.push(`${r.method()} ${r.url()}`);
+        }
+    });
+});
+test.afterEach(() => {
+    expect(backendCalls, `backend calls from a browser-only app: ${backendCalls.join(' | ')}`).toEqual([]);
+});
+
 /**
  * Give the suite a registry to work with, created the way a user would:
  * "Fournisseurs" → "Ajouter", which asks for the name through a native
@@ -252,6 +268,7 @@ test.describe('Vendor (TPRM) — local frontend journeys', () => {
         await expect(modal.locator('#ct-der-subject .ct-ref-tag')).toContainText(name);
         await modal.locator('#ct-der-just').fill('Contract signed before the assessment; assessment booked.');
         await expect(modal.locator('#ct-der-owner-plain')).toBeVisible();     // no directory in a file
+        await expect(modal.locator('#ct-der-owner-plain')).not.toHaveAttribute('placeholder'); // free text, not a search
         await modal.locator('#ct-der-owner-plain').fill('Purchasing');
         await modal.locator('#ct-der-approver-plain').fill('Security lead');
         const until = new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10);
