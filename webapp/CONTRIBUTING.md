@@ -7,15 +7,15 @@ JavaScript, no framework, no bundler, no `node_modules` needed to run it.
 ## Running it
 
 ```bash
-git clone <this repo>
-cd vendor
+git clone https://github.com/CISOToolbox/vendor.git
+cd vendor/webapp
 python3 -m http.server 8080     # any static server works
 # then open http://127.0.0.1:8080/
 ```
 
 Opening `index.html` straight from the filesystem (`file://`) mostly works, but
-`fetch()`-based features (loading `demo-*.json`, lazy-loaded frameworks) are
-blocked by the browser's origin rules. Use a static server.
+the browser's origin rules block `fetch()` on local files, so the demo dataset
+(`demo-*.json`) cannot be loaded. Use a static server.
 
 ## Generated files
 
@@ -46,7 +46,8 @@ matching `.js` (`tsc -p .`) and commit both, keeping them consistent.
 
 ## Coding conventions
 
-- Vanilla ES5-compatible JavaScript, no framework, no external runtime
+- Vanilla JavaScript (TypeScript compiled to ES2021, see `tsconfig.json`), no
+  framework, no external runtime
   dependency (the few bundled libraries under `js/vendor/` are third-party and
   are not modified here).
 - **No inline event handlers.** The app is written to run under
@@ -55,7 +56,8 @@ matching `.js` (`tsc -p .`) and commit both, keeping them consistent.
 - **Always escape** anything that comes from user or imported data with the
   shared `esc()` helper before injecting it into HTML.
 - Every user-visible string goes through the i18n layer (`data-i18n` attribute
-  or `t("key")`), with an entry in both `*_i18n_fr.js` and `*_i18n_en.js`.
+  or `t("key")`), with an entry in both `ts/TPRM_i18n_fr.ts` and
+  `ts/TPRM_i18n_en.ts`.
 - Keep it accessible: real `<button>` elements, `aria-label` on icon-only
   controls, visible focus.
 
@@ -67,13 +69,13 @@ behaviour change should come with, or update, a test.
 
 ## Demo data
 
-The repository currently ships **no demo dataset** — the previous
-`demo-*.json` files were removed and new ones will be generated later. Until
-then, build the data you need from the application itself.
+The repository ships a demo dataset, `demo-fr.json` and `demo-en.json`, built
+around a **fictional** company (MedSecure). It is loaded from the settings
+panel, *Demonstration* section (the file matching the current language).
 
-When demo datasets come back, they must describe a **fictional** company.
-Never add real organisation data — no real company, person, email address or
-site. Pull requests containing real assessment data will be closed.
+Any change to these files must keep the customer organisation, its contacts and
+its assessments fictional — never real client data, real people or real email
+addresses. Pull requests containing real assessment data will be closed.
 
 ## Pull requests
 

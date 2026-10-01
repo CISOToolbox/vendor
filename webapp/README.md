@@ -24,7 +24,7 @@
 - Template editor: sections, free-text questions, criticality (info / major / blocker), weight (0–100)
 - **Import templates from Excel** (downloadable `.xlsx` example with data validation) or create them in the graphical editor
 - Template-driven assessments with **coverage status** (`Covered` / `Partial` / `Not covered` / `N/A`), mandatory **corrective actions or justification** on partial / not-covered, per-question progress, submit-for-approval workflow
-- **Weighted maturity score** aggregating multiple approved assessments (per-question criticality, per-kind weight, temporal decay, manual overrides)
+- **Weighted maturity score** aggregating the vendor's validated assessments (per-question weight, per-kind or per-template weight, temporal decay, per-assessment weight override or exclusion)
 
 ### Vendor Portal (companion app at `/portal/`)
 - Standalone single-page app for vendors to fill questionnaires in their own browser
@@ -47,10 +47,10 @@
 - Document registry with expiry alerts, URL verification, confidence scoring
 - **Undo / redo** (Ctrl+Z / Ctrl+Y) and **snapshots** panel with optional AES-256 encryption
 - AES-256-GCM with PBKDF2 (250k iterations) for encrypted files and snapshots
-- Bilingual FR / EN with lazy-loaded English translations
+- Bilingual FR / EN: both languages are loaded at startup and switched in place (globe button in the toolbar, or the settings panel); the choice is kept in `localStorage["ct_lang"]`
 
 ### AI assistant (optional)
-- Suggest vendor-specific risks and mitigating measures (Anthropic Claude or OpenAI GPT)
+- Suggest vendor-specific risks and mitigating measures. The settings panel offers Anthropic (Claude), OpenAI (GPT), Google (Gemini) and AWS Bedrock; the shipped CSP (`connect-src`) only allows `api.anthropic.com` and `api.openai.com`, so the other two require extending it
 - AI collection of public vendor documentation with URL verification
 - Answer suggestion for questionnaires
 
@@ -58,7 +58,7 @@
 
 1. Visit [vendor.cisotoolbox.org](https://vendor.cisotoolbox.org) or clone this repo
 2. Open `index.html` in a browser
-3. Start a new vendor register — the repository also ships a fictional demo dataset (MedSecure): `demo-fr.json`, `demo-en.json`
+3. Start a new vendor register — or load the fictional demo dataset (MedSecure, `demo-fr.json` / `demo-en.json`) from the settings panel, *Demonstration* section; the file matching the current language is loaded
 4. No backend, no account required
 
 ## Vendor Portal
@@ -74,7 +74,7 @@ The portal is a separate standalone page under `portal/`, served at [vendor.ciso
 - Data in the browser (localStorage autosave + downloadable JSON/Excel for persistence)
 - Event delegation via `data-click` / `data-change` / `data-input` (CSP-compliant, no inline handlers)
 - AES-256-GCM encryption for saved files and snapshots
-- Shared libraries from `../../shared/` copied at deploy time: `cisotoolbox.js`, `cisotoolbox_local.js`, `i18n.js`, `ai_common.js`, `ct_refselect.js`, `cisotoolbox.css`
+- Shared files, identical across the CISO Toolbox apps, carry a "Generated file - do not edit" header and are rewritten at every release: `cisotoolbox.js`, `cisotoolbox_local.js`, `i18n.js`, `i18n_core_*.js`, `ai_common.js`, `ct_*.js`, `dora_codelists_i18n.js`, `cisotoolbox.css` (see *Generated files* below)
 - Reuses the shared **SVG icon helper** (`_icon(name)` from `cisotoolbox.js`), the shared **snapshots panel** (`_renderSnapshotsPanel()` from `cisotoolbox_local.js`) and the shared **undo hook** (`_installUndoHook()`)
 - `<body class="ct-app-shell">` enables the fixed toolbar + sidebar + internal-scroll layout; the portal omits that class for natural document scroll
 
@@ -101,12 +101,10 @@ This app is intentionally **100% browser-local** — your data never leaves
 your machine. If you outgrow it, the same module exists in two server-backed
 flavours:
 
-- **Standalone backend** (accounts, PostgreSQL, REST API, Docker):
-  the `-standalone` distribution of this repo — see `STANDALONE.md` /
-  `ghcr.io/cisotoolbox/ciso-vendor:latest`.
-- **Governance suite**: all CISO Toolbox modules integrated behind Pilot
-  (SSO, shared user directory, consolidated action plan, centralized
-  backups and point-in-time restore) — see https://www.cisotoolbox.org.
+- **Standalone backend**: the server-backed version at the
+  [root of this repository](../) — see its `STANDALONE.md`.
+- **Governance suite**: all CISO Toolbox modules integrated — see
+  https://www.cisotoolbox.org.
 
 Your JSON exports from this app import as-is into both.
 
@@ -116,16 +114,16 @@ This is a static, frontend-only application — no backend, no account, no build
 step.
 
 ```bash
-git clone <this repo>
-cd vendor
+git clone https://github.com/CISOToolbox/vendor.git
+cd vendor/webapp
 python3 -m http.server 8080      # any static file server will do
 ```
 
 Then open <http://127.0.0.1:8080/>.
 
 Opening `index.html` directly from the filesystem (`file://`) works for the
-basic UI, but the browser blocks `fetch()` on local files, so `demo-*.json` and
-the lazy-loaded frameworks will not load. Prefer a static server.
+basic UI, but the browser blocks `fetch()` on local files, so the demo dataset
+(`demo-*.json`) will not load. Prefer a static server.
 
 ## Deploying behind a web server
 
@@ -153,14 +151,18 @@ static files directly. The `python3 -m http.server` above is for local use only.
 | Work in progress (autosave) | `localStorage["tprm_autosave"]` | Until you clear the browser storage |
 | Snapshots | `localStorage["tprm_autosave_snapshots"]` (optionally AES-256-GCM encrypted) | Same |
 | UI preferences | `localStorage["ct_lang"]`, `localStorage["ct_theme"]` | Same |
+| Settings (DORA mode and thresholds, AI assistant) | `localStorage["tprm_dora_*"]`, `localStorage["tprm_ai_*"]` | Same |
 | Your real deliverable | **A file on your own disk**, via *File → Save* | Yours |
-| AI provider API key (optional) | `localStorage`, sent only to the provider you configured | Until you clear it |
+| AI provider API key (optional) | `localStorage["tprm_ai_apikey"]`, sent only to the provider you configured | Until you clear it |
 
 **Persistence is file-based.** The browser copy is a convenience buffer, not a
-backup: a cleared profile, a private window or a different machine means an
+backup: a cleared profile, an incognito window or a different machine means an
 empty app. Save to a `.json` (or AES-256-GCM encrypted `.ctenc`) file and keep
-that file wherever you keep your other security deliverables. Nothing is ever
-sent to a server — there is no server.
+that file wherever you keep your other security deliverables. The project runs
+no server: the only outbound requests are the ones you trigger — calls to the
+AI provider you configured, the GLEIF LEI lookup (`api.gleif.org`) in the DORA
+register, the vendor logo URL you enter, and the check of document URLs found
+by the AI document collection.
 
 ## Repository layout
 
@@ -188,11 +190,12 @@ nginx-security.conf.example
 tsconfig.json
 ```
 
-## Replicated files
+## Generated files
 
 The design system and the cross-module libraries (`js/cisotoolbox*.js`,
-`js/i18n.js`, `js/ai_common.js`, `js/ct_*.js`, `css/cisotoolbox.css`,
-`ts/types/*.d.ts`) are **generated** and carry a "Generated file - do not
+`js/i18n.js`, `js/i18n_core_*.js`, `js/ai_common.js`, `js/ct_*.js`,
+`js/dora_codelists_i18n.js`, `css/cisotoolbox.css`, `ts/types/*.d.ts`) are
+**generated** and carry a "Generated file - do not
 edit" banner. They are overwritten at every release — see
 [CONTRIBUTING.md](CONTRIBUTING.md) for what to do if you find a bug in one of
 them.
@@ -208,5 +211,5 @@ See [`e2e/README.md`](e2e/README.md).
 ## Contributing / Security
 
 - [CONTRIBUTING.md](CONTRIBUTING.md)
-- [SECURITY.md](SECURITY.md) — please report vulnerabilities privately
+- [SECURITY.md](SECURITY.md) — please report vulnerabilities confidentially
 - Licence: MIT, see [LICENSE](LICENSE)

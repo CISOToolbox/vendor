@@ -2,8 +2,8 @@
 
 Playwright tests for the CISO Toolbox **Vendor (TPRM)** module. They run against a
 **local static server that Playwright starts itself** (`python3 -m http.server`
-on the repository root) — nothing is deployed and no external site is
-contacted.
+serving `webapp/`, the parent of `e2e/`) — nothing is deployed and no external
+site is contacted.
 
 ## Requirements
 
@@ -50,12 +50,12 @@ E2E_PORT=9090 npm test
 | 6 | Theme | The light/dark toggle is stored in `localStorage["ct_theme"]` and survives a reload |
 | 7 | Local persistence | A vendor created **by the test itself** through "Fournisseurs → Ajouter" autosaves to `localStorage` and is still there after a reload — no fixture file, no server |
 | * | No backend call | In **every** journey, no request to the app's own origin reaches an `/api/` path — the check above only sees other origins |
-| + | Module-specific | See the last test(s) of the spec file |
+| + | Module-specific | `File → Open` without the File System Access API; restoring the autosaved session from the banner; the vendor registry; non-conformity register journeys on a third party (derogation approved locally, removal of a third party, a third party created from a declaration); the Vendor Portal page loading on its own |
 
-> The repository ships **no dataset**: the `demo-*.json` files were removed and
-> new ones will be generated later. Every journey that needs data builds it
-> through the application UI, which is what a self-contained e2e suite should
-> do anyway.
+> The journeys do not use the demo dataset (`demo-fr.json` / `demo-en.json`,
+> fictional MedSecure company, loadable from the settings panel). Every journey
+> that needs data builds it through the application UI or inside the test
+> itself, which is what a self-contained e2e suite should do anyway.
 
 These are deliberately **smoke-level journeys for a local frontend app**: they
 check that the page boots, that navigation and the shared UI shell work, that

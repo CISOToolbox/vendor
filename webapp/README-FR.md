@@ -60,7 +60,7 @@ Cette application a été conçue autour de deux principes simples :
 - Éditeur graphique : sections, questions en texte libre, criticité (info / majeur / bloquant), poids (0--100)
 - **Import depuis Excel** d'un modèle structuré (un fichier `.xlsx` d'exemple avec validation de données est téléchargeable)
 - Évaluations pilotées par modèle avec **statut de couverture** (`Couverte` / `Partielle` / `Non couverte` / `Non applicable`), **actions correctives ou justification obligatoires** en cas de couverture partielle ou nulle, progression en temps réel, workflow de soumission pour approbation
-- **Score de maturité pondéré** agrégeant plusieurs évaluations approuvées (criticité par question, poids par type d'évaluation, décroissance temporelle, surcharges manuelles)
+- **Score de maturité pondéré** agrégeant les évaluations validées du fournisseur (poids par question, poids par type d'évaluation ou par modèle, décroissance temporelle, surcharge du poids ou exclusion par évaluation)
 
 ### Portail fournisseur (application compagnon sous `/portal/`)
 
@@ -87,7 +87,7 @@ Cette application a été conçue autour de deux principes simples :
 - **Annuler / Rétablir** (Ctrl+Z / Ctrl+Y) sur toutes les actions
 - **Snapshots** (points de sauvegarde) stockés dans le navigateur, avec chiffrement AES-256 optionnel
 - Chiffrement AES-256-GCM avec dérivation PBKDF2 (250 000 itérations) pour les fichiers et les snapshots
-- Interface bilingue FR / EN avec chargement différé de l'anglais
+- Interface bilingue FR / EN : les deux langues sont chargées au démarrage et la bascule se fait sur place (bouton globe de la barre d'outils ou panneau de réglages) ; le choix est conservé dans `localStorage["ct_lang"]`
 
 ### Assistant IA (optionnel)
 
@@ -110,14 +110,17 @@ Le portail fournisseur est accessible sur **https://vendor.cisotoolbox.org/porta
 ### Fichier de démonstration
 
 Le dépôt fournit un jeu de données de démonstration fictif (MedSecure) :
-`demo-fr.json` et `demo-en.json`.
+`demo-fr.json` et `demo-en.json`. Il se charge depuis le panneau de réglages,
+section *Démonstration* (le fichier de la langue courante est chargé). Le
+chargement passe par `fetch()` : servez l'application avec un serveur statique
+plutôt que de l'ouvrir en `file://`.
 
 ### Démarrage rapide
 
 1. Ouvrir l'application dans un navigateur
 2. Aller dans **Fournisseurs** et cliquer sur **Ajouter**
 3. Parcourir les fournisseurs depuis la barre latérale (**Fournisseurs**)
-4. Cliquer sur un fournisseur pour voir sa fiche détaillée (Informations / Risques / Évaluations / Documents)
+4. Cliquer sur un fournisseur pour voir sa fiche détaillée (Informations / Risques / Évaluations / Documents / Registre DORA)
 
 ### Workflow type d'une évaluation
 
@@ -139,7 +142,7 @@ L'application n'enferme pas les données. Tout peut être importé et exporté d
 | **Ouvrir** / **Enregistrer sous** | Menu Fichier | `.json` / `.ctenc` | Format natif. Le `.ctenc` est chiffré AES-256-GCM avec PBKDF2 250k itérations. |
 | **Export évaluation Excel** | Sur une évaluation | `.xlsx` | Fichier préfabriqué avec onglet instructions, colonnes d'identité verrouillées, listes déroulantes de couverture et mise en forme conditionnelle sur les actions/justifications manquantes. |
 | **Export évaluation JSON / chiffré** | Sur une évaluation | `.json` / `.ctenc` | Sérialisation complète de l'évaluation + instantané du modèle. |
-| **Lien d'évaluation** | Sur une évaluation | URL | Charge utile gzippée + chiffrée AES-256 dans le hash de l'URL. Pour les petits questionnaires (&lt; 2 Mo). |
+| **Lien d'évaluation** | Sur une évaluation | URL | Charge utile gzippée + chiffrée AES-256 dans le hash de l'URL. Pour les petits questionnaires : au-delà de 8 000 caractères, l'application signale un risque de troncature par certains clients mail, et au-delà de 12 000 recommande l'export en fichier chiffré. |
 | **Import évaluation** | Sur une évaluation | `.xlsx` / `.json` / `.ctenc` | Les réponses, couvertures et actions sont fusionnées dans l'évaluation existante. |
 | **Import modèle Excel** | Page Modèles d'évaluation | `.xlsx` | Crée un nouveau modèle à partir d'un fichier structuré (Section, Question, Réponse attendue, Criticité, Poids). Un exemple téléchargeable est fourni. |
 
@@ -157,7 +160,7 @@ L'application n'enferme pas les données. Tout peut être importé et exporté d
 | Souveraineté des données | Toutes les données restent dans le navigateur (localStorage + fichiers) |
 | Pas d'étape de build pour l'exécuter | JavaScript vanilla, pas de framework, pas de bundler, pas de `node_modules` ; le code propre au module est écrit en TypeScript (`ts/`) et le JavaScript compilé (`js/`) est versionné (voir CONTRIBUTING) |
 | Bibliothèques partagées | Code commun (`cisotoolbox.js`, `cisotoolbox_local.js`, `i18n.js`, `ai_common.js`) partagé entre les apps CISO Toolbox |
-| Chargement à la demande | Assets lourds (templates Excel, bibliothèque ExcelJS) chargés uniquement si nécessaire |
+| Chargement à la demande | La bibliothèque ExcelJS (`js/vendor/`) n'est chargée qu'au premier import ou export Excel |
 | Conforme CSP | Pas de script inline, pas de `eval`, pas de `unsafe-inline` pour le JS |
 
 ### Structure des fichiers
@@ -236,10 +239,10 @@ Les scripts sont chargés de manière synchrone dans un ordre strict en bas de `
 window.CT_CONFIG = {
     autosaveKey: "tprm_autosave",
     initDataVar: "TPRM_INIT_DATA",
-    label: "analyse",
     filePrefix: "TPRM",
-    getSociete: function() { return D.metadata && D.metadata.organization || ""; },
-    getDate: function() { return D.metadata && D.metadata.date || ""; }
+    labelKey: "toolbar.subtitle",
+    getSociete: function (data) { return (data.metadata && data.metadata.organization) || ""; },
+    getDate: function (data) { return (data.metadata && data.metadata.created) || ""; }
 };
 ```
 
@@ -267,7 +270,10 @@ window.CT_CONFIG = {
 Interaction utilisateur
     |
     v
-updateField(path, value)   -- écrit dans D
+modification de D          -- ex. _autoSaveVendorField(), updateRiskField()
+    |
+    v
+_persist() / _persistCreate() / _persistDelete()
     |
     v
 _autoSave()                -- écrit D dans localStorage
@@ -320,7 +326,7 @@ Chaque application vit dans son propre dépôt git. Les fichiers partagés sont 
 | **Assainissement HTML** | Toutes les saisies utilisateur sont échappées via `esc()` avant insertion dans le DOM |
 | **SRI** | Sans objet : ExcelJS est servi depuis la même origine (`js/vendor/`), plus aucun chargement tiers |
 | **HTTPS** | Imposé au niveau du serveur/hébergement |
-| **Pas de serveur** | Aucune donnée ne transite par un serveur tiers (sauf assistant IA si activé) |
+| **Pas de serveur** | Aucune donnée ne transite par un serveur du projet. Seules sortent les requêtes que vous déclenchez : assistant IA (si activé), recherche LEI GLEIF (`api.gleif.org`) dans le registre DORA, URL de logo saisie, vérification des URL de documents trouvées par la collecte IA |
 
 ---
 
@@ -339,10 +345,16 @@ Fonctionnalités principales :
 
 ### Fournisseurs supportés
 
-| Fournisseur | Modèles | Endpoint API |
-|-------------|---------|-------------|
-| Anthropic | Claude (Sonnet, Haiku) | `https://api.anthropic.com` |
-| OpenAI | GPT-4o, GPT-4o-mini | `https://api.openai.com` |
+| Fournisseur | Endpoint API |
+|-------------|-------------|
+| Anthropic (Claude) | `https://api.anthropic.com` |
+| OpenAI (GPT) | `https://api.openai.com` |
+| Google (Gemini) | `https://generativelanguage.googleapis.com` |
+| AWS Bedrock | `https://bedrock-runtime.eu-west-3.amazonaws.com` par défaut |
+
+La CSP livrée (`.htaccess.example`, `nginx-security.conf.example`) n'autorise en
+`connect-src` que `api.anthropic.com` et `api.openai.com` : pour Gemini ou
+Bedrock, il faut l'étendre.
 
 ### Configuration
 
@@ -382,10 +394,11 @@ L'application est un ensemble de fichiers statiques. Aucun serveur applicatif n'
 
 ### Fonctionnement hors-ligne
 
-L'application fonctionne hors-ligne une fois chargée, avec deux exceptions :
+L'application fonctionne hors-ligne une fois chargée, avec ces exceptions :
 
 - **Import/export Excel** charge ExcelJS depuis `js/vendor/` lors de la première utilisation (aucun accès réseau)
 - **Assistant IA** nécessite une connexion Internet pour communiquer avec l'API du fournisseur
+- **Recherche LEI** du registre DORA interroge `api.gleif.org`
 
 ### Instances en ligne
 
