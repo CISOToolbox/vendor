@@ -34,7 +34,7 @@ The application lives under `webapp/` in the repository. Files marked *generated
 | `js/i18n.js` | *Generated* — i18n engine: `t()`, `_registerTranslations()`, `switchLang()`, `_applyStaticTranslations()` |
 | `js/i18n_core_fr.js`, `js/i18n_core_en.js` | *Generated* — translation keys common to all apps |
 | `js/ct_schema.js` | *Generated* — schema revision stamp and migration on load (`ctSchemaStamp`, `ctSchemaMigrate`) |
-| `js/ai_common.js` | *Generated* — AI providers (Anthropic, OpenAI, Google Gemini, AWS Bedrock): API calls, settings, suggestion panel |
+| `js/ai_common.js` | *Generated* — AI providers (Anthropic, OpenAI in this browser app): API calls, settings, suggestion panel |
 | `js/ct_settings.js` | *Generated* — settings panel |
 | `js/ct_refselect.js` | *Generated* — multi-select dropdown widget with tags |
 | `js/ct_modal.js` | *Generated* — dialogs |

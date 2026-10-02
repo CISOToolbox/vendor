@@ -50,7 +50,7 @@
 - Bilingual FR / EN: both languages are loaded at startup and switched in place (globe button in the toolbar, or the settings panel); the choice is kept in `localStorage["ct_lang"]`
 
 ### AI assistant (optional)
-- Suggest vendor-specific risks and mitigating measures. The settings panel offers Anthropic (Claude), OpenAI (GPT), Google (Gemini) and AWS Bedrock; the shipped CSP (`connect-src`) only allows `api.anthropic.com` and `api.openai.com`, so the other two require extending it
+- Suggest vendor-specific risks and mitigating measures. The settings panel offers Anthropic (Claude) and OpenAI (GPT), the two hosts the shipped CSP (`connect-src`) allows
 - AI collection of public vendor documentation with URL verification
 - Answer suggestion for questionnaires
 

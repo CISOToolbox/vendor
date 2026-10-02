@@ -1,7 +1,7 @@
 /**
  * TPRM (Vendor) — types of the D data model + app globals.
  * Pure type file (no emit). Reference schema:
- * vendor/src/assessment_validation.py
+ * src/assessment_validation.py (the module's backend, in this repository)
  * ("DATA MODEL CONTRACT" docstring) + actual usage in TPRM_app.js,
  * TPRM_dora.js, TPRM_dora_export.js, VendorPortal_app.js.
  */

@@ -2661,8 +2661,8 @@ function _buildDefaultQuestionnaireTemplate(lang: string) {
         id: "TPL-001",
         name: lang === "en" ? "Standard vendor questionnaire" : "Questionnaire fournisseur standard",
         description: lang === "en"
-            ? "Default security questionnaire (30 essential questions covering governance, access, cloud, DORA, etc.)."
-            : "Questionnaire de securite par defaut (30 questions essentielles couvrant gouvernance, acces, cloud, DORA, etc.).",
+            ? "Default security questionnaire (25 essential questions across 13 domains: governance, access, cloud, continuity, etc.)."
+            : "Questionnaire de securite par defaut (25 questions essentielles sur 13 domaines : gouvernance, acces, cloud, continuite, etc.).",
         kind: "questionnaire",
         language: lang,
         version: 1,
@@ -2672,22 +2672,19 @@ function _buildDefaultQuestionnaireTemplate(lang: string) {
     };
 
     var domainTitles: Record<string, Record<string, string>> = {
-        governance:     { fr: "Gouvernance et organisation",      en: "Governance and organization" },
-        access:         { fr: "Controle d'acces",                 en: "Access control" },
-        network:        { fr: "Securite reseau",                  en: "Network security" },
-        dev:            { fr: "Developpement securise",           en: "Secure development" },
-        data:           { fr: "Protection des donnees",           en: "Data protection" },
-        endpoint:       { fr: "Securite des postes",              en: "Endpoint security" },
-        detection:      { fr: "Detection et supervision",         en: "Detection and monitoring" },
-        continuity:     { fr: "Continuite d'activite",            en: "Business continuity" },
-        supply_chain:   { fr: "Chaine d'approvisionnement",       en: "Supply chain" },
-        audit:          { fr: "Audit et conformite",              en: "Audit and compliance" },
-        hr:             { fr: "Ressources humaines",              en: "Human resources" },
-        physical:       { fr: "Securite physique",                en: "Physical security" },
-        cloud:          { fr: "Securite cloud",                   en: "Cloud security" },
-        incidents:      { fr: "Gestion des incidents",            en: "Incident management" },
-        compliance:     { fr: "Conformite reglementaire",         en: "Regulatory compliance" },
-        dora:           { fr: "DORA - Prestataire TIC critique",  en: "DORA - Critical ICT provider" }
+        governance:          { fr: "Gouvernance et organisation",  en: "Governance and organization" },
+        access_management:   { fr: "Gestion des acces",            en: "Access management" },
+        network:             { fr: "Securite reseau",              en: "Network security" },
+        vulnerability_mgmt:  { fr: "Gestion des vulnerabilites",   en: "Vulnerability management" },
+        dev_security:        { fr: "Developpement securise",       en: "Secure development" },
+        data_protection:     { fr: "Protection des donnees",       en: "Data protection" },
+        endpoint_protection: { fr: "Protection des postes",        en: "Endpoint protection" },
+        incident_response:   { fr: "Reponse aux incidents",        en: "Incident response" },
+        continuity:          { fr: "Continuite d'activite",        en: "Business continuity" },
+        supply_chain:        { fr: "Chaine d'approvisionnement",   en: "Supply chain" },
+        hr_security:         { fr: "Securite RH",                  en: "Human resources security" },
+        cloud_security:      { fr: "Securite cloud",               en: "Cloud security" },
+        compliance:          { fr: "Conformite",                   en: "Compliance" }
     };
 
     var sectionMap: Record<string, any> = {};
