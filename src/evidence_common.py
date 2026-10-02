@@ -46,7 +46,7 @@ def compute_evidence_status(date_expiration, today: date | None = None, soon_day
 
 def evidence_to_pilot_payload(ev: dict, module: str, linked=None, today: date | None = None) -> dict:
     """Uniform shape pushed to Pilot's EvidenceCache / returned by each
-    module's GET /api/internal/evidences. See pilot-dashboard-contract.md.
+    module's GET /api/internal/evidences.
 
     ``ev`` is a plain dict of the evidence row; ``linked`` is the list of
     objects it is attached to ([{object_type, object_id, label}]).
