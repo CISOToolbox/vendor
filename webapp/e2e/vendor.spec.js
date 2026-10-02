@@ -365,4 +365,30 @@ test.describe('Vendor (TPRM) — local frontend journeys', () => {
         expect(errors, `uncaught page errors: ${errors.join(' | ')}`).toEqual([]);
     });
 
+
+    // The app calls the AI provider straight from the browser: it offers only
+    // the providers its shipped CSP (connect-src) allows, and a provider saved
+    // before that falls back to the default.
+    test('only the providers and endpoints the CSP allows are offered', async ({ page }) => {
+        await openApp(page);
+        await page.waitForFunction(() => window._AI_PROVIDERS);
+        expect(await page.evaluate(() => Object.keys(window._AI_PROVIDERS).sort())).toEqual(['anthropic', 'openai']);
+        await page.evaluate(() => localStorage.setItem('tprm_ai_provider', 'bedrock'));
+        expect(await page.evaluate(() => window._aiGetProvider())).toBe('anthropic');
+        // No custom LLM and no endpoint override either: the CSP would block them.
+        expect(await page.evaluate(() => window._AI_PROVIDER_ALLOWLIST)).toEqual(['anthropic', 'openai']);
+        await page.evaluate(() => {
+            localStorage.setItem('tprm_ai_provider', 'custom');
+            localStorage.setItem('tprm_ai_endpoint', 'https://llm.example.com/v1/chat/completions');
+        });
+        expect(await page.evaluate(() => window._aiGetProvider())).toBe('anthropic');
+        expect(await page.evaluate(() => window._aiGetEndpoint())).toBe('');
+        // A model saved for a dropped provider goes with it.
+        await page.evaluate(() => {
+            localStorage.setItem('tprm_ai_provider', 'bedrock');
+            localStorage.setItem('tprm_ai_model', 'anthropic.claude-sonnet-4-6-20250514-v1:0');
+        });
+        expect(await page.evaluate(() => window._aiGetModel())).toBe(
+            await page.evaluate(() => window._AI_PROVIDERS.anthropic.defaultModel));
+    });
 });

@@ -349,12 +349,9 @@ Fonctionnalités principales :
 |-------------|-------------|
 | Anthropic (Claude) | `https://api.anthropic.com` |
 | OpenAI (GPT) | `https://api.openai.com` |
-| Google (Gemini) | `https://generativelanguage.googleapis.com` |
-| AWS Bedrock | `https://bedrock-runtime.eu-west-3.amazonaws.com` par défaut |
 
-La CSP livrée (`.htaccess.example`, `nginx-security.conf.example`) n'autorise en
-`connect-src` que `api.anthropic.com` et `api.openai.com` : pour Gemini ou
-Bedrock, il faut l'étendre.
+La CSP livrée (`.htaccess.example`, `nginx-security.conf.example`) autorise en
+`connect-src` exactement ces deux hôtes.
 
 ### Configuration
 
