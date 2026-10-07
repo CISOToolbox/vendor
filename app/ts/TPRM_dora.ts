@@ -1800,13 +1800,25 @@ window.doraOpenFunctionModalForArr = function() {
     }
 };
 
-// Listener for the substitutability-level dropdown: shows/hides the
-// "reason" sub-dropdown per ITS B.07.01.0060 (mandatory only when level
-// ∈ {not_substitutable, highly_complex}).
-// Kept for backwards-compatibility: the substitutability_reason slot is
-// always visible now (the user couldn't discover the field when hidden).
-// _collect() in the arrangement modal clears the value at save time when
-// the level does not require a reason.
+// B_07.01.0060 (substitutability reason) is conditional on the 0050 level:
+// it only applies when the level ∈ {not_substitutable, highly_complex} (ITS
+// B.07.01). The slot stays visible (hiding it killed discoverability) but is
+// disabled otherwise, so a reason can never be configured where it would be
+// silently dropped. _doraSyncSubRsnEnabled toggles that live with the level;
+// _collect() still clears the value for a non-applicable level.
+function _doraSubRsnApplies(lvl: string | null | undefined): boolean {
+    return lvl === "not_substitutable" || lvl === "highly_complex";
+}
+function _doraSyncSubRsnEnabled(lvl: string | null | undefined): void {
+    var slot = document.getElementById("arr-sub-rsn-slot");
+    if (!slot) return;
+    if (_doraSubRsnApplies(lvl)) { slot.classList.remove("tprm-field-disabled"); return; }
+    slot.classList.add("tprm-field-disabled");
+    // Clear any stale reason so nothing meaningless is shown or persisted.
+    var dd = document.getElementById("arr-sub-rsn-dd");
+    if (dd) dd.querySelectorAll("input:checked").forEach(function(c) { (c as HTMLInputElement).checked = false; });
+    _doraRefRefreshTags("arr-sub-rsn", _doraCodeItems("substitutability_reason"));
+}
 // Tier=1 = direct subcontractor (no upstream sibling), so the parent picker
 // is meaningless — hide it and clear any stale value. Re-shown for tier ≥ 2.
 // Tier is picked directly from the rank dropdown in the subcontractor
@@ -1854,8 +1866,9 @@ window.doraOpenArrangementModal = function(arrangementId: string, vendorIdHint: 
     }
 
     // B_07.01.0060 (substitutability_reason) is always shown so users can
-    // discover the field. _collect() below clears it if the level doesn't
-    // require it (R: only kept for not_substitutable / highly_complex).
+    // discover the field, but disabled (and rendered empty) unless the level
+    // requires it — see _doraSyncSubRsnEnabled. _collect() also clears it for a
+    // non-applicable level (R: only kept for not_substitutable / highly_complex).
 
     // ── Section 1: Identification ──
     var sectionIdentity = ''
@@ -1915,11 +1928,11 @@ window.doraOpenArrangementModal = function(arrangementId: string, vendorIdHint: 
 
     // ── Section 5: Substitutability & exit (ITS B.07.01) ──
     var sectionSubsExit = ''
-        + _fld(_doraT("dora.modal.arr_substitutability", "Substitutability of the TPP (B_07.01.0050)"), _doraRefSelect("arr-sub-lvl", a.substitutability_level, _doraCodeItems("substitutability")))
+        + _fld(_doraT("dora.modal.arr_substitutability", "Substitutability of the TPP (B_07.01.0050)"), _doraRefSelect("arr-sub-lvl", a.substitutability_level, _doraCodeItems("substitutability"), { onToggle: function(_u: string, ids: string[]) { _doraSyncSubRsnEnabled(ids && ids.length ? ids[0] : ""); }, onRemove: function() { _doraSyncSubRsnEnabled(""); } }))
         + _fld(_doraT("dora.modal.arr_reintegration", "Possibility of reintegration (B_07.01.0090)"), _doraRefSelect("arr-reint-lvl", a.reintegration_level, _doraCodeItems("reintegration_level")))
-        + '<div id="arr-sub-rsn-slot" class="ct-col-span-2">'
+        + '<div id="arr-sub-rsn-slot" class="ct-col-span-2' + (_doraSubRsnApplies(a.substitutability_level) ? '' : ' tprm-field-disabled') + '">'
         +   '<div class="ct-mb-1">' + _doraT("dora.modal.arr_substitutability_reason", "Reason if non/hard substitutable (B_07.01.0060)") + '</div>'
-        +   _doraRefSelect("arr-sub-rsn", a.substitutability_reason, _doraCodeItems("substitutability_reason"))
+        +   _doraRefSelect("arr-sub-rsn", _doraSubRsnApplies(a.substitutability_level) ? a.substitutability_reason : "", _doraCodeItems("substitutability_reason"))
         +   '<div class="ct-mt-1 ct-text-label ct-muted">' + esc(_doraT("dora.modal.arr_substitutability_reason_hint", "Exporté uniquement si le niveau ci-dessus est « non substituable » ou « hautement complexe ».")) + '</div>'
         + '</div>'
         + _fld(_doraT("dora.modal.arr_impact", "Impact of discontinuing (B_07.01.0100)"), _doraRefSelect("arr-impact", a.impact_discontinuing_level, _doraCodeItems("impact_level")))
