@@ -35,8 +35,46 @@ window.CT_CONFIG = {
 };
 // FEAT-36 — schema versioning: rev 2 = assessments V2 (BUG-17 migration
 // becomes link 1→2 of the chain; the ad hoc call in _initDataAndRender is gone).
-window.SCHEMA_REV = 2;
-window.SCHEMA_MIGRATIONS = { 1: function () { _migrateAllLegacyAssessments(); } };
+// FEAT-54 — rev 3 = classification "non évalué" vs 0: a classification
+// indicator at 0 used to mean "unset"; it now means "assessed: no impact". The
+// 2→3 link coerces old exports' 0s to null (not assessed) so they are not read
+// as a real low rating. (Python twin is a documented passthrough — the import
+// path reshapes frontend-side, like 1→2; the DB is handled by alembic 018.)
+window.SCHEMA_REV = 3;
+window.SCHEMA_MIGRATIONS = {
+    1: function () { _migrateAllLegacyAssessments(); },
+    2: function (data) { _migrateClassificationUnassessed(data); },
+};
+function _migrateClassificationUnassessed(data) {
+    var dep = ["ops_impact", "processes", "replace_difficulty"];
+    var pen = ["data_sensitivity", "integration", "regulatory_impact"];
+    function axisMean(c, ks) {
+        var sum = 0;
+        for (var i = 0; i < ks.length; i++) {
+            var x = c[ks[i]];
+            if (x === null || x === undefined || x === "")
+                return null;
+            sum += Number(x);
+        }
+        return Math.round(sum / ks.length * 10) / 10;
+    }
+    var vendors = (data && data.vendors) || [];
+    for (var v = 0; v < vendors.length; v++) {
+        var c = vendors[v] && vendors[v].classification;
+        if (!c)
+            continue;
+        var all = dep.concat(pen);
+        for (var j = 0; j < all.length; j++) {
+            if (c[all[j]] === 0)
+                c[all[j]] = null;
+        }
+        var ex = vendors[v].exposure;
+        if (ex) {
+            ex.dependance = axisMean(c, dep);
+            ex.penetration = axisMean(c, pen);
+        }
+    }
+}
 var _panel = "dashboard";
 var D = JSON.parse(JSON.stringify(TPRM_INIT_DATA));
 var _selectedVendor = null;
@@ -1299,15 +1337,15 @@ function _renderVendorForm(v) {
     h += '<div class="ct-form-grid">';
     h += '<div class="cls-col">';
     h += '<div class="cls-col-title">' + t("vendor.dependance") + '</div>';
-    h += _slider("vendor.cls_ops_impact", "v-cls-ops", c.ops_impact || 0, 4);
-    h += _slider("vendor.cls_processes", "v-cls-proc", c.processes || 0, 4);
-    h += _slider("vendor.cls_replace_difficulty", "v-cls-repl", c.replace_difficulty || 0, 4);
+    h += _slider("vendor.cls_ops_impact", "v-cls-ops", c.ops_impact, 4);
+    h += _slider("vendor.cls_processes", "v-cls-proc", c.processes, 4);
+    h += _slider("vendor.cls_replace_difficulty", "v-cls-repl", c.replace_difficulty, 4);
     h += '</div>';
     h += '<div class="cls-col">';
     h += '<div class="cls-col-title">' + t("vendor.penetration") + '</div>';
-    h += _slider("vendor.cls_data_sensitivity", "v-cls-data", c.data_sensitivity || 0, 4);
-    h += _slider("vendor.cls_integration", "v-cls-integ", c.integration || 0, 4);
-    h += _slider("vendor.cls_regulatory", "v-cls-reg", c.regulatory_impact || 0, 4);
+    h += _slider("vendor.cls_data_sensitivity", "v-cls-data", c.data_sensitivity, 4);
+    h += _slider("vendor.cls_integration", "v-cls-integ", c.integration, 4);
+    h += _slider("vendor.cls_regulatory", "v-cls-reg", c.regulatory_impact, 4);
     h += '</div>';
     h += '</div>';
     // Hidden inputs for computed values used by _computeExposure. dep/pen and
@@ -1315,8 +1353,8 @@ function _renderVendorForm(v) {
     // _fullExposure — so the display matches the list and tier badge.
     var fx = _fullExposure(v);
     var dep = fx.dependance, pen = fx.penetration;
-    h += '<input type="hidden" id="v-dep" value="' + dep + '">';
-    h += '<input type="hidden" id="v-pen" value="' + pen + '">';
+    h += '<input type="hidden" id="v-dep" value="' + (dep == null ? '' : dep) + '">';
+    h += '<input type="hidden" id="v-pen" value="' + (pen == null ? '' : pen) + '">';
     h += '<input type="hidden" id="v-mat" value="' + fx.maturite + '">';
     h += '<input type="hidden" id="v-conf" value="' + fx.confiance + '">';
     // Threat level result
@@ -1330,8 +1368,8 @@ function _renderVendorForm(v) {
         h += ' <span class="ct-ref" data-size="sm">' + t("vendor.dora_critical") + '</span>';
     h += '</div>';
     h += '<div class="ct-text-label ct-muted ct-mt-1">';
-    h += t("vendor.dependance") + ' : <strong>' + dep + '/4</strong>';
-    h += ' — ' + t("vendor.penetration") + ' : <strong>' + pen + '/4</strong>';
+    h += t("vendor.dependance") + ' : <strong>' + (dep == null ? '—' : dep + '/4') + '</strong>';
+    h += ' — ' + t("vendor.penetration") + ' : <strong>' + (pen == null ? '—' : pen + '/4') + '</strong>';
     if (fx.maturite || fx.confiance) {
         h += ' — ' + t("vendor.maturite") + ' : <strong>' + fx.maturite + '/4</strong>';
         h += ' — ' + t("vendor.confiance") + ' : <strong>' + fx.confiance + '/4</strong>';
@@ -1351,22 +1389,20 @@ function _renderVendorForm(v) {
     return h;
 }
 // ── Exposure helpers (same formula as PP in Risk) ──
-// Threat = (dependency x penetration) / (maturity x confidence), all rated
-// 1..4 (0 = not filled). Returns null — "not assessed" — as soon as a factor
-// is missing, NOT 0. Two reasons: maturity and confidence are the denominator,
-// so a missing one would push the threat UP, not down (dividing by ~0); and
-// more importantly, a vendor never evaluated must not read as "low threat" —
-// absence of assessment is not a certificate of safety. Callers render a
-// distinct "Non évalué" state and treat it as to-be-assessed, never as safe.
+// Threat = (dependency x penetration) / (maturity x confidence). Returns null
+// — "not assessed" — when dependence or penetration is null (an axis not fully
+// rated), NOT when it is 0: a real 0 is a deliberate "no impact" rating and
+// yields a threat of 0 (tier "low"), never "unassessed" (FEAT-54). Maturity and
+// confidence are the denominator and floor at 1, so they only mitigate. A
+// vendor never evaluated must not read as "low threat" — absence of assessment
+// is not a certificate of safety; callers render a distinct "Non évalué" state.
 function _computeExposure(ex) {
     if (!ex)
         return null;
-    var d = ex.dependance || 0, p = ex.penetration || 0;
-    // Maturity and confidence floor at 1 — they only mitigate the threat.
-    // The sole "unassessed" state is an empty classification (dep/pen at 0).
-    var m = ex.maturite || 1, c = ex.confiance || 1;
-    if (!d || !p)
+    var d = ex.dependance, p = ex.penetration;
+    if (d == null || p == null)
         return null;
+    var m = ex.maturite || 1, c = ex.confiance || 1;
     return Math.round((d * p) / (m * c) * 100) / 100;
 }
 // The three DERIVED exposure factors are recomputed from their source of
@@ -1426,8 +1462,8 @@ function _refreshThreatDisplay() {
         // card, the DORA marker just above.
         var detailEl = threatEl.nextElementSibling;
         if (detailEl && detailEl.style && detailEl.style.fontSize === "0.78em") {
-            detailEl.innerHTML = t("vendor.dependance") + ' : <strong>' + (ex.dependance || 0) + '/4</strong>' +
-                ' — ' + t("vendor.penetration") + ' : <strong>' + (ex.penetration || 0) + '/4</strong>' +
+            detailEl.innerHTML = t("vendor.dependance") + ' : <strong>' + (ex.dependance == null ? '—' : ex.dependance + '/4') + '</strong>' +
+                ' — ' + t("vendor.penetration") + ' : <strong>' + (ex.penetration == null ? '—' : ex.penetration + '/4') + '</strong>' +
                 ' — ' + t("vendor.maturite") + ' : <strong>' + (ex.maturite || 1) + '/4</strong>' +
                 ' — ' + t("vendor.confiance") + ' : <strong>' + (ex.confiance || 1) + '/4</strong>';
         }
@@ -1461,9 +1497,21 @@ function _exposureLabel(level) {
         return t("vendor.exposure_moderate");
     return t("vendor.exposure_low");
 }
+// All-or-nothing axis mean (FEAT-54): the 0-4 mean, or null when any indicator
+// is unassessed (null/undefined/""). A real 0 counts in the mean; a single
+// unrated indicator makes the whole axis "non évalué". Mirrors the backend
+// compute_dependance / compute_penetration.
 function _avgSliders(vals) {
     var sum = 0;
-    vals.forEach(function (v) { sum += (v || 0); });
+    for (var i = 0; i < vals.length; i++) {
+        var v = vals[i];
+        if (v === null || v === undefined || v === "")
+            return null;
+        var n = Number(v);
+        if (isNaN(n))
+            return null;
+        sum += n;
+    }
     return Math.round(sum / vals.length * 10) / 10;
 }
 function _computeClassificationScore(c) {
@@ -1477,30 +1525,49 @@ function _computeClassificationScore(c) {
 function _isDoraICTCritical(c) {
     if (!c || !_isDoraEnabled())
         return false;
+    // Only pronounced on a COMPLETE classification (FEAT-54): any unassessed
+    // indicator → not flagged, the flag waits for the full classification.
+    var raw = [c.ops_impact, c.processes, c.replace_difficulty, c.data_sensitivity, c.integration, c.regulatory_impact];
+    for (var i = 0; i < raw.length; i++) {
+        if (raw[i] === null || raw[i] === undefined || raw[i] === "")
+            return false;
+    }
     var th = _getDoraThresholds();
-    var vals = [c.ops_impact || 0, c.processes || 0, c.replace_difficulty || 0, c.data_sensitivity || 0, c.integration || 0, c.regulatory_impact || 0];
+    var vals = raw.map(function (v) { return Number(v); });
     var maxed = vals.filter(function (v) { return v === 4; }).length;
     var avg = vals.reduce(function (a, b) { return a + b; }, 0) / vals.length;
     return maxed >= th.maxCriteria || avg >= th.avgScore;
 }
+// A classification indicator slider. FEAT-54: value === null/undefined/"" means
+// "non évalué", rendered as the dedicated -1 position at the far left (distinct
+// from 0, a real "no impact" rating). Dragging to -1 sets the indicator back to
+// unassessed; _onSliderChange maps -1 ↔ null.
 function _slider(labelKey, id, value, max) {
+    var unassessed = (value === null || value === undefined || value === "");
+    var sv = unassessed ? -1 : Number(value);
+    var lbl = unassessed ? t("vendor.cls_unassessed") : String(sv);
+    var cls = "slider-input ct-flex-1" + (unassessed ? " cls-unassessed" : "");
     var h = '<div class="ct-form-row">';
     h += '<label>' + t(labelKey) + '</label>';
     h += '<div class="ct-flex ct-items-center ct-gap-2">';
-    h += '<input type="range" id="' + id + '" min="0" max="' + max + '" value="' + (value || 0) + '" class="slider-input ct-flex-1" data-invert data-input="_onSliderChange" data-pass-el>';
-    h += '<span id="' + id + '-val" class="slider-label" style="min-width:20px">' + (value || 0) + '</span>';
+    h += '<input type="range" id="' + id + '" min="-1" max="' + max + '" value="' + sv + '" class="' + cls + '" data-invert data-input="_onSliderChange" data-pass-el>';
+    h += '<span id="' + id + '-val" class="slider-label" style="min-width:20px">' + esc(lbl) + '</span>';
     h += '</div></div>';
     return h;
 }
 function _onSliderChange(el) {
+    var unassessed = (el.value === "-1");
     var valSpan = document.getElementById(el.id + "-val");
     if (valSpan)
-        valSpan.textContent = el.value;
+        valSpan.textContent = unassessed ? t("vendor.cls_unassessed") : el.value;
+    el.classList.toggle("cls-unassessed", unassessed);
     _applySliderStyle(el);
     // Recompute D/P from classification sliders and save to vendor
     var v = _selectedVendor !== null ? D.vendors[_selectedVendor] : null;
     if (v) {
-        var _el = function (id) { var e = document.getElementById(id); return e ? parseInt(e.value) || 0 : 0; };
+        // -1 (far-left) → null = not assessed; 0..4 → the rating (FEAT-54).
+        var _el = function (id) { var e = document.getElementById(id); if (!e)
+            return null; var n = parseInt(e.value); return (isNaN(n) || n < 0) ? null : n; };
         var cls = {
             ops_impact: _el("v-cls-ops"), processes: _el("v-cls-proc"), replace_difficulty: _el("v-cls-repl"),
             data_sensitivity: _el("v-cls-data"), integration: _el("v-cls-integ"), regulatory_impact: _el("v-cls-reg")
@@ -2610,11 +2677,12 @@ function addVendor() {
         internal_contact: { name: "", email: "" },
         contract: { services: "", start_date: "", end_date: "", review_date: "" },
         classification: {
-            ops_impact: 0, processes: 0, replace_difficulty: 0,
-            data_sensitivity: 0, integration: 0, regulatory_impact: 0,
+            // FEAT-54: a new vendor starts "not assessed" (null), not 0.
+            ops_impact: null, processes: null, replace_difficulty: null,
+            data_sensitivity: null, integration: null, regulatory_impact: null,
             gdpr_subprocessor: false
         },
-        exposure: { dependance: 0, penetration: 0, maturite: 1, confiance: 1 },
+        exposure: { dependance: null, penetration: null, maturite: 1, confiance: 1 },
         certifications: [], dpa_signed: false, sub_contractors: [],
         status: "prospect",
         measures: [],
@@ -2654,13 +2722,15 @@ function _autoSaveVendorField() {
         // overwrite it with "": el() returns an empty string for a missing
         // element, without signalling anything.
         v.contract = { services: el("v-services"), start_date: el("v-cstart"), end_date: el("v-cend"), review_date: el("v-creview") };
+        // -1 (far-left "non évalué" notch) → null; 0..4 → the rating (FEAT-54).
+        var _clsVal = function (id) { var n = parseInt(el(id)); return (isNaN(n) || n < 0) ? null : n; };
         v.classification = {
-            ops_impact: parseInt(el("v-cls-ops")) || 0,
-            processes: parseInt(el("v-cls-proc")) || 0,
-            replace_difficulty: parseInt(el("v-cls-repl")) || 0,
-            data_sensitivity: parseInt(el("v-cls-data")) || 0,
-            integration: parseInt(el("v-cls-integ")) || 0,
-            regulatory_impact: parseInt(el("v-cls-reg")) || 0,
+            ops_impact: _clsVal("v-cls-ops"),
+            processes: _clsVal("v-cls-proc"),
+            replace_difficulty: _clsVal("v-cls-repl"),
+            data_sensitivity: _clsVal("v-cls-data"),
+            integration: _clsVal("v-cls-integ"),
+            regulatory_impact: _clsVal("v-cls-reg"),
             gdpr_subprocessor: chk("v-gdpr")
         };
         if (!v.exposure)
@@ -6911,9 +6981,9 @@ function _createVendorForNc(draft) {
             contact: { name: "", email: "", phone: "" },
             internal_contact: { name: "", email: "" },
             contract: { services: "", start_date: "", end_date: "", review_date: "" },
-            classification: { ops_impact: 0, processes: 0, replace_difficulty: 0,
-                data_sensitivity: 0, integration: 0, regulatory_impact: 0, gdpr_subprocessor: false },
-            exposure: { dependance: 0, penetration: 0, maturite: 1, confiance: 1 },
+            classification: { ops_impact: null, processes: null, replace_difficulty: null,
+                data_sensitivity: null, integration: null, regulatory_impact: null, gdpr_subprocessor: false },
+            exposure: { dependance: null, penetration: null, maturite: 1, confiance: 1 },
             certifications: [], dpa_signed: false, sub_contractors: [], status: "prospect",
             measures: [], notes: ""
         };

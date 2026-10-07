@@ -136,18 +136,22 @@ class ContractInfo(BaseModel):
 
 
 class ClassificationInfo(BaseModel):
-    ops_impact: int = 0
-    processes: int = 0
-    replace_difficulty: int = 0
-    data_sensitivity: int = 0
-    integration: int = 0
-    regulatory_impact: int = 0
+    # None = not assessed, 0..4 = assessed (0 is a real "no impact" rating).
+    # See FEAT-54: a deliberate 0 must be distinct from "not yet rated".
+    ops_impact: int | None = None
+    processes: int | None = None
+    replace_difficulty: int | None = None
+    data_sensitivity: int | None = None
+    integration: int | None = None
+    regulatory_impact: int | None = None
     gdpr_subprocessor: bool = False
 
 
 class ExposureInfo(BaseModel):
-    dependance: float = 0
-    penetration: float = 0
+    # dependance/penetration are derived axes: None when the axis is not fully
+    # assessed (any of its three indicators unassessed), else the 0-4 mean.
+    dependance: float | None = None
+    penetration: float | None = None
     maturite: float = 0
     confiance: float = 0
 

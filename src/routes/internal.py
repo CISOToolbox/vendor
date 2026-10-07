@@ -76,10 +76,14 @@ def _compute_menace(exposure: dict) -> tuple[float | None, str]:
     ``"NonEvaluee"`` when the exposure is not fully assessed — an unassessed
     vendor is a distinct state, never a false "Faible".
     """
-    dep = exposure.get("dependance", 0) or 0
-    pen = exposure.get("penetration", 0) or 0
-    mat = exposure.get("maturite", 0) or 0
-    conf = exposure.get("confiance", 0) or 0
+    # dependance/penetration: None (not fully assessed) stays None; a real 0
+    # stays 0 — do NOT coerce with `or 0`, that would conflate the two and is
+    # exactly the FEAT-54 bug. maturite/confiance only mitigate and floor at 1
+    # inside compute_threat_level, so a missing one is harmless as 0 here.
+    dep = exposure.get("dependance")
+    pen = exposure.get("penetration")
+    mat = exposure.get("maturite") or 0
+    conf = exposure.get("confiance") or 0
     score = compute_threat_level(dep, pen, mat, conf)
     return (score, _TIER_FR[compute_tier(score)])
 
@@ -141,6 +145,12 @@ async def export_vendors(request: Request, db: AsyncSession = Depends(get_db)):
         exp_wire = dict(v.exposure or {})
         exp_wire["maturite"] = exp_wire.get("maturite") or 1
         exp_wire["confiance"] = exp_wire.get("confiance") or 1
+        # Keep the wire numeric for Risk's recompute: a not-fully-assessed axis
+        # (None, FEAT-54) contributes 0 here, same convention as threat_wire
+        # and as Risk's own 0-is-unassessed handling. The distinct "non évalué"
+        # state lives in the Vendor UI, not in this numeric feed.
+        exp_wire["dependance"] = exp_wire.get("dependance") or 0
+        exp_wire["penetration"] = exp_wire.get("penetration") or 0
 
         all_vendors.append({
             "id": v.id,

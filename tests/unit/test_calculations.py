@@ -68,7 +68,7 @@ class TestComputeDependance:
         assert compute_dependance(cl) == 4.0
 
     def test_mixed_values(self):
-        # Average of all three axes (missing = 0): (1 + 0 + 3) / 3 = 1.33
+        # All three rated (0 is a real rating): (1 + 0 + 3) / 3 = 1.33
         cl = {"ops_impact": 1, "processes": 0, "replace_difficulty": 3}
         assert compute_dependance(cl) == 1.3
 
@@ -77,19 +77,32 @@ class TestComputeDependance:
         cl = {"ops_impact": 1, "processes": 2, "replace_difficulty": 3}
         assert compute_dependance(cl) == 2.0
 
-    def test_missing_keys(self):
-        assert compute_dependance({}) == 0
+    def test_missing_keys_is_none(self):
+        # FEAT-54: all three unassessed → axis not assessed (None), not 0.
+        assert compute_dependance({}) is None
 
-    def test_none_values(self):
+    def test_none_values_is_none(self):
         cl = {"ops_impact": None, "processes": None, "replace_difficulty": None}
-        assert compute_dependance(cl) == 0
+        assert compute_dependance(cl) is None
+
+    def test_partial_assessment_is_none(self):
+        # FEAT-54 all-or-nothing: one indicator unassessed → the whole axis is
+        # None, even if the others are rated.
+        assert compute_dependance({"ops_impact": 4, "processes": 3}) is None
+        assert compute_dependance(
+            {"ops_impact": 4, "processes": 3, "replace_difficulty": None}) is None
+
+    def test_all_zero_assessed_is_zero_not_none(self):
+        # Three real 0s → a real mean of 0.0 (tier "low"), distinct from None.
+        assert compute_dependance(
+            {"ops_impact": 0, "processes": 0, "replace_difficulty": 0}) == 0.0
 
     def test_string_values_converted(self):
         cl = {"ops_impact": "3", "processes": "2", "replace_difficulty": "1"}
         assert compute_dependance(cl) == 2.0
 
-    def test_single_non_zero_divides_by_three(self):
-        # One axis filled still divides by 3: 4 / 3 = 1.33
+    def test_single_rated_rest_zero_divides_by_three(self):
+        # All three rated (two at a real 0): 4 / 3 = 1.33
         cl = {"ops_impact": 4, "processes": 0, "replace_difficulty": 0}
         assert compute_dependance(cl) == 1.3
 
@@ -122,12 +135,20 @@ class TestComputePenetration:
         cl = {"data_sensitivity": 1, "integration": 3, "regulatory_impact": 2}
         assert compute_penetration(cl) == 2.0
 
-    def test_missing_keys(self):
-        assert compute_penetration({}) == 0
+    def test_missing_keys_is_none(self):
+        # FEAT-54: all three unassessed → axis not assessed (None), not 0.
+        assert compute_penetration({}) is None
 
-    def test_none_values(self):
+    def test_partial_assessment_is_none(self):
+        assert compute_penetration({"data_sensitivity": 2, "integration": 1}) is None
+
+    def test_all_zero_assessed_is_zero_not_none(self):
+        assert compute_penetration(
+            {"data_sensitivity": 0, "integration": 0, "regulatory_impact": 0}) == 0.0
+
+    def test_none_values_is_none(self):
         cl = {"data_sensitivity": None, "integration": None, "regulatory_impact": None}
-        assert compute_penetration(cl) == 0
+        assert compute_penetration(cl) is None
 
     def test_rounding(self):
         # (1 + 3 + 4) / 3 = 2.666... -> 2.7
@@ -180,15 +201,20 @@ class TestComputeThreatLevel:
         # the maximum threat for its exposure — never a false low.
         assert compute_threat_level(4.0, 4.0, 1.0, 1.0) == 16.0
 
-    # ── The sole "unassessed" state: empty classification (dep/pen at 0) ──
-    def test_zero_dependance_is_unassessed(self):
-        assert compute_threat_level(0.0, 4.0, 4.0, 4.0) is None
+    # ── "unassessed" = a None axis (not fully rated), NOT an axis at 0 (FEAT-54) ──
+    def test_none_dependance_is_unassessed(self):
+        assert compute_threat_level(None, 4.0, 4.0, 4.0) is None
 
-    def test_zero_penetration_is_unassessed(self):
-        assert compute_threat_level(4.0, 0.0, 4.0, 4.0) is None
+    def test_none_penetration_is_unassessed(self):
+        assert compute_threat_level(4.0, None, 4.0, 4.0) is None
 
-    def test_all_zeros_is_unassessed(self):
-        assert compute_threat_level(0.0, 0.0, 0.0, 0.0) is None
+    def test_zero_dependance_is_low_not_unassessed(self):
+        # A real 0 (the three axis indicators all rated, sum 0) yields a threat
+        # of 0 → tier "low", never "unassessed".
+        assert compute_threat_level(0.0, 4.0, 4.0, 4.0) == 0.0
+
+    def test_zero_penetration_is_low_not_unassessed(self):
+        assert compute_threat_level(4.0, 0.0, 4.0, 4.0) == 0.0
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -261,6 +287,15 @@ class TestComputeIsDoraCritical:
             "data_sensitivity": 4, "integration": 4, "regulatory_impact": 4,
         }
         assert compute_is_dora_critical(cl) is True
+
+    def test_incomplete_classification_not_critical(self):
+        # FEAT-54: a would-be-critical classification with any indicator still
+        # unassessed is NOT flagged — the flag waits for the full six.
+        cl = {
+            "ops_impact": 4, "processes": 4, "replace_difficulty": 4,
+            "data_sensitivity": None, "integration": 0, "regulatory_impact": 0,
+        }
+        assert compute_is_dora_critical(cl) is False
 
 
 # ═══════════════════════════════════════════════════════════════════════

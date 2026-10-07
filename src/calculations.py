@@ -16,50 +16,72 @@ def _to_num(val) -> float:
         return 0
 
 
+def _num_or_none(val):
+    """A classification indicator: a number (0-4, where 0 is a real "no
+    impact" rating) when assessed, or None when not assessed (null/absent/"").
+
+    The distinction between a deliberate 0 and "not yet rated" is the whole
+    point of FEAT-54: 0 is a value that must be ratable, not a synonym for
+    missing.
+    """
+    if val is None or val == "":
+        return None
+    try:
+        return float(val)
+    except (ValueError, TypeError):
+        return None
+
+
 # ═════════════════════════════════════════════════════════════════════
 # VENDOR CALCULATIONS
 # ═════════════════════════════════════════════════════════════════════
 
-def compute_dependance(classification: dict) -> float:
-    """Average of the three dependency-axis sliders (0-4 scale).
+def compute_dependance(classification: dict) -> float | None:
+    """Mean of the three dependency-axis indicators (0-4), or None when the
+    axis is not fully assessed (FEAT-54).
 
-    Divides by 3 — a missing/zero axis counts as 0, matching the frontend
-    ``_avgSliders`` and the methodology doc (``moyenne(3 axes)``). Averaging
-    only the non-zero axes diverged from both and, under the multiplicative
-    threat formula, inflated the tier for a partially-classified vendor.
+    All-or-nothing: if any of the three indicators is unassessed (null), the
+    whole axis is "not assessed" (None) rather than silently counting the gap
+    as 0. A real 0 (a deliberate "no impact" rating) therefore stays distinct
+    from "not yet rated". No division by zero is possible: either the three are
+    present and we divide by 3, or the axis is None.
     """
-    ops = _to_num(classification.get("ops_impact"))
-    proc = _to_num(classification.get("processes"))
-    repl = _to_num(classification.get("replace_difficulty"))
+    ops = _num_or_none(classification.get("ops_impact"))
+    proc = _num_or_none(classification.get("processes"))
+    repl = _num_or_none(classification.get("replace_difficulty"))
+    if ops is None or proc is None or repl is None:
+        return None
     return round((ops + proc + repl) / 3, 1)
 
 
-def compute_penetration(classification: dict) -> float:
-    """Average of the three penetration-axis sliders (0-4 scale).
-
-    Divides by 3 (missing axis = 0) — same rule as ``compute_dependance`` and
-    the frontend ``_avgSliders``.
+def compute_penetration(classification: dict) -> float | None:
+    """Mean of the three penetration-axis indicators (0-4), or None when the
+    axis is not fully assessed — same all-or-nothing rule as
+    ``compute_dependance`` (FEAT-54).
     """
-    data = _to_num(classification.get("data_sensitivity"))
-    integ = _to_num(classification.get("integration"))
-    reg = _to_num(classification.get("regulatory_impact"))
+    data = _num_or_none(classification.get("data_sensitivity"))
+    integ = _num_or_none(classification.get("integration"))
+    reg = _num_or_none(classification.get("regulatory_impact"))
+    if data is None or integ is None or reg is None:
+        return None
     return round((data + integ + reg) / 3, 1)
 
 
-def compute_threat_level(dependance: float, penetration: float,
+def compute_threat_level(dependance: float | None, penetration: float | None,
                          maturite: float, confiance: float) -> float | None:
     """Canonical vendor threat level = (dep * pen) / (mat * conf).
 
     Maturity and confidence floor at 1 — they can only *mitigate* the threat
     (they are the denominator), never make it uncomputable. The sole
-    "unassessed" state is an empty classification (dependance or penetration at
-    0), for which this returns ``None``. A classified-but-not-yet-assessed
-    vendor (mat=conf=1 by default) therefore gets the conservative maximum for
+    "unassessed" state is a dependency or penetration axis that is ``None``
+    (not fully rated) — NOT an axis rated 0: a real 0 yields a threat of 0
+    (tier "low"), never "unassessed" (FEAT-54). A classified-but-not-yet-
+    assessed vendor (mat=conf=1 by default) gets the conservative maximum for
     its exposure, not a false low. Single source of truth for the three
     surfaces that used to diverge: the frontend ``_computeExposure`` and
     ``routes/internal._compute_menace`` share this exact formula and scale.
     """
-    if not dependance or not penetration:
+    if dependance is None or penetration is None:
         return None
     m = maturite or 1
     c = confiance or 1
@@ -80,17 +102,25 @@ def compute_tier(threat_level: float | None) -> str:
 
 
 def compute_is_dora_critical(classification: dict) -> bool:
-    """DORA critical ICT provider: >= 3 fields at max (4) OR average >= 3.5."""
+    """DORA critical ICT provider: >= 3 indicators at max (4) OR average >= 3.5.
+
+    Only pronounced on a COMPLETE classification (FEAT-54): if any of the six
+    indicators is unassessed (None), returns False — a vendor is not
+    auto-flagged "DORA critical" on partial data; the flag waits for the full
+    classification.
+    """
     vals = [
-        _to_num(classification.get("ops_impact")),
-        _to_num(classification.get("processes")),
-        _to_num(classification.get("replace_difficulty")),
-        _to_num(classification.get("data_sensitivity")),
-        _to_num(classification.get("integration")),
-        _to_num(classification.get("regulatory_impact")),
+        _num_or_none(classification.get("ops_impact")),
+        _num_or_none(classification.get("processes")),
+        _num_or_none(classification.get("replace_difficulty")),
+        _num_or_none(classification.get("data_sensitivity")),
+        _num_or_none(classification.get("integration")),
+        _num_or_none(classification.get("regulatory_impact")),
     ]
+    if any(v is None for v in vals):
+        return False
     at_max = sum(1 for v in vals if v >= 4)
-    avg = sum(vals) / len(vals) if vals else 0
+    avg = sum(vals) / len(vals)
     return at_max >= 3 or avg >= 3.5
 
 

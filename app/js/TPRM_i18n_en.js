@@ -384,6 +384,7 @@ _registerTranslations("en", {
     "vendor.cls_data_sensitivity": "Sensitive data",
     "vendor.cls_integration": "Systems integration",
     "vendor.cls_regulatory": "Regulatory impact",
+    "vendor.cls_unassessed": "Not assessed",
     "vendor.dependance": "Dependency",
     "vendor.penetration": "Penetration",
     "vendor.maturite": "Cyber maturity",

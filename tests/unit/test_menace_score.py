@@ -52,25 +52,40 @@ class TestComputeMenaceFormula:
 
 
 class TestComputeMenaceZeroHandling:
-    """The sole 'unassessed' state is an empty classification (dependance or
-    penetration at 0) → score None, tier 'NonEvaluee'. Maturity and confidence
-    floor at 1, so a 0 there is a conservative value, not 'unassessed'."""
+    """FEAT-54: 'unassessed' is a None dependance/penetration (axis not fully
+    rated), NOT an axis at 0. A real 0 yields a computed (low) threat; None (or
+    a missing axis) → score None, tier 'NonEvaluee'. Maturity/confidence floor
+    at 1, so a 0 there is a conservative value."""
 
-    def test_zero_dependance_is_unassessed(self):
+    def test_none_dependance_is_unassessed(self):
+        score, tier = _compute_menace({
+            "dependance": None, "penetration": 5,
+            "maturite": 3, "confiance": 3,
+        })
+        assert score is None
+        assert tier == "NonEvaluee"
+
+    def test_none_penetration_is_unassessed(self):
+        score, tier = _compute_menace({
+            "dependance": 5, "penetration": None,
+            "maturite": 3, "confiance": 3,
+        })
+        assert score is None
+        assert tier == "NonEvaluee"
+
+    def test_missing_dependance_is_unassessed(self):
+        score, tier = _compute_menace({"penetration": 5, "maturite": 3, "confiance": 3})
+        assert score is None
+        assert tier == "NonEvaluee"
+
+    def test_zero_dependance_is_computed_low(self):
+        # A real 0 → (0*5)/(3*3) = 0.0, a computed low threat, not 'NonEvaluee'.
         score, tier = _compute_menace({
             "dependance": 0, "penetration": 5,
             "maturite": 3, "confiance": 3,
         })
-        assert score is None
-        assert tier == "NonEvaluee"
-
-    def test_zero_penetration_is_unassessed(self):
-        score, tier = _compute_menace({
-            "dependance": 5, "penetration": 0,
-            "maturite": 3, "confiance": 3,
-        })
-        assert score is None
-        assert tier == "NonEvaluee"
+        assert score == 0.0
+        assert tier != "NonEvaluee"
 
     def test_zero_maturite_floors_to_1(self):
         # (5*5)/(1*3) = 8.33 — computed, not unassessed.
