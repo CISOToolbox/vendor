@@ -15,6 +15,12 @@
 .tprm-card.high .card-val { color: var(--ct-high-ink); }
 .tprm-card.warning .card-val { color: var(--ct-medium-ink); }
 
+/* A field group disabled by a dependency rule (e.g. the B_07.01.0060
+   substitutability reason, only applicable when the 0050 level is
+   not_substitutable / highly_complex). Greyed and non-interactive, but kept
+   visible so the field stays discoverable. */
+.tprm-field-disabled { opacity: 0.5; pointer-events: none; }
+
 /* ── Vendor list ──────────────────────────────────────── */
 .vendor-card { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--ct-surface); border: 1px solid var(--ct-line); border-radius: 6px; margin-bottom: 6px; cursor: pointer; transition: all 0.15s; font-size: 0.85em; }
 .vendor-card:hover { border-color: var(--ct-accent); }
