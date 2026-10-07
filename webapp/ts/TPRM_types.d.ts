@@ -138,20 +138,23 @@ interface TprmContract {
 }
 
 interface TprmClassification {
-    ops_impact?: number;
-    processes?: number;
-    replace_difficulty?: number;
-    data_sensitivity?: number;
-    integration?: number;
-    regulatory_impact?: number;
+    // FEAT-54: null = not assessed, 0..4 = assessed (0 is a real "no impact"
+    // rating, distinct from "not yet rated").
+    ops_impact?: number | null;
+    processes?: number | null;
+    replace_difficulty?: number | null;
+    data_sensitivity?: number | null;
+    integration?: number | null;
+    regulatory_impact?: number | null;
     gdpr_subprocessor?: boolean;
     [k: string]: unknown;
 }
 
-/** Threat exposure (0..4 sliders) — convention "" = not filled in. */
+/** Threat exposure. dependance/penetration are derived axes: null = axis not
+ *  fully assessed (FEAT-54), else the 0..4 mean. maturite/confiance 1..4. */
 interface TprmExposure {
-    dependance?: number | "";
-    penetration?: number | "";
+    dependance?: number | null;
+    penetration?: number | null;
     maturite?: number | "";
     confiance?: number | "";
 }
