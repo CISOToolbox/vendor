@@ -6283,9 +6283,11 @@ window.AI_APP_CONFIG = {
     // this one: the test-data loading button was therefore missing from the
     // settings panel of the Vendor module only.
     settingsExtraHTML: function() { return _doraSettingsHTML() + _customQuestionnaireHTML()
-        + (typeof _demoSettingsHTML === "function" ? _demoSettingsHTML() : ""); },
+        + (typeof _demoSettingsHTML === "function" ? _demoSettingsHTML() : "")
+        + (window._ctProxySettingsHTML ? window._ctProxySettingsHTML() : ""); },
     onSettingsRendered: function() { _wireDoraSettings(); _wireCustomQuestionnaire();
-        if (typeof _wireDemoSettings === "function") _wireDemoSettings(); },
+        if (typeof _wireDemoSettings === "function") _wireDemoSettings();
+        if (window._ctProxySettingsLoad) window._ctProxySettingsLoad(); },
     onSettingsSaved: function() { _saveDoraSettings(); renderAll(); }
 };
 
