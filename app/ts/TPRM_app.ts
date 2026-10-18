@@ -6304,7 +6304,7 @@ function _customQuestionnaireHTML() {
         h += '<p class="fs-xs ct-text-low ct-mb-2">\u2713 ' + t("settings.custom_questionnaire_active", {count: count}) + '</p>';
         h += '<button class="ct-btn ai-btn-ignore ct-text-label ct-mb-2" id="settings-clear-questionnaire">' + t("settings.custom_questionnaire_clear") + '</button> ';
     }
-    h += '<div class="ct-flex ct-gap-1 ct-items-center">';
+    h += '<div class="ct-flex ct-gap-1 ct-items-center" data-settings-immediate>';   // imported at once, nothing for Save
     h += '<input type="file" id="settings-questionnaire-file" accept=".csv,.tsv,.txt" class="settings-input ct-flex-1 ct-font-inherit">';
     h += '</div>';
     h += '<p class="fs-xs text-muted ct-mt-1">' + t("settings.custom_questionnaire_hint") + '</p>';
@@ -6313,22 +6313,39 @@ function _customQuestionnaireHTML() {
     return h;
 }
 
+// The questionnaire is stored at once and the panel redrawn to show it,
+// which drops other sections' unsaved edits: asked before acting (FEAT-59).
+function _questionnaireGuard(action: () => void, onKeep?: () => void) {
+    if (typeof window._ctSettingsDirty === "function" && window._ctSettingsDirty()
+        && !confirm(t("settings.unsaved_confirm"))) { if (onKeep) onKeep(); return; }
+    action();
+}
+
+function _reopenSettingsAfterQuestionnaire() {
+    if (typeof openSettings === "function") openSettings();
+}
+
 function _wireCustomQuestionnaire() {
     var fileEl = document.getElementById("settings-questionnaire-file");
     if (fileEl) fileEl.onchange = function() {
-        if (!(fileEl as HTMLInputElement).files![0]) return;
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            _importCustomQuestionnaire(e.target!.result as string);
-        };
-        reader.readAsText((fileEl as HTMLInputElement).files![0]);
+        var file = (fileEl as HTMLInputElement).files![0];
+        if (!file) return;
+        _questionnaireGuard(function() {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                _importCustomQuestionnaire(e.target!.result as string);
+            };
+            reader.readAsText(file);
+        }, function() { (fileEl as HTMLInputElement).value = ""; });
     };
     var clearBtn = document.getElementById("settings-clear-questionnaire");
     if (clearBtn) clearBtn.onclick = function() {
-        D._custom_questionnaire = [];
-        _autoSave();
-        if (typeof openSettings === "function") openSettings();
-        showStatus(t("settings.custom_questionnaire_cleared"));
+        _questionnaireGuard(function() {
+            D._custom_questionnaire = [];
+            _autoSave();
+            _reopenSettingsAfterQuestionnaire();
+            showStatus(t("settings.custom_questionnaire_cleared"));
+        });
     };
 }
 
@@ -6378,7 +6395,7 @@ function _importCustomQuestionnaire(csvText: string) {
 
     D._custom_questionnaire = questions;
     _autoSave(); // _autoSave hook handles the undo-stack push
-    if (typeof openSettings === "function") openSettings();
+    _reopenSettingsAfterQuestionnaire();
     showStatus(t("settings.custom_questionnaire_imported", {count: questions.length}));
 }
 
