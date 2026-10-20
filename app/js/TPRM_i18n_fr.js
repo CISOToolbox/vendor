@@ -573,6 +573,8 @@ _registerTranslations("fr", {
     "assessment.ap_description_audit": "Description de l'engagement fournisseur (contenu validé par lui-même)",
     "assessment.ap_owner_audit": "Responsable (côté fournisseur)",
     "assessment.already_validated": "Évaluation déjà validée",
+    "assessment.xlsx_invalid_title": "Valeur invalide",
+    "assessment.xlsx_invalid_body": "Choisissez une valeur dans la liste.",
     "assessment.locked_notice": "Évaluation validée : elle ne peut plus être modifiée.",
     "assessment.import_locked": "Cette évaluation est validée : elle ne peut plus recevoir de réponses. Importez dans une évaluation en cours ou créez-en une nouvelle.",
     "assessment.locked_save_refused": "Enregistrement refusé : une évaluation validée ne peut plus être modifiée. La page va se recharger avec les données enregistrées.",

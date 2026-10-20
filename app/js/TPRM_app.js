@@ -3078,20 +3078,75 @@ function _ensureDefaultTemplate() {
         _autoSave();
     var lang = (typeof _locale === "string" && _locale === "en") ? "en" : "fr";
     var added = false;
-    // Seed the default vendor questionnaire if absent
-    if (!D.questionnaire_templates.some(function (tp) { return tp.id === "TPL-001"; })) {
-        if (typeof TPRM_QUESTIONS !== "undefined" && TPRM_QUESTIONS.length) {
-            D.questionnaire_templates.push(_buildDefaultQuestionnaireTemplate(lang));
+    // FEAT-62 — each default template exists in French and in English: two
+    // distinct templates, identical question for question. The first one keeps
+    // its historical id (TPL-001 / TPL-002, in whatever language it was
+    // created); the other language gets <id>-EN or <id>-FR.
+    var defaults = [
+        // the standard questionnaire needs the question bank
+        { id: "TPL-001", build: _buildDefaultQuestionnaireTemplate, ready: typeof TPRM_QUESTIONS !== "undefined" && TPRM_QUESTIONS.length > 0 },
+        // the ANSSI audit (42 hygiene rules)
+        { id: "TPL-002", build: _buildAnssi42AuditTemplate, ready: true },
+    ];
+    defaults.forEach(function (d) {
+        if (!d.ready)
+            return;
+        var family = D.questionnaire_templates.filter(function (tp) { return tp.id === d.id || tp.id.indexOf(d.id + "-") === 0; });
+        if (!family.length) {
+            // A new project: both languages, the session's under the historical id.
+            [lang, lang === "fr" ? "en" : "fr"].forEach(function (l, i) {
+                var tpl = d.build(l);
+                if (i > 0)
+                    tpl.id = d.id + "-" + l.toUpperCase();
+                D.questionnaire_templates.push(tpl);
+            });
             added = true;
+            return;
         }
-    }
-    // Seed the default audit template (ANSSI — 42 hygiene rules)
-    if (!D.questionnaire_templates.some(function (tp) { return tp.id === "TPL-002"; })) {
-        D.questionnaire_templates.push(_buildAnssi42AuditTemplate(lang));
-        added = true;
-    }
+        // An existing project: add the missing language. A template without a
+        // language field (created before it existed) is recognised by its
+        // default name; renamed by its owner, it is left alone.
+        var langs = {};
+        var unknown = false;
+        family.forEach(function (tp) {
+            var l = tp.language || _defaultTemplateLanguage(d.build, tp);
+            if (l) {
+                langs[l] = true;
+                if (!tp.language) {
+                    tp.language = l;
+                    added = true;
+                }
+            }
+            else
+                unknown = true;
+        });
+        if (unknown)
+            return;
+        ["fr", "en"].forEach(function (l) {
+            if (langs[l])
+                return;
+            var id = d.id + "-" + l.toUpperCase();
+            // Its id already taken (the user changed that template's language):
+            // their edit stands, nothing is duplicated.
+            if (D.questionnaire_templates.some(function (tp) { return tp.id === id; }))
+                return;
+            var tpl = d.build(l);
+            tpl.id = id;
+            D.questionnaire_templates.push(tpl);
+            added = true;
+        });
+    });
     if (added)
         _autoSave();
+}
+// The language of a default template stored without one: by its untouched
+// default name, else null (renamed: its owner's own template).
+function _defaultTemplateLanguage(build, tp) {
+    if (tp.name === build("fr").name)
+        return "fr";
+    if (tp.name === build("en").name)
+        return "en";
+    return null;
 }
 function _buildDefaultQuestionnaireTemplate(lang) {
     var tpl = {
@@ -5086,10 +5141,21 @@ function _copyEmailTemplate(assessId) {
     var vendorName = _vendorName(a.vendor_id);
     var templateName = tpl ? tpl.name : "";
     var dueDate = a.due_date || "-";
-    var subject = t("assessment.email_subject").replace("{vendor}", vendorName);
-    var bodyTemplate = t("assessment.email_body")
-        .replace("{template}", templateName)
-        .replace("{due_date}", dueDate);
+    // FEAT-62 — the e-mail goes to the vendor: in the questionnaire's language.
+    var sessionLocale = _locale;
+    if (tpl && tpl.language && _translations[tpl.language])
+        _locale = tpl.language;
+    var subject, bodyTemplate, linkLabel;
+    try {
+        linkLabel = t("assessment.email_link_label");
+        subject = t("assessment.email_subject").replace("{vendor}", vendorName);
+        bodyTemplate = t("assessment.email_body")
+            .replace("{template}", templateName)
+            .replace("{due_date}", dueDate);
+    }
+    finally {
+        _locale = sessionLocale;
+    }
     // Plain text version (fallback): the link appears as raw URL
     var plainBody = bodyTemplate.replace("{link}", link);
     var plainClipboard = subject + "\n\n" + plainBody;
@@ -5105,7 +5171,7 @@ function _copyEmailTemplate(assessId) {
     //   4. Substitute the placeholder with the real <a href="...">.
     var PLACEHOLDER = "\u0001LINK\u0001";
     var htmlSource = bodyTemplate.replace("{link}", PLACEHOLDER);
-    var anchor = '<a href="' + esc(link) + '">' + esc(t("assessment.email_link_label")) + '</a>';
+    var anchor = '<a href="' + esc(link) + '">' + esc(linkLabel) + '</a>';
     var htmlBody = esc(htmlSource)
         .split("\n")
         .map(function (line) { return line === "" ? "<br>" : "<p style=\"margin:0 0 8px\">" + line + "</p>"; })
@@ -5151,192 +5217,203 @@ function _exportAssessmentExcel(assessId) {
         return;
     _loadExcelJS().then(function () {
         var wb = new ExcelJS.Workbook();
-        // Sheet 1: Instructions
-        var ws1 = wb.addWorksheet(t("assessment.instructions_sheet"));
-        ws1.columns = [{ width: 100 }];
-        [
-            t("assessment.instructions_line1"),
-            "",
-            t("assessment.instructions_line2"),
-            t("assessment.instructions_line3"),
-            t("assessment.instructions_line4"),
-            t("assessment.instructions_line5"),
-            "",
-            t("assessment.instructions_line6"),
-            "",
-            t("assessment.instructions_coverage_covered"),
-            t("assessment.instructions_coverage_partial"),
-            t("assessment.instructions_coverage_not_covered"),
-            t("assessment.instructions_coverage_not_applicable"),
-            "",
-            t("assessment.instructions_id") + ": " + a.id,
-            t("assessment.instructions_vendor") + ": " + _vendorName(a.vendor_id),
-            t("assessment.instructions_template") + ": " + tpl.name + " v" + (a.template_version || 1),
-            t("assessment.instructions_due_date") + ": " + (a.due_date || "-")
-        ].forEach(function (line) { ws1.addRow([line]); });
-        ws1.getRow(1).font = { bold: true, size: 14 };
-        // Sheet 2: Questionnaire (simplified — only free_text questions)
-        var ws2 = wb.addWorksheet(t("assessment.questionnaire_sheet"));
-        ws2.columns = [
-            { header: "ID", key: "id", width: 10 },
-            { header: t("assessment.col_section"), key: "section", width: 22 },
-            { header: t("assessment.col_question"), key: "question", width: 50 },
-            { header: t("assessment.col_expected"), key: "expected", width: 40 },
-            { header: t("assessment.col_answer"), key: "answer", width: 40 },
-            { header: t("assessment.col_coverage"), key: "coverage", width: 16 },
-            { header: t("assessment.col_comment"), key: "comment", width: 30 },
-            { header: t("assessment.col_ap_title"), key: "ap_title", width: 30 },
-            { header: t("assessment.col_ap_desc"), key: "ap_desc", width: 30 },
-            { header: t("assessment.col_ap_date"), key: "ap_date", width: 14 },
-            { header: t("assessment.col_ap_owner"), key: "ap_owner", width: 20 },
-            { header: t("assessment.col_justification"), key: "justification", width: 30 }
-        ];
-        // Header style: dark navy background, bold white text, frozen first row
-        ws2.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF0B1F3A" } };
-        ws2.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
-        ws2.getRow(1).alignment = { vertical: "middle" };
-        ws2.views = [{ state: "frozen", ySplit: 1 }];
-        // Column indices (1-based)
-        var COL_ID = 1;
-        var COL_SECTION = 2;
-        var COL_QUESTION = 3;
-        var COL_EXPECTED = 4;
-        var COL_ANSWER = 5;
-        var COL_COVERAGE = 6;
-        var COL_COMMENT = 7;
-        var COL_AP_TITLE = 8;
-        var COL_AP_DESC = 9;
-        var COL_AP_DATE = 10;
-        var COL_AP_OWNER = 11;
-        var COL_JUSTIFICATION = 12;
-        var COVERAGE_OPTIONS = ["covered", "partial", "not_covered", "not_applicable"];
-        function _setListValidation(cell, values, errorMsg) {
-            cell.dataValidation = {
-                type: "list",
-                allowBlank: true,
-                formulae: ['"' + values.join(",") + '"'],
-                showErrorMessage: true,
-                errorStyle: "warning",
-                errorTitle: "Valeur invalide",
-                error: errorMsg || "Choisissez une valeur dans la liste."
-            };
-        }
-        // Lock the question metadata columns (id, section, question, expected)
-        // — those are filled by the client and must not be edited by the
-        // vendor. We do not enable sheet protection (would require a
-        // password); the locked attribute simply communicates intent.
-        function _lockCell(cell) {
-            cell.protection = { locked: true };
-            cell.font = Object.assign({}, cell.font, { color: { argb: "FF1E293B" } });
-        }
-        (tpl.sections || []).forEach(function (section) {
-            (section.questions || []).forEach(function (q) {
-                var r = _findAssessmentResp(a, q.id) || {};
-                var firstAp = (r.action_plans && r.action_plans[0]) || {};
-                var answerStr = "";
-                if (Array.isArray(r.answer))
-                    answerStr = r.answer.join("; ");
-                else if (r.answer && typeof r.answer === "object" && r.answer.name)
-                    answerStr = r.answer.name;
-                else if (r.answer != null)
-                    answerStr = String(r.answer);
-                var row = ws2.addRow({
-                    id: q.id,
-                    section: section.title,
-                    question: q.text,
-                    expected: q.expected || "",
-                    answer: answerStr,
-                    coverage: r.coverage || "",
-                    comment: r.comment || "",
-                    ap_title: firstAp.title || "",
-                    ap_desc: firstAp.description || "",
-                    ap_date: firstAp.target_date || "",
-                    ap_owner: firstAp.owner || "",
-                    justification: r.justification || ""
+        // FEAT-62 — the file goes to the vendor: it is written in the
+        // questionnaire's language, whatever the session's (built
+        // synchronously, the session's language is restored right after).
+        var sessionLocale = _locale;
+        if (tpl.language && _translations[tpl.language])
+            _locale = tpl.language;
+        try {
+            // Sheet 1: Instructions
+            var ws1 = wb.addWorksheet(t("assessment.instructions_sheet"));
+            ws1.columns = [{ width: 100 }];
+            [
+                t("assessment.instructions_line1"),
+                "",
+                t("assessment.instructions_line2"),
+                t("assessment.instructions_line3"),
+                t("assessment.instructions_line4"),
+                t("assessment.instructions_line5"),
+                "",
+                t("assessment.instructions_line6"),
+                "",
+                t("assessment.instructions_coverage_covered"),
+                t("assessment.instructions_coverage_partial"),
+                t("assessment.instructions_coverage_not_covered"),
+                t("assessment.instructions_coverage_not_applicable"),
+                "",
+                t("assessment.instructions_id") + ": " + a.id,
+                t("assessment.instructions_vendor") + ": " + _vendorName(a.vendor_id),
+                t("assessment.instructions_template") + ": " + tpl.name + " v" + (a.template_version || 1),
+                t("assessment.instructions_due_date") + ": " + (a.due_date || "-")
+            ].forEach(function (line) { ws1.addRow([line]); });
+            ws1.getRow(1).font = { bold: true, size: 14 };
+            // Sheet 2: Questionnaire (simplified — only free_text questions)
+            var ws2 = wb.addWorksheet(t("assessment.questionnaire_sheet"));
+            ws2.columns = [
+                { header: "ID", key: "id", width: 10 },
+                { header: t("assessment.col_section"), key: "section", width: 22 },
+                { header: t("assessment.col_question"), key: "question", width: 50 },
+                { header: t("assessment.col_expected"), key: "expected", width: 40 },
+                { header: t("assessment.col_answer"), key: "answer", width: 40 },
+                { header: t("assessment.col_coverage"), key: "coverage", width: 16 },
+                { header: t("assessment.col_comment"), key: "comment", width: 30 },
+                { header: t("assessment.col_ap_title"), key: "ap_title", width: 30 },
+                { header: t("assessment.col_ap_desc"), key: "ap_desc", width: 30 },
+                { header: t("assessment.col_ap_date"), key: "ap_date", width: 14 },
+                { header: t("assessment.col_ap_owner"), key: "ap_owner", width: 20 },
+                { header: t("assessment.col_justification"), key: "justification", width: 30 }
+            ];
+            // Header style: dark navy background, bold white text, frozen first row
+            ws2.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF0B1F3A" } };
+            ws2.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
+            ws2.getRow(1).alignment = { vertical: "middle" };
+            ws2.views = [{ state: "frozen", ySplit: 1 }];
+            // Column indices (1-based)
+            var COL_ID = 1;
+            var COL_SECTION = 2;
+            var COL_QUESTION = 3;
+            var COL_EXPECTED = 4;
+            var COL_ANSWER = 5;
+            var COL_COVERAGE = 6;
+            var COL_COMMENT = 7;
+            var COL_AP_TITLE = 8;
+            var COL_AP_DESC = 9;
+            var COL_AP_DATE = 10;
+            var COL_AP_OWNER = 11;
+            var COL_JUSTIFICATION = 12;
+            var COVERAGE_OPTIONS = ["covered", "partial", "not_covered", "not_applicable"];
+            function _setListValidation(cell, values, errorMsg) {
+                cell.dataValidation = {
+                    type: "list",
+                    allowBlank: true,
+                    formulae: ['"' + values.join(",") + '"'],
+                    showErrorMessage: true,
+                    errorStyle: "warning",
+                    errorTitle: t("assessment.xlsx_invalid_title"),
+                    error: errorMsg || t("assessment.xlsx_invalid_body")
+                };
+            }
+            // Lock the question metadata columns (id, section, question, expected)
+            // — those are filled by the client and must not be edited by the
+            // vendor. We do not enable sheet protection (would require a
+            // password); the locked attribute simply communicates intent.
+            function _lockCell(cell) {
+                cell.protection = { locked: true };
+                cell.font = Object.assign({}, cell.font, { color: { argb: "FF1E293B" } });
+            }
+            (tpl.sections || []).forEach(function (section) {
+                (section.questions || []).forEach(function (q) {
+                    var r = _findAssessmentResp(a, q.id) || {};
+                    var firstAp = (r.action_plans && r.action_plans[0]) || {};
+                    var answerStr = "";
+                    if (Array.isArray(r.answer))
+                        answerStr = r.answer.join("; ");
+                    else if (r.answer && typeof r.answer === "object" && r.answer.name)
+                        answerStr = r.answer.name;
+                    else if (r.answer != null)
+                        answerStr = String(r.answer);
+                    var row = ws2.addRow({
+                        id: q.id,
+                        section: section.title,
+                        question: q.text,
+                        expected: q.expected || "",
+                        answer: answerStr,
+                        coverage: r.coverage || "",
+                        comment: r.comment || "",
+                        ap_title: firstAp.title || "",
+                        ap_desc: firstAp.description || "",
+                        ap_date: firstAp.target_date || "",
+                        ap_owner: firstAp.owner || "",
+                        justification: r.justification || ""
+                    });
+                    row.alignment = { vertical: "top", wrapText: true };
+                    // Lock metadata columns
+                    _lockCell(row.getCell(COL_ID));
+                    _lockCell(row.getCell(COL_SECTION));
+                    _lockCell(row.getCell(COL_QUESTION));
+                    _lockCell(row.getCell(COL_EXPECTED));
+                    // Coverage dropdown — every row gets the same list
+                    _setListValidation(row.getCell(COL_COVERAGE), COVERAGE_OPTIONS);
+                    // Date format on ap_date
+                    row.getCell(COL_AP_DATE).numFmt = "yyyy-mm-dd";
                 });
-                row.alignment = { vertical: "top", wrapText: true };
-                // Lock metadata columns
-                _lockCell(row.getCell(COL_ID));
-                _lockCell(row.getCell(COL_SECTION));
-                _lockCell(row.getCell(COL_QUESTION));
-                _lockCell(row.getCell(COL_EXPECTED));
-                // Coverage dropdown — every row gets the same list
-                _setListValidation(row.getCell(COL_COVERAGE), COVERAGE_OPTIONS);
-                // Date format on ap_date
-                row.getCell(COL_AP_DATE).numFmt = "yyyy-mm-dd";
             });
-        });
-        // Conditional formatting: highlight ap_title and justification cells
-        // when coverage is "partial" or "not_covered" AND both fields are
-        // empty. The formula uses ISBLANK() and absolute column references on
-        // the coverage column ($F = 6th column) so each row evaluates
-        // independently.
-        var lastRow = ws2.rowCount;
-        if (lastRow > 1) {
-            var coverageColLetter = "F"; // 6th column
-            var apTitleColLetter = "H"; // 8th column
-            var justColLetter = "L"; // 12th column
-            // Range covering ap_title cells from row 2 to lastRow
-            var apTitleRange = apTitleColLetter + "2:" + apTitleColLetter + lastRow;
-            var justRange = justColLetter + "2:" + justColLetter + lastRow;
-            // Formula: TRUE when coverage ∈ {partial, not_covered} AND both
-            // ap_title (H) and justification (L) are blank on the same row.
-            // The reference uses $F2 (relative row, fixed column) so Excel
-            // re-evaluates per row.
-            var needAction = 'AND(OR($' + coverageColLetter + '2="partial",$' + coverageColLetter + '2="not_covered"),'
-                + 'TRIM($' + apTitleColLetter + '2)="",'
-                + 'TRIM($' + justColLetter + '2)="")';
-            ws2.addConditionalFormatting({
-                ref: apTitleRange + " " + justRange,
-                rules: [
-                    {
-                        type: "expression",
-                        formulae: [needAction],
-                        style: {
-                            fill: { type: "pattern", pattern: "solid", bgColor: { argb: "FFFEE2E2" } },
-                            font: { color: { argb: "FF7F1D1D" }, bold: true },
-                            border: {
-                                left: { style: "thin", color: { argb: "FFB91C1C" } },
-                                right: { style: "thin", color: { argb: "FFB91C1C" } },
-                                top: { style: "thin", color: { argb: "FFB91C1C" } },
-                                bottom: { style: "thin", color: { argb: "FFB91C1C" } }
+            // Conditional formatting: highlight ap_title and justification cells
+            // when coverage is "partial" or "not_covered" AND both fields are
+            // empty. The formula uses ISBLANK() and absolute column references on
+            // the coverage column ($F = 6th column) so each row evaluates
+            // independently.
+            var lastRow = ws2.rowCount;
+            if (lastRow > 1) {
+                var coverageColLetter = "F"; // 6th column
+                var apTitleColLetter = "H"; // 8th column
+                var justColLetter = "L"; // 12th column
+                // Range covering ap_title cells from row 2 to lastRow
+                var apTitleRange = apTitleColLetter + "2:" + apTitleColLetter + lastRow;
+                var justRange = justColLetter + "2:" + justColLetter + lastRow;
+                // Formula: TRUE when coverage ∈ {partial, not_covered} AND both
+                // ap_title (H) and justification (L) are blank on the same row.
+                // The reference uses $F2 (relative row, fixed column) so Excel
+                // re-evaluates per row.
+                var needAction = 'AND(OR($' + coverageColLetter + '2="partial",$' + coverageColLetter + '2="not_covered"),'
+                    + 'TRIM($' + apTitleColLetter + '2)="",'
+                    + 'TRIM($' + justColLetter + '2)="")';
+                ws2.addConditionalFormatting({
+                    ref: apTitleRange + " " + justRange,
+                    rules: [
+                        {
+                            type: "expression",
+                            formulae: [needAction],
+                            style: {
+                                fill: { type: "pattern", pattern: "solid", bgColor: { argb: "FFFEE2E2" } },
+                                font: { color: { argb: "FF7F1D1D" }, bold: true },
+                                border: {
+                                    left: { style: "thin", color: { argb: "FFB91C1C" } },
+                                    right: { style: "thin", color: { argb: "FFB91C1C" } },
+                                    top: { style: "thin", color: { argb: "FFB91C1C" } },
+                                    bottom: { style: "thin", color: { argb: "FFB91C1C" } }
+                                }
                             }
                         }
-                    }
-                ]
-            });
-            // Bonus: also highlight the coverage cell itself in green when
-            // it is "covered" or "not_applicable" (visual confirmation).
-            ws2.addConditionalFormatting({
-                ref: coverageColLetter + "2:" + coverageColLetter + lastRow,
-                rules: [
-                    {
-                        type: "expression",
-                        formulae: ['OR($' + coverageColLetter + '2="covered",$' + coverageColLetter + '2="not_applicable")'],
-                        style: {
-                            fill: { type: "pattern", pattern: "solid", bgColor: { argb: "FFD1FAE5" } },
-                            font: { color: { argb: "FF065F46" } }
+                    ]
+                });
+                // Bonus: also highlight the coverage cell itself in green when
+                // it is "covered" or "not_applicable" (visual confirmation).
+                ws2.addConditionalFormatting({
+                    ref: coverageColLetter + "2:" + coverageColLetter + lastRow,
+                    rules: [
+                        {
+                            type: "expression",
+                            formulae: ['OR($' + coverageColLetter + '2="covered",$' + coverageColLetter + '2="not_applicable")'],
+                            style: {
+                                fill: { type: "pattern", pattern: "solid", bgColor: { argb: "FFD1FAE5" } },
+                                font: { color: { argb: "FF065F46" } }
+                            }
+                        },
+                        {
+                            type: "expression",
+                            formulae: ['OR($' + coverageColLetter + '2="partial",$' + coverageColLetter + '2="not_covered")'],
+                            style: {
+                                fill: { type: "pattern", pattern: "solid", bgColor: { argb: "FFFEF3C7" } },
+                                font: { color: { argb: "FF92400E" } }
+                            }
                         }
-                    },
-                    {
-                        type: "expression",
-                        formulae: ['OR($' + coverageColLetter + '2="partial",$' + coverageColLetter + '2="not_covered")'],
-                        style: {
-                            fill: { type: "pattern", pattern: "solid", bgColor: { argb: "FFFEF3C7" } },
-                            font: { color: { argb: "FF92400E" } }
-                        }
-                    }
-                ]
-            });
+                    ]
+                });
+            }
+            // Sheet 3: Self validation
+            var ws3 = wb.addWorksheet(t("assessment.self_validation_sheet"));
+            ws3.columns = [{ width: 80 }];
+            ws3.addRow([t("assessment.self_validation_title")]);
+            ws3.addRow([t("assessment.self_validation_hint")]);
+            ws3.addRow([""]);
+            ws3.addRow([t("assessment.self_validation_check_label") + ": [   ]  " + t("assessment.self_validation_tick_hint")]);
+            ws3.getRow(1).font = { bold: true, size: 14 };
         }
-        // Sheet 3: Self validation
-        var ws3 = wb.addWorksheet(t("assessment.self_validation_sheet"));
-        ws3.columns = [{ width: 80 }];
-        ws3.addRow([t("assessment.self_validation_title")]);
-        ws3.addRow([t("assessment.self_validation_hint")]);
-        ws3.addRow([""]);
-        ws3.addRow([t("assessment.self_validation_check_label") + ": [   ]  " + t("assessment.self_validation_tick_hint")]);
-        ws3.getRow(1).font = { bold: true, size: 14 };
+        finally {
+            _locale = sessionLocale;
+        }
         wb.xlsx.writeBuffer().then(function (buf) {
             var blob = new Blob([buf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
             var baseName = (a.id + "_" + _vendorName(a.vendor_id).replace(/\s+/g, "_") + "_questionnaire").replace(/[^a-z0-9_.-]/gi, "");

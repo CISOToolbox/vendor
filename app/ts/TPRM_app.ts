@@ -3029,19 +3029,61 @@ function _ensureDefaultTemplate() {
     var lang = (typeof _locale === "string" && _locale === "en") ? "en" : "fr";
     var added = false;
 
-    // Seed the default vendor questionnaire if absent
-    if (!D.questionnaire_templates.some(function(tp) { return tp.id === "TPL-001"; })) {
-        if (typeof TPRM_QUESTIONS !== "undefined" && TPRM_QUESTIONS.length) {
-            D.questionnaire_templates.push(_buildDefaultQuestionnaireTemplate(lang));
+    // FEAT-62 — each default template exists in French and in English: two
+    // distinct templates, identical question for question. The first one keeps
+    // its historical id (TPL-001 / TPL-002, in whatever language it was
+    // created); the other language gets <id>-EN or <id>-FR.
+    var defaults: Array<{ id: string; build: (l: string) => TprmTemplate; ready: boolean }> = [
+        // the standard questionnaire needs the question bank
+        { id: "TPL-001", build: _buildDefaultQuestionnaireTemplate, ready: typeof TPRM_QUESTIONS !== "undefined" && TPRM_QUESTIONS.length > 0 },
+        // the ANSSI audit (42 hygiene rules)
+        { id: "TPL-002", build: _buildAnssi42AuditTemplate, ready: true },
+    ];
+    defaults.forEach(function(d) {
+        if (!d.ready) return;
+        var family = D.questionnaire_templates.filter(function(tp) { return tp.id === d.id || tp.id.indexOf(d.id + "-") === 0; });
+        if (!family.length) {
+            // A new project: both languages, the session's under the historical id.
+            [lang, lang === "fr" ? "en" : "fr"].forEach(function(l, i) {
+                var tpl = d.build(l);
+                if (i > 0) tpl.id = d.id + "-" + l.toUpperCase();
+                D.questionnaire_templates.push(tpl);
+            });
             added = true;
+            return;
         }
-    }
-    // Seed the default audit template (ANSSI — 42 hygiene rules)
-    if (!D.questionnaire_templates.some(function(tp) { return tp.id === "TPL-002"; })) {
-        D.questionnaire_templates.push(_buildAnssi42AuditTemplate(lang));
-        added = true;
-    }
+        // An existing project: add the missing language. A template without a
+        // language field (created before it existed) is recognised by its
+        // default name; renamed by its owner, it is left alone.
+        var langs: Record<string, boolean> = {};
+        var unknown = false;
+        family.forEach(function(tp) {
+            var l = tp.language || _defaultTemplateLanguage(d.build, tp);
+            if (l) { langs[l] = true; if (!tp.language) { tp.language = l; added = true; } }
+            else unknown = true;
+        });
+        if (unknown) return;
+        ["fr", "en"].forEach(function(l) {
+            if (langs[l]) return;
+            var id = d.id + "-" + l.toUpperCase();
+            // Its id already taken (the user changed that template's language):
+            // their edit stands, nothing is duplicated.
+            if (D.questionnaire_templates.some(function(tp) { return tp.id === id; })) return;
+            var tpl = d.build(l);
+            tpl.id = id;
+            D.questionnaire_templates.push(tpl);
+            added = true;
+        });
+    });
     if (added) _autoSave();
+}
+
+// The language of a default template stored without one: by its untouched
+// default name, else null (renamed: its owner's own template).
+function _defaultTemplateLanguage(build: (l: string) => TprmTemplate, tp: TprmTemplate): string | null {
+    if (tp.name === build("fr").name) return "fr";
+    if (tp.name === build("en").name) return "en";
+    return null;
 }
 
 function _buildDefaultQuestionnaireTemplate(lang: string) {
@@ -5016,10 +5058,17 @@ function _copyEmailTemplate(assessId: string) {
     var vendorName = _vendorName(a.vendor_id);
     var templateName = tpl ? tpl.name : "";
     var dueDate = a.due_date || "-";
-    var subject = t("assessment.email_subject").replace("{vendor}", vendorName);
-    var bodyTemplate = t("assessment.email_body")
-        .replace("{template}", templateName)
-        .replace("{due_date}", dueDate);
+    // FEAT-62 — the e-mail goes to the vendor: in the questionnaire's language.
+    var sessionLocale = _locale;
+    if (tpl && tpl.language && _translations[tpl.language]) _locale = tpl.language;
+    var subject: string, bodyTemplate: string, linkLabel: string;
+    try {
+        linkLabel = t("assessment.email_link_label");
+        subject = t("assessment.email_subject").replace("{vendor}", vendorName);
+        bodyTemplate = t("assessment.email_body")
+            .replace("{template}", templateName)
+            .replace("{due_date}", dueDate);
+    } finally { _locale = sessionLocale; }
 
     // Plain text version (fallback): the link appears as raw URL
     var plainBody = bodyTemplate.replace("{link}", link);
@@ -5037,7 +5086,7 @@ function _copyEmailTemplate(assessId: string) {
     //   4. Substitute the placeholder with the real <a href="...">.
     var PLACEHOLDER = "\u0001LINK\u0001";
     var htmlSource = bodyTemplate.replace("{link}", PLACEHOLDER);
-    var anchor = '<a href="' + esc(link) + '">' + esc(t("assessment.email_link_label")) + '</a>';
+    var anchor = '<a href="' + esc(link) + '">' + esc(linkLabel) + '</a>';
     var htmlBody = esc(htmlSource)
         .split("\n")
         .map(function(line) { return line === "" ? "<br>" : "<p style=\"margin:0 0 8px\">" + line + "</p>"; })
@@ -5084,6 +5133,12 @@ function _exportAssessmentExcel(assessId: string) {
     if (!tpl) return;
     _loadExcelJS().then(function() {
         var wb = new ExcelJS.Workbook();
+        // FEAT-62 — the file goes to the vendor: it is written in the
+        // questionnaire's language, whatever the session's (built
+        // synchronously, the session's language is restored right after).
+        var sessionLocale = _locale;
+        if (tpl!.language && _translations[tpl!.language]) _locale = tpl!.language;
+        try {
         // Sheet 1: Instructions
         var ws1 = wb.addWorksheet(t("assessment.instructions_sheet"));
         ws1.columns = [{ width: 100 }];
@@ -5154,8 +5209,8 @@ function _exportAssessmentExcel(assessId: string) {
                 formulae: ['"' + values.join(",") + '"'],
                 showErrorMessage: true,
                 errorStyle: "warning",
-                errorTitle: "Valeur invalide",
-                error: errorMsg || "Choisissez une valeur dans la liste."
+                errorTitle: t("assessment.xlsx_invalid_title"),
+                error: errorMsg || t("assessment.xlsx_invalid_body")
             };
         }
 
@@ -5282,6 +5337,7 @@ function _exportAssessmentExcel(assessId: string) {
         ws3.addRow([""]);
         ws3.addRow([t("assessment.self_validation_check_label") + ": [   ]  " + t("assessment.self_validation_tick_hint")]);
         ws3.getRow(1).font = { bold: true, size: 14 };
+        } finally { _locale = sessionLocale; }
 
         wb.xlsx.writeBuffer().then(function(buf) {
             var blob = new Blob([buf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });

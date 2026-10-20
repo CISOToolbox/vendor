@@ -573,6 +573,8 @@ _registerTranslations("en", {
     "assessment.ap_description_audit": "Description of the vendor's commitment (content validated by the vendor)",
     "assessment.ap_owner_audit": "Owner (vendor side)",
     "assessment.already_validated": "Assessment already validated",
+    "assessment.xlsx_invalid_title": "Invalid value",
+    "assessment.xlsx_invalid_body": "Choose a value from the list.",
     "assessment.locked_notice": "Assessment validated: it can no longer be changed.",
     "assessment.import_locked": "This assessment is validated: it can no longer receive responses. Import into an assessment in progress or create a new one.",
     "assessment.locked_save_refused": "Save refused: a validated assessment can no longer be changed. The page will reload with the saved data.",
