@@ -422,7 +422,15 @@ window._autoSave = function() {
         VendorAPI.update(_activeId, { name: name, data: JSON.parse(JSON.stringify(D)),
                               expected_server_rev: _serverRev } as any)
             .catch(function(err: any) {
-                if (err && String(err.message || "").indexOf("API 409") === 0) { _staleConflict(); return; }
+                var msg = String((err && err.message) || "");
+                // BUG-111: the server refused a change to an approved assessment —
+                // say so, then reload what the server keeps.
+                if (msg.indexOf("API 409") === 0 && msg.indexOf("validated assessment is locked") >= 0) {
+                    alert(t("assessment.locked_save_refused"));
+                    window.location.reload();
+                    return;
+                }
+                if (msg.indexOf("API 409") === 0) { _staleConflict(); return; }
                 console.error("Autosave failed:", err);
             });
     }, 500);

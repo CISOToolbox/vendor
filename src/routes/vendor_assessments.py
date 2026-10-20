@@ -87,6 +87,8 @@ async def update_assessment(
     # completeness gate on transition to pending_approval, response
     # shape, reviewer-field stripping, and recomputes score.
     sanitized = validate_on_update(assessment, body.model_dump(exclude_unset=True))
+    if not sanitized:
+        return assessment   # nothing changes (a locked assessment re-sent as is): no write
 
     # Server-side assignment of reviewer timestamps, triggered by the
     # new status value (R7 in the validator doc).

@@ -2345,7 +2345,9 @@ function _renderVendorAssessments(v: any) {
         h += '</div>';
         h += '<div class="ct-flex ct-items-center ct-gap-2">';
         h += '<span class="ct-text-label ct-ink-1">' + esc(a.date || "") + '</span>';
-        h += '<button class="ct-btn ct-py-1 ct-px-2 ct-text-label" data-variant="danger" data-size="sm" data-click="deleteAssessment" data-args=\'' + _da(a.id) + '\' data-stop title="' + esc(t("vendor.delete")) + '">\u00d7</button>';
+        if (!_assessmentLocked(a)) {
+            h += '<button class="ct-btn ct-py-1 ct-px-2 ct-text-label" data-variant="danger" data-size="sm" data-click="deleteAssessment" data-args=\'' + _da(a.id) + '\' data-stop title="' + esc(t("vendor.delete")) + '">\u00d7</button>';
+        }
         h += '</div>';
         h += '</div>';
         // Progress bar + score
@@ -2627,6 +2629,7 @@ function openAssessmentFromVendor(assessId: string, vendorIdx: any) {
 window.openAssessmentFromVendor = openAssessmentFromVendor;
 
 function deleteAssessment(assessId: string) {
+    if (_assessmentLocked(_findAssessment(assessId))) { showStatus(t("assessment.locked_notice"), true); return; }
     if (!confirm(t("assessment.confirm_delete"))) return;
     var idx = D.assessments.findIndex(function(a) { return a.id === assessId; });
     if (idx < 0) return;
@@ -3730,8 +3733,8 @@ window._newAssessmentFromTemplate = _newAssessmentFromTemplate;
 function openAssessmentV2(assessId: string) {
     var a = D.assessments.find(function(x) { return x.id === assessId; });
     if (!a) return;
-    if (!a.template_snapshot) _migrateAssessmentToV2(a); // legacy V1 → V2 on the fly
-    if (!a.template_snapshot) return; // migration impossible (no default template)
+    if (!a.template_snapshot) a = _migrateAssessmentToV2(a); // legacy V1 → V2 on the fly (a copy when locked)
+    if (!a || !a.template_snapshot) return; // migration impossible (no default template)
     // Recompute stats every time we render — covers cases where the assessment
     // was touched before the latest stats algorithm change.
     _touchAssessment(a);
@@ -3784,7 +3787,9 @@ function openAssessmentV2(assessId: string) {
         h += '<button class="ct-btn" data-variant="primary" data-click="_exportAssessmentLink" data-args=\'' + _da(a.id) + '\'>' + esc(t("assessment.export_link")) + '</button>';
     }
     h += '<button class="ct-btn" data-variant="primary" data-click="_exportAssessmentExcel" data-args=\'' + _da(a.id) + '\'>' + esc(_tk(a, "assessment.export_excel")) + '</button>';
-    h += '<button class="ct-btn" data-variant="primary" data-click="_importAssessmentIntoExisting" data-args=\'' + _da(a.id) + '\'>' + esc(_tk(a, "assessment.import_response")) + '</button>';
+    if (!_assessmentLocked(a)) {
+        h += '<button class="ct-btn" data-variant="primary" data-click="_importAssessmentIntoExisting" data-args=\'' + _da(a.id) + '\'>' + esc(_tk(a, "assessment.import_response")) + '</button>';
+    }
     h += '<span class="ct-flex-1"></span>';
     if (a.status === "pending_approval") {
         h += '<button class="ct-btn" data-variant="primary" data-click="_approveAssessment" data-args=\'' + _da(a.id) + '\'>' + esc(t("assessment.approve")) + '</button>';
@@ -3801,13 +3806,17 @@ function openAssessmentV2(assessId: string) {
         }
     }
 
+    if (_assessmentLocked(a)) {
+        h += '<div class="ct-hint ct-mb-3" id="evalv2-locked">' + esc(t("assessment.locked_notice")) + '</div>';
+    }
+    h += '<div id="evalv2-body">';
     // ── Sections + questions ──
     tpl.sections.forEach(function(section) {
         h += '<div class="tpl-section">';
         h += '<div class="tpl-section-header">';
         h += '<span class="tpl-section-id">' + esc(section.id) + '</span>';
         h += '<span class="tpl-section-title">' + esc(section.title) + '</span>';
-        if (typeof _aiIsEnabled === "function" && _aiIsEnabled() && a!.status !== "validated") {
+        if (typeof _aiIsEnabled === "function" && _aiIsEnabled() && !_assessmentLocked(a)) {
             h += '<button class="ct-btn btn-ai ct-ml-auto" data-size="xs" data-click="aiSuggestSectionV2" data-args=\'' + _da(a!.id, section.id) + '\' title="' + esc(t("ai.btn")) + '">&#10024;</button>';
         }
         h += '</div>';
@@ -3843,6 +3852,7 @@ function openAssessmentV2(assessId: string) {
         h += '<div id="evalv2-validated-on" class="ct-text-label ct-ink-1 ct-mt-1">' + esc(t("assessment.self_validated_on")) + ' ' + esc(a.self_validated_at) + '</div>';
     }
     h += '</div>';
+    h += '</div>';   // #evalv2-body
 
     // Footer: Save + Submit for approval
     h += '<div class="form-actions">';
@@ -3852,6 +3862,11 @@ function openAssessmentV2(assessId: string) {
 
     var c = document.getElementById("content");
     c!.innerHTML = h;
+    // Approved: every field and button of the questionnaire is read-only.
+    if (_assessmentLocked(a)) {
+        c!.querySelectorAll("#evalv2-body input, #evalv2-body select, #evalv2-body textarea, #evalv2-body button")
+            .forEach(function(el) { (el as HTMLInputElement).disabled = true; });
+    }
 }
 window.openAssessmentV2 = openAssessmentV2;
 
@@ -3863,7 +3878,7 @@ window.openAssessmentV2 = openAssessmentV2;
 function aiSuggestSectionV2(assessId: string, sectionId: string) {
     var a = _findAssessment(assessId);
     if (!a || !a.template_snapshot || typeof _aiIsEnabled !== "function" || !_aiIsEnabled()) return;
-    if (a.status === "validated") return;
+    if (_assessmentLocked(a)) return;
     var v = D.vendors.find(function(x) { return x.id === a!.vendor_id; });
     var section = (a.template_snapshot.sections || []).find(function(s: any) { return s.id === sectionId; });
     if (!section) return;
@@ -3929,10 +3944,17 @@ window.aiSuggestSectionV2 = aiSuggestSectionV2;
 // persisted, not just in-memory.
 function _migrateAssessmentToV2(a: any): any {
     if (!a || a.template_snapshot) return a; // already V2 or invalid
-    if (typeof _ensureDefaultTemplate === "function") _ensureDefaultTemplate();
+    // Locked (BUG-111): an approved or legacy-completed assessment is migrated
+    // on a copy, for display only — the stored one is neither changed nor written.
+    var locked = _assessmentLocked(a);
+    if (!locked && typeof _ensureDefaultTemplate === "function") _ensureDefaultTemplate();
     var tpl: any = (D.questionnaire_templates || []).find(function(tp) { return tp.id === "TPL-001"; })
         || (D.questionnaire_templates || [])[0];
+    // A locked one is only displayed: the default template is built for the
+    // copy, not added to the project.
+    if (!tpl && locked) tpl = _buildDefaultQuestionnaireTemplate((typeof _locale === "string" && _locale === "en") ? "en" : "fr");
     if (!tpl) return a;
+    if (locked) a = JSON.parse(JSON.stringify(a));
     var covMap: Record<string, string> = { compliant: "covered", partial: "partial", non_compliant: "not_covered", na: "not_applicable" };
     var oldByNum: Record<string, any> = {};
     (a.responses || []).forEach(function(r: any) {
@@ -3957,6 +3979,7 @@ function _migrateAssessmentToV2(a: any): any {
     if (a.self_validation == null) a.self_validation = false;
     if (a.status === "completed") a.status = "validated";
     else if (!a.status) a.status = "in_progress";
+    if (locked) return a;
     if (typeof _touchAssessment === "function") _touchAssessment(a);
     // Persist the snapshot too (_touchAssessment only sends score/completion/status/responses).
     if (typeof _persist === "function") _persist("assessment", a.id, {
@@ -3968,7 +3991,7 @@ function _migrateAssessmentToV2(a: any): any {
 function _migrateAllLegacyAssessments(): number {
     var n = 0;
     (D.assessments || []).forEach(function(a: any) {
-        if (a && !a.template_snapshot) { _migrateAssessmentToV2(a); n++; }
+        if (a && !a.template_snapshot && !_assessmentLocked(a)) { _migrateAssessmentToV2(a); n++; }
     });
     return n;
 }
@@ -4081,15 +4104,34 @@ function _findAssessment(assessId: string) {
     return (D.assessments || []).find(function(a) { return a.id === assessId; });
 }
 
+// BUG-111 — an approved (validated) assessment is locked: the handlers that
+// change one look it up through this, and do nothing on a locked one.
+function _assessmentLocked(a: any): boolean {
+    return !!a && (a.status === "validated" || a.status === "completed");
+}
+
+// What the assessment screen shows: the stored one, or for a legacy one (no
+// template) its V2 migration — a display copy when it is locked. Exports use
+// it so they carry what the user sees.
+function _assessmentView(assessId: string): any {
+    var a = _findAssessment(assessId);
+    return a && !a.template_snapshot ? _migrateAssessmentToV2(a) : a;
+}
+
+function _editableAssessment(assessId: string) {
+    var a = _findAssessment(assessId);
+    return a && !_assessmentLocked(a) ? a : null;
+}
+
 function _findAssessmentResp(a: any, questionId: string) {
     if (!a || !a.responses) return null;
     return a.responses.find(function(r: any) { return r.question_id === questionId; });
 }
 
 function _renderSubmitButton(a: any, completion: number) {
-    var canSubmit = a.self_validation && completion === 100 && a.status !== "validated" && a.status !== "pending_approval";
+    var canSubmit = a.self_validation && completion === 100 && !_assessmentLocked(a) && a.status !== "pending_approval";
     var reason = "";
-    if (a.status === "validated") reason = t("assessment.already_validated");
+    if (_assessmentLocked(a)) reason = t("assessment.already_validated");
     else if (a.status === "pending_approval") reason = t("assessment.already_submitted");
     else if (completion < 100) reason = t("assessment.complete_all_questions");
     else if (!a.self_validation) reason = t("assessment.check_self_validation");
@@ -4169,6 +4211,9 @@ function _healAssessmentQuestionIds(a: any) {
 }
 
 function _touchAssessment(a: any) {
+    // Locked (BUG-111): an approved assessment is shown as the server keeps it
+    // (score and completion included) — nothing is healed, recomputed or written.
+    if (_assessmentLocked(a)) return;
     _healAssessmentQuestionIds(a);
     var stats = _assessmentStats(a);
     a.completion_rate = stats.total > 0 ? Math.round((stats.answered / stats.total) * 100) : 0;
@@ -4178,7 +4223,7 @@ function _touchAssessment(a: any) {
 }
 
 function _setCoverage(assessId: string, questionId: string, coverage: string) {
-    var a = _findAssessment(assessId);
+    var a = _editableAssessment(assessId);
     var resp = _findAssessmentResp(a, questionId);
     if (!resp) return;
     resp.coverage = coverage;
@@ -4192,7 +4237,7 @@ function _setCoverage(assessId: string, questionId: string, coverage: string) {
 window._setCoverage = _setCoverage;
 
 function _setAnswerV2Text(assessId: string, questionId: string, value: string) {
-    var a = _findAssessment(assessId);
+    var a = _editableAssessment(assessId);
     var resp = _findAssessmentResp(a, questionId);
     if (!resp) return;
     resp.answer = value;
@@ -4291,7 +4336,7 @@ function _refreshAssessmentLiveState(assessId: string, questionId: string) {
 }
 
 function _onAssessmentCommentChange(assessId: string, questionId: string, value: string) {
-    var a = _findAssessment(assessId);
+    var a = _editableAssessment(assessId);
     var resp = _findAssessmentResp(a, questionId);
     if (!resp) return;
     resp.comment = value;
@@ -4301,7 +4346,7 @@ function _onAssessmentCommentChange(assessId: string, questionId: string, value:
 window._onAssessmentCommentChange = _onAssessmentCommentChange;
 
 function _onAssessmentJustificationChange(assessId: string, questionId: string, value: string) {
-    var a = _findAssessment(assessId);
+    var a = _editableAssessment(assessId);
     var resp = _findAssessmentResp(a, questionId);
     if (!resp) return;
     resp.justification = value;
@@ -4310,7 +4355,7 @@ function _onAssessmentJustificationChange(assessId: string, questionId: string, 
 window._onAssessmentJustificationChange = _onAssessmentJustificationChange;
 
 function _addActionPlan(assessId: string, questionId: string) {
-    var a = _findAssessment(assessId);
+    var a = _editableAssessment(assessId);
     var resp = _findAssessmentResp(a, questionId);
     if (!resp) return;
     if (!resp.action_plans) resp.action_plans = [];
@@ -4328,7 +4373,7 @@ function _addActionPlan(assessId: string, questionId: string) {
 window._addActionPlan = _addActionPlan;
 
 function _removeActionPlan(assessId: string, questionId: string, apIdx: number) {
-    var a = _findAssessment(assessId);
+    var a = _editableAssessment(assessId);
     var resp = _findAssessmentResp(a, questionId);
     if (!resp || !resp.action_plans) return;
     resp.action_plans.splice(apIdx, 1);
@@ -4338,7 +4383,7 @@ function _removeActionPlan(assessId: string, questionId: string, apIdx: number) 
 window._removeActionPlan = _removeActionPlan;
 
 function _updateActionPlanField(assessId: string, questionId: string, apIdx: number, field: string, value: string) {
-    var a = _findAssessment(assessId);
+    var a = _editableAssessment(assessId);
     var resp = _findAssessmentResp(a, questionId);
     if (!resp || !resp.action_plans || !resp.action_plans[apIdx]) return;
     resp.action_plans[apIdx][field] = value;
@@ -4347,7 +4392,7 @@ function _updateActionPlanField(assessId: string, questionId: string, apIdx: num
 window._updateActionPlanField = _updateActionPlanField;
 
 function _toggleSelfValidation(assessId: string, checked: any) {
-    var a = _findAssessment(assessId);
+    var a = _editableAssessment(assessId);
     if (!a) return;
     a.self_validation = !!checked;
     a.self_validated_at = checked ? new Date().toISOString() : null;
@@ -4504,7 +4549,7 @@ function _quartersBetween(dateStr: string | undefined, now: any) {
 function _computeVendorMaturityDetail(vendorId: string) {
     var cfg = _maturityConfig();
     var all = (D.assessments || []).filter(function(a) {
-        return a.vendor_id === vendorId && a.status === "validated";
+        return a.vendor_id === vendorId && _assessmentLocked(a);   // approved, or a legacy completed one
     });
     var now = new Date();
     var rows: any[] = [];
@@ -4719,7 +4764,7 @@ function _buildExportPayload(a: any) {
 }
 
 function _exportAssessmentJSON(assessId: string) {
-    var a = _findAssessment(assessId);
+    var a = _assessmentView(assessId);
     if (!a) return;
 
     _showModal(
@@ -4746,7 +4791,7 @@ window._doExportJSONAuto = _doExportJSONAuto;
 
 // Dedicated modal for generating a portal link.
 function _exportAssessmentLink(assessId: string) {
-    var a = _findAssessment(assessId);
+    var a = _assessmentView(assessId);
     if (!a) return;
 
     _showModal(
@@ -4764,7 +4809,7 @@ function _exportAssessmentLink(assessId: string) {
 window._exportAssessmentLink = _exportAssessmentLink;
 
 function _doExportJSON(assessId: string, encrypted: any) {
-    var a = _findAssessment(assessId);
+    var a = _assessmentView(assessId);
     if (!a) return;
     var payload = _buildExportPayload(a);
     var json = JSON.stringify(payload, null, 2);
@@ -4841,7 +4886,7 @@ function _portalBaseURL() {
 }
 
 async function _generatePortalLink(assessId: string) {
-    var a = _findAssessment(assessId);
+    var a = _assessmentView(assessId);
     if (!a) return;
     var pwd = ((document.getElementById("exp-password") as HTMLInputElement | null) || ({} as HTMLInputElement)).value || "";
     if (!pwd) { alert(t("assessment.password_required")); return; }
@@ -4989,7 +5034,7 @@ function _triggerDownload(blob: any, filename: string) {
 }
 
 function _exportAssessmentExcel(assessId: string) {
-    var a = _findAssessment(assessId);
+    var a = _assessmentView(assessId);
     if (!a) return;
     var tpl = _getAssessmentTemplate(a);
     if (!tpl) return;
@@ -5212,6 +5257,7 @@ function _importAssessmentResponse(vendorId: string) {
 window._importAssessmentResponse = _importAssessmentResponse;
 
 function _importAssessmentIntoExisting(assessId: string) {
+    if (!_editableAssessment(assessId)) return;   // locked (BUG-111)
     _pickAssessmentFile(assessId, null);
 }
 window._importAssessmentIntoExisting = _importAssessmentIntoExisting;
@@ -5276,6 +5322,9 @@ function _applyImportedPayload(payload: any, existingAssessId: string | null, ve
     } else {
         // Look up by payload assessment_id first
         a = _findAssessment(payload.assessment_id);
+    }
+    if (_assessmentLocked(a)) { alert(t("assessment.import_locked")); return; }
+    if (!existingAssessId) {
         if (!a) {
             // Create a new assessment anchored to the vendor
             var targetVendor = vendorId || payload.vendor_id;
@@ -5298,6 +5347,7 @@ function _applyImportedPayload(payload: any, existingAssessId: string | null, ve
             D.assessments.push(a);
         }
     }
+    if (!a) return;
     // Merge responses from payload
     a.responses = (payload.responses || []).map(function(r: any) { return JSON.parse(JSON.stringify(r)); });
     a.status = "pending_approval";
@@ -5411,6 +5461,7 @@ function _handleImportedExcel(file: any, existingAssessId: string | null, vendor
                 // match an existing one by scanning question IDs.
                 var a;
                 if (existingAssessId) a = _findAssessment(existingAssessId);
+                if (_assessmentLocked(a)) { alert(t("assessment.import_locked")); return; }
                 if (!a) {
                     // Heuristic: find an assessment whose responses intersect
                     // with the imported question ids. This lets the user
@@ -5418,7 +5469,7 @@ function _handleImportedExcel(file: any, existingAssessId: string | null, vendor
                     // having opened a specific assessment first.
                     var qIds = Object.keys(respByQ);
                     var candidate = (D.assessments || []).find(function(x) {
-                        if (!x.template_snapshot) return false;
+                        if (!x.template_snapshot || _assessmentLocked(x)) return false;
                         if (vendorId && x.vendor_id !== vendorId) return false;
                         return (x.responses || []).some(function(rr) { return qIds.indexOf(rr.question_id) >= 0; });
                     });
@@ -6600,7 +6651,7 @@ function _applyAiData(v: any, data: any) {
             // Reuse an existing non-validated V2 assessment, else create one.
             // Legacy V1 assessments (no template_snapshot) are never touched.
             var assessment: any = D.assessments.find(function(a) {
-                return a.vendor_id === v.id && a.status !== "validated" && (a as any).template_snapshot;
+                return a.vendor_id === v.id && !_assessmentLocked(a) && (a as any).template_snapshot;
             });
             var _assessmentIsNew = false;
             if (!assessment) {

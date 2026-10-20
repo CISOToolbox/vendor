@@ -113,8 +113,7 @@ R5. **Status transitions are linear and gated.**
         in_progress ─┤─► pending_approval ─┬─► validated (terminal)
                      │                    └─► rejected ─► draft
     Any other transition → 409.
-    `validated` is terminal: no further PATCH accepted except by an
-    admin reset (not exposed via this module).
+    `validated` is terminal and the assessment is locked (R10).
 
 R6. **pending_approval requires full completeness.**
     Transition to pending_approval requires:
@@ -145,6 +144,15 @@ R9. **Legacy assessments (no template_snapshot) are exempt.**
     Assessments without `template_snapshot` are the pre-phase-0b
     format. They still pass through the routes unchanged — rules
     R1-R8 apply only when `template_snapshot` is present.
+
+R10. **A validated assessment is locked.**
+    Once `validated`, nothing of its content changes — responses, action
+    plans, justifications, title, dates, self-validation, template — through
+    PATCH or through the blob PUT (409), and the blob PUT cannot drop it
+    (deletion is refused as well). Re-sending the stored values is a no-op.
+    Only the vendor-maturity settings (`weight_override`, `excluded`) and the
+    display order (`sort_order`) stay writable: they weigh the approved
+    result, they do not change it.
 
 ─────────────────────────────────────────────────────────────────────────
 PUBLIC API
@@ -507,6 +515,50 @@ def validate_on_create(body: dict) -> dict:
     return out
 
 
+# R10: what a validated (locked) assessment still accepts, and what the
+# server recomputes anyway so a client value is not a change.
+LOCK_EXEMPT_FIELDS = {"weight_override", "excluded", "sort_order"}
+RECOMPUTED_FIELDS = {"score", "completion_rate"}
+
+
+def _same_value(field: str, stored: Any, incoming: Any, snapshot: Any) -> bool:
+    if field == "responses" and _is_template_snapshot(snapshot) and isinstance(incoming, list):
+        qids = {q["id"] for q in _collect_questions(snapshot)}
+        try:
+            stored_norm = [_validate_response_entry(r, qids) for r in (stored or [])]
+        except HTTPException:
+            # Stored before the current rules (an orphan question id, an old
+            # coverage value): only an exact echo is unchanged.
+            return stored == incoming
+        try:
+            return [_validate_response_entry(r, qids) for r in incoming] == stored_norm
+        except HTTPException:
+            return False
+    if stored in (None, "") and incoming in (None, ""):
+        return True
+    return stored == incoming
+
+
+def _locked_update(stored: Any, incoming: dict) -> dict:
+    """R10: the changes a validated assessment accepts — the exempt fields;
+    anything else that differs from the stored value is refused."""
+    snapshot = getattr(stored, "template_snapshot", None)
+    out: dict = {}
+    changed: list[str] = []
+    for field, value in incoming.items():
+        if field in RECOMPUTED_FIELDS:
+            continue
+        if field in LOCK_EXEMPT_FIELDS:
+            out[field] = value
+            continue
+        if not _same_value(field, getattr(stored, field, None), value, snapshot):
+            changed.append(field)
+    if changed:
+        raise _err(409, "a validated assessment is locked: "
+                        f"{', '.join(sorted(changed))} cannot change")
+    return out
+
+
 def validate_on_update(stored: Any, body: dict) -> dict:
     """Normalize the payload of PATCH /assessments/{id}.
 
@@ -521,6 +573,8 @@ def validate_on_update(stored: Any, body: dict) -> dict:
     # Strip reviewer fields the client should not be able to set (R7)
     for f in SERVER_ASSIGNED_FIELDS:
         incoming.pop(f, None)
+    if getattr(stored, "status", None) == "validated":
+        return _locked_update(stored, incoming)
     # Access stored snapshot + responses. These are JSONB, so they
     # come back as dict/list directly.
     stored_snapshot = getattr(stored, "template_snapshot", None)
@@ -629,6 +683,14 @@ def validate_blob(
         merged = dict(stored)
         merged.update(sanitized)
         out.append(merged)
+    # R10: the blob PUT rewrites every assessment; leaving a validated one
+    # out would delete it, which the DELETE route refuses.
+    kept = {a.get("id") for a in out}
+    dropped = sorted(aid for aid, s in stored_by_id.items()
+                     if (s or {}).get("status") == "validated" and aid not in kept)
+    if dropped:
+        raise _err(409, "a validated assessment is locked and cannot be removed: "
+                        + ", ".join(dropped))
     return out
 
 
