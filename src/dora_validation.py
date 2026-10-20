@@ -62,6 +62,29 @@ except FileNotFoundError:
     _CODELISTS = {}
 
 
+# EBA "Data Model for DORA RoI": per template (B_01.01 … B_07.01), each
+# column with its code and whether the model requires it (Nullable = No);
+# ``required`` is None where the model's cell could not be read.
+_ROI_MODEL_PATH = os.path.join(os.path.dirname(__file__), "dora_roi_model.json")
+try:
+    with open(_ROI_MODEL_PATH, encoding="utf-8") as _f:
+        _ROI_MODEL: dict[str, Any] = json.load(_f)
+except FileNotFoundError:
+    _ROI_MODEL = {"tables": {}}
+
+
+def roi_model() -> dict[str, Any]:
+    """The EBA RoI data model (templates, columns, required flags)."""
+    return _ROI_MODEL
+
+
+def roi_required_columns() -> set[str]:
+    """The columns the EBA model requires, as ``B_xx.yy.zzzz``."""
+    return {f"{table}.{col['code']}"
+            for table, cols in (_ROI_MODEL.get("tables") or {}).items()
+            for col in cols if col.get("required") is True}
+
+
 def codelists() -> dict[str, Any]:
     """Return the loaded codelists for /api/dora/codelists endpoint."""
     return _CODELISTS

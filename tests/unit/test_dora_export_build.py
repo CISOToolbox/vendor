@@ -60,6 +60,9 @@ async def test_build_dora_xlsx_returns_loadable_workbook():
         from openpyxl import load_workbook
         wb = load_workbook(io.BytesIO(blob))
         assert len(wb.sheetnames) > 0  # at least the cover + template sheets
+        # FEAT-60: the cover explains the red cells.
+        cover = wb["Cover"]
+        assert any("Red cell" in str(c.value or "") for row in cover.iter_rows() for c in row)
     finally:
         async with _engine.begin() as conn:
             await conn.run_sync(Base.metadata.drop_all)

@@ -33,6 +33,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.csv_common import xlsx_safe_workbook
+from src.dora_validation import roi_required_columns
 from src.models import (
     DoraArrangement,
     DoraArrangementFunction,
@@ -85,6 +86,14 @@ _HEADER_FONT = Font(bold=True)
 
 _CODE_FILL = PatternFill("solid", fgColor="EFEFEF")
 
+# A data cell left empty although the EBA data model requires its column
+# (Nullable = No, src/dora_roi_model.json): red, so it is filled before filing.
+_MISSING_FILL = PatternFill("solid", fgColor="FF9999")
+
+
+def _is_empty(value: Any) -> bool:
+    return value is None or (isinstance(value, str) and not value.strip())
+
 
 def _write_sheet(wb: Workbook, name: str, cols: list[tuple[str, str]], rows: list[list[Any]]) -> None:
     """Write a sheet with the EBA two-row header convention.
@@ -106,8 +115,13 @@ def _write_sheet(wb: Workbook, name: str, cols: list[tuple[str, str]], rows: lis
         cell.font = Font(bold=True, italic=True, color="666666")
         cell.fill = _CODE_FILL
         cell.alignment = Alignment(horizontal="left", vertical="center")
+    required = roi_required_columns()
     for r in rows:
         ws.append(r)
+        row = ws.max_row
+        for col_idx, code in enumerate(codes, start=1):
+            if f"{name}.{code}" in required and _is_empty(r[col_idx - 1] if col_idx - 1 < len(r) else None):
+                ws.cell(row=row, column=col_idx).fill = _MISSING_FILL
     ws.row_dimensions[1].height = 32
     for col_idx, title in enumerate(titles, start=1):
         max_len = max(
@@ -658,6 +672,11 @@ async def build_dora_xlsx(
         for i, (tid, label) in enumerate(_TEMPLATE_TITLES, start=9):
             cover.cell(row=i, column=1, value=tid)
             cover.cell(row=i, column=2, value=label)
+        legend_row = 9 + len(_TEMPLATE_TITLES) + 1
+        cover.cell(row=legend_row, column=1).fill = _MISSING_FILL
+        cover.cell(row=legend_row, column=2,
+                   value="Red cell: required by the EBA data model, empty in this export "
+                         "(not entered, or not mapped to an EBA code) — complete it before filing.")
         cover.column_dimensions["A"].width = 12
         cover.column_dimensions["B"].width = 80
 

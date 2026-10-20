@@ -1,0 +1,622 @@
+{
+ "source": "EBA — Data Model for DORA RoI (column Nullable: No = required)",
+ "note": "required is null where the model's cell could not be read; such a column is not shown as required.",
+ "tables": {
+  "B_01.01": [
+   {
+    "code": "0010",
+    "label": "LEI of the entity maintaining the register of information",
+    "type": "char",
+    "required": true
+   },
+   {
+    "code": "0020",
+    "label": "Name of the entity",
+    "type": "varchar",
+    "required": true
+   },
+   {
+    "code": "0030",
+    "label": "Country of the entity",
+    "type": "char",
+    "required": true
+   },
+   {
+    "code": "0040",
+    "label": "Type of entity",
+    "type": "varchar",
+    "required": true
+   },
+   {
+    "code": "0050",
+    "label": "Competent Authority",
+    "type": "varchar",
+    "required": true
+   },
+   {
+    "code": "0060",
+    "label": "Date of the reporting",
+    "type": "date",
+    "required": true
+   }
+  ],
+  "B_01.02": [
+   {
+    "code": "0010",
+    "label": "LEI of the entity",
+    "type": "char",
+    "required": true
+   },
+   {
+    "code": "0020",
+    "label": "Name of the entity",
+    "type": "varchar",
+    "required": true
+   },
+   {
+    "code": "0030",
+    "label": "Country of the entity",
+    "type": "char",
+    "required": true
+   },
+   {
+    "code": "0040",
+    "label": "Type of entity",
+    "type": "varchar",
+    "required": true
+   },
+   {
+    "code": "0050",
+    "label": "Hierarchy of the entity within the group (where applicable)",
+    "type": "varchar",
+    "required": true
+   },
+   {
+    "code": "0060",
+    "label": "LEI of the direct parent undertaking of the financial entity",
+    "type": "char",
+    "required": false
+   },
+   {
+    "code": "0070",
+    "label": "Date of last update",
+    "type": "date",
+    "required": true
+   },
+   {
+    "code": "0080",
+    "label": "Date of integration in the Register of information",
+    "type": "date",
+    "required": true
+   },
+   {
+    "code": "0090",
+    "label": "Date of deletion in the Register of information",
+    "type": "date",
+    "required": true
+   },
+   {
+    "code": "0100",
+    "label": "Currency",
+    "type": "char",
+    "required": false
+   },
+   {
+    "code": "0110",
+    "label": "Value of total assets - of the financial entity",
+    "type": "money",
+    "required": false
+   }
+  ],
+  "B_01.03": [
+   {
+    "code": "0010",
+    "label": "Identication code of the branch",
+    "type": "varchar",
+    "required": true
+   },
+   {
+    "code": "0020",
+    "label": "LEI of the financial entity head office of the branch",
+    "type": "char",
+    "required": true
+   },
+   {
+    "code": "0030",
+    "label": "Name of the branch",
+    "type": "varchar",
+    "required": true
+   },
+   {
+    "code": "0040",
+    "label": "Country of the branch",
+    "type": "char",
+    "required": true
+   }
+  ],
+  "B_02.01": [
+   {
+    "code": "0010",
+    "label": "Contractual arrangement reference number",
+    "type": "varchar",
+    "required": true
+   },
+   {
+    "code": "0020",
+    "label": "Type of contractual arrangement",
+    "type": "varchar",
+    "required": true
+   },
+   {
+    "code": "0030",
+    "label": "Overarching contractual arrangement reference number",
+    "type": "varchar",
+    "required": false
+   },
+   {
+    "code": "0040",
+    "label": "Currency of the amount reported",
+    "type": "char",
+    "required": true
+   },
+   {
+    "code": "0050",
+    "label": "Annual expense or estimated cost of the contractual arrangement for the past year",
+    "type": "money",
+    "required": true
+   }
+  ],
+  "B_02.02": [
+   {
+    "code": "0010",
+    "label": "Contractual arrangement reference number",
+    "type": "varchar",
+    "required": true
+   },
+   {
+    "code": "0020",
+    "label": "LEI of the financial entity making use of the ICT service",
+    "type": "char",
+    "required": true
+   },
+   {
+    "code": "0030",
+    "label": "Identification code of the third-party service provider",
+    "type": "varchar",
+    "required": true
+   },
+   {
+    "code": "0040",
+    "label": "Type of code to identify the third- party service provider",
+    "type": "varchar",
+    "required": false
+   },
+   {
+    "code": "0050",
+    "label": "Function identifier",
+    "type": "varchar",
+    "required": true
+   },
+   {
+    "code": "0060",
+    "label": "Type of ICT services",
+    "type": "varchar",
+    "required": true
+   },
+   {
+    "code": "0070",
+    "label": "Start date of the contractual arrangement",
+    "type": "date",
+    "required": true
+   },
+   {
+    "code": "0080",
+    "label": "End date of the contractual arrangement",
+    "type": "date",
+    "required": true
+   },
+   {
+    "code": "0090",
+    "label": "Reason of the termination or ending of the contractual arrangement",
+    "type": "varchar",
+    "required": false
+   },
+   {
+    "code": "0100",
+    "label": "Notice period for the financial entity",
+    "type": "int",
+    "required": false
+   },
+   {
+    "code": "0110",
+    "label": "Notice period for the ICT third-party service provider",
+    "type": "int",
+    "required": false
+   },
+   {
+    "code": "0120",
+    "label": "Country of the governing law of the contractual arrangement",
+    "type": "char",
+    "required": false
+   },
+   {
+    "code": "0130",
+    "label": "Country of provision of the ICT services",
+    "type": "char",
+    "required": true
+   },
+   {
+    "code": "0140",
+    "label": "Storage of data",
+    "type": "bit",
+    "required": null
+   },
+   {
+    "code": "0150",
+    "label": "Location of the data at rest (storage)",
+    "type": "char",
+    "required": true
+   },
+   {
+    "code": "0160",
+    "label": "Location of management of the data (processing)",
+    "type": "char",
+    "required": true
+   },
+   {
+    "code": "0170",
+    "label": "Sensitiveness of the data stored by the ICT third-party service provider",
+    "type": "varchar",
+    "required": false
+   },
+   {
+    "code": "0180",
+    "label": "Level of reliance on the ICT service supporting the critical or important function.",
+    "type": "varchar",
+    "required": false
+   }
+  ],
+  "B_06.01": [
+   {
+    "code": "0010",
+    "label": "Function identifier",
+    "type": "varchar",
+    "required": true
+   },
+   {
+    "code": "0020",
+    "label": "Licenced activity",
+    "type": "varchar",
+    "required": true
+   },
+   {
+    "code": "0030",
+    "label": "Function name",
+    "type": "varchar",
+    "required": true
+   },
+   {
+    "code": "0040",
+    "label": "LEI of the financial entity",
+    "type": "char",
+    "required": true
+   },
+   {
+    "code": "0050",
+    "label": "Criticality or importance assessment",
+    "type": "varchar",
+    "required": true
+   },
+   {
+    "code": "0060",
+    "label": "Reasons for criticality or importance",
+    "type": "varchar",
+    "required": null
+   },
+   {
+    "code": "0070",
+    "label": "Date of the last assessment of criticality or importance",
+    "type": "date",
+    "required": true
+   },
+   {
+    "code": "0080",
+    "label": "Recovery time objective of the function",
+    "type": "int",
+    "required": true
+   },
+   {
+    "code": "0090",
+    "label": "Recovery point objective of the function",
+    "type": "int",
+    "required": true
+   },
+   {
+    "code": "0100",
+    "label": "Impact of discontinuing the function",
+    "type": "varchar",
+    "required": true
+   }
+  ],
+  "B_07.01": [
+   {
+    "code": "0010",
+    "label": "Contractual arrangement reference number",
+    "type": "varchar",
+    "required": true
+   },
+   {
+    "code": "0020",
+    "label": "Identification code of the third-party service provider",
+    "type": "varchar",
+    "required": true
+   },
+   {
+    "code": "0030",
+    "label": "Type of code of the third-party service provider",
+    "type": "varchar",
+    "required": null
+   },
+   {
+    "code": "0040",
+    "label": "Type of ICT services",
+    "type": "varchar",
+    "required": true
+   },
+   {
+    "code": "0050",
+    "label": "Substitutability of the ICT third-party service provider",
+    "type": "varchar",
+    "required": true
+   },
+   {
+    "code": "0060",
+    "label": "Reason if the ICT third-party service provider is considered not substitutable or difficult to be substitutable",
+    "type": "varchar",
+    "required": false
+   },
+   {
+    "code": "0070",
+    "label": "Date of the last audit on the ICT third- party service provider",
+    "type": "date",
+    "required": true
+   },
+   {
+    "code": "0080",
+    "label": "Existence of an exit plan",
+    "type": "bit",
+    "required": true
+   },
+   {
+    "code": "0090",
+    "label": "Possibility of reintegration of the contracted ICT service",
+    "type": "varchar",
+    "required": true
+   },
+   {
+    "code": "0100",
+    "label": "Impact of discontinuing the ICT services",
+    "type": "varchar",
+    "required": true
+   },
+   {
+    "code": "0110",
+    "label": "Are there alternative ICT third-party service providers identified?",
+    "type": "bit",
+    "required": true
+   },
+   {
+    "code": "0120",
+    "label": "Identification of alternative ICT TPP",
+    "type": "varchar",
+    "required": false
+   }
+  ],
+  "B_02.03": [
+   {
+    "code": "0010",
+    "label": "Contractual arrangement with ICT intra-group service provider",
+    "type": "varchar",
+    "required": true
+   },
+   {
+    "code": "0020",
+    "label": "Linked contractual arrangement with ICT third-party service provider",
+    "type": "varchar",
+    "required": true
+   }
+  ],
+  "B_03.01": [
+   {
+    "code": "0010",
+    "label": "Contractual arrangement reference number",
+    "type": "varchar",
+    "required": true
+   },
+   {
+    "code": "0020",
+    "label": "LEI of the entity signing the contractual arrangement",
+    "type": "char",
+    "required": true
+   }
+  ],
+  "B_03.02": [
+   {
+    "code": "0010",
+    "label": "Contractual arrangement reference number",
+    "type": "varchar",
+    "required": true
+   },
+   {
+    "code": "0020",
+    "label": "Identification code of the third-party service provider",
+    "type": "varchar",
+    "required": true
+   },
+   {
+    "code": "0030",
+    "label": "Type of code of the third-party service provider",
+    "type": "varchar",
+    "required": false
+   }
+  ],
+  "B_03.03": [
+   {
+    "code": "0010",
+    "label": "Contractual arrangement reference number",
+    "type": "varchar",
+    "required": true
+   },
+   {
+    "code": "0020",
+    "label": "LEI of the intra-group entity providing ICT service",
+    "type": "char",
+    "required": true
+   }
+  ],
+  "B_04.01": [
+   {
+    "code": "0010",
+    "label": "Contractual arrangement reference number",
+    "type": "varchar",
+    "required": true
+   },
+   {
+    "code": "0020",
+    "label": "LEI of the financial entity",
+    "type": "char",
+    "required": true
+   },
+   {
+    "code": "0030",
+    "label": "Is the entity making use of the ICT services a branch of a financial entity?",
+    "type": "binary",
+    "required": true
+   },
+   {
+    "code": "0040",
+    "label": "Identification code of the branch",
+    "type": "varchar",
+    "required": true
+   }
+  ],
+  "B_05.01": [
+   {
+    "code": "0010",
+    "label": "Identification code of the third-party service provider",
+    "type": "varchar",
+    "required": true
+   },
+   {
+    "code": "0020",
+    "label": "Type of code of the third-party service provider",
+    "type": "varchar",
+    "required": true
+   },
+   {
+    "code": "0030",
+    "label": "Additional identification code of the third-party service provider",
+    "type": "int",
+    "required": false
+   },
+   {
+    "code": "0040",
+    "label": "Type of additional identification code of the third-party service provider",
+    "type": "varchar",
+    "required": false
+   },
+   {
+    "code": "0050",
+    "label": "Legal name of the third-party service provider",
+    "type": "varchar",
+    "required": true
+   },
+   {
+    "code": "0060",
+    "label": "Name of the ICT third-party service provider in Latin alphabet",
+    "type": "varchar",
+    "required": false
+   },
+   {
+    "code": "0070",
+    "label": "Type of person of the third-party service provider",
+    "type": "varchar",
+    "required": true
+   },
+   {
+    "code": "0080",
+    "label": "Country of the third-party service provider\\222s headquarters",
+    "type": "char",
+    "required": true
+   },
+   {
+    "code": "0090",
+    "label": "Currency of the amount reported",
+    "type": "char",
+    "required": false
+   },
+   {
+    "code": "0100",
+    "label": "Total annual expense or estimated cost of the third-party service provider",
+    "type": "money",
+    "required": false
+   },
+   {
+    "code": "0110",
+    "label": "Identification code of the third-party service provider\\222s ultimate parent undertaking",
+    "type": "varchar",
+    "required": true
+   },
+   {
+    "code": "0120",
+    "label": "Type of code of the third-party service provider\\222s ultimate parent undertaking",
+    "type": "varchar",
+    "required": false
+   }
+  ],
+  "B_05.02": [
+   {
+    "code": "0010",
+    "label": "Contractual arrangement reference number",
+    "type": "varchar",
+    "required": true
+   },
+   {
+    "code": "0020",
+    "label": "Type of ICT services",
+    "type": "varchar",
+    "required": true
+   },
+   {
+    "code": "0030",
+    "label": "Identification code of the third-party service provider",
+    "type": "varchar",
+    "required": true
+   },
+   {
+    "code": "0040",
+    "label": "Type of code of the third-party service provider",
+    "type": "varchar",
+    "required": false
+   },
+   {
+    "code": "0050",
+    "label": "Rank",
+    "type": "int",
+    "required": true
+   },
+   {
+    "code": "0060",
+    "label": "Identification code of the recipient of sub-contracted ICT services",
+    "type": "varchar",
+    "required": true
+   },
+   {
+    "code": "0070",
+    "label": "Type of code of the recipient of sub- contracted ICT services",
+    "type": "varchar",
+    "required": false
+   }
+  ]
+ }
+}
