@@ -46,7 +46,9 @@ server-side backups — or as a stepping stone to the full suite.
   server-recomputed scores blocks tampering even via hand-crafted requests.
 - **Vendor portal**: a companion single-page app your vendors open from a
   link or file — they answer in their browser and send the response back
-  encrypted, no account needed.
+  encrypted, no account needed. Links open on the public portal
+  (vendor.cisotoolbox.org) so a vendor reaches them even when your
+  deployment is internal; `VENDOR_PORTAL_URL` points them elsewhere.
 - **Maturity evaluations** and **DORA Register of Information** with
   pre-export validation against the official codelists.
 - **AI assistant** (optional) and JSON import/export compatible with the

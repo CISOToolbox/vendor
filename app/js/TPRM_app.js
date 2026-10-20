@@ -4959,12 +4959,39 @@ function _bytesToBase64Url(bytes) {
     return _bytesToBase64(bytes).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 // Builds the URL that should open the portal at the same origin / path.
-function _portalBaseURL() {
+// FEAT-61 — a generated link points at the public static portal by default
+// (most deployments are internal: their own address is out of the vendor's
+// reach). The server says which portal (VENDOR_PORTAL_URL); an empty value
+// means the deployment's own. The questionnaire travels in the fragment,
+// which no portal server receives.
+var _portalBase = null;
+function _ownPortalURL() {
     var loc = window.location;
     // window.location.pathname may end with /index.html or /.
     // We want the current folder + "portal/".
     var folder = loc.pathname.replace(/\/[^/]*$/, "/"); // keep trailing /
     return loc.origin + folder + "portal/";
+}
+async function _portalBaseURL() {
+    if (_portalBase !== null)
+        return _portalBase;
+    // The server's answer decides; when it cannot be read (session expired,
+    // server error), the deployment's own portal is used and not remembered:
+    // a failure never sends the questionnaire to the public portal against
+    // what the operator may have set.
+    try {
+        var r = await fetch("api/settings/portal", { credentials: "same-origin" });
+        if (r.ok) {
+            var j = await r.json();
+            if (j && typeof j.base_url === "string") {
+                var base = j.base_url || _ownPortalURL();
+                _portalBase = base;
+                return base;
+            }
+        }
+    }
+    catch (e) { /* unreachable: below */ }
+    return _ownPortalURL();
 }
 async function _generatePortalLink(assessId) {
     var a = _assessmentView(assessId);
@@ -4989,7 +5016,7 @@ async function _generatePortalLink(assessId) {
         var b64 = _bytesToBase64Url(enc);
         // 5. build URL with a version tag so the portal knows how to
         //    decode (v1gz = base64(gzip(json)) then encrypted).
-        var url = _portalBaseURL() + "#data=v1gz." + b64;
+        var url = (await _portalBaseURL()) + "#data=v1gz." + b64;
         // Compute thresholds
         var size = url.length;
         var statusKey, statusColor, statusBg;

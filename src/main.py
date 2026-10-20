@@ -25,6 +25,7 @@ from src.routes.vendor_risks import router as vendor_risks_router
 from src.routes.vendor_documents import router as vendor_documents_router
 from src.routes.vendor_assessments import router as vendor_assessments_router
 from src.routes.dora import router as dora_router
+from src.routes.portal import router as portal_router
 from src.routes.nonconformities import router as nonconformities_router, internal_router as nonconformities_internal_router  # FEAT-45
 from src.version_common import version_payload
 
@@ -85,6 +86,7 @@ app.include_router(vendors_router)
 app.include_router(vendor_measures_router)
 app.include_router(vendor_risks_router)
 app.include_router(vendor_documents_router)
+app.include_router(portal_router)
 app.include_router(vendor_assessments_router)
 app.include_router(dora_router)
 app.include_router(ai_router)
