@@ -118,7 +118,7 @@ window.selectVendorListTab = function(tab: any) {
     // Make sure the DORA tree is loaded before showing the subs tab —
     // _renderSubcontractors reads _doraTree.subcontractors directly.
     if (tab === "subcontractors" && window.DoraData && !window.DoraData.getTree()) {
-        window.DoraData.ensureLoaded(function() { renderPanel(); });
+        window.DoraData.ensureLoaded(function() { _renderKeepingFocus(renderPanel); });
     }
     renderPanel();
 };
@@ -700,11 +700,26 @@ var _vendorFilter = "";
 var _vendorStatusFilter = "";
 var _subFilter = "";
 
-function filterVendors(val: string) { _vendorFilter = (val || "").toLowerCase(); renderPanel(); }
+// BUG-110: a list re-render replaces its filter field too, so typing lost the
+// focus on every keystroke. Re-render, then give the focus and the caret back
+// to the field that had them (found by id).
+function _renderKeepingFocus(render: () => void): void {
+    var prev = document.activeElement as HTMLInputElement | null;
+    var id = prev && prev.id ? prev.id : "";
+    var caret: number | null = null;
+    try { caret = prev && typeof prev.selectionStart === "number" ? prev.selectionStart : null; } catch (e) { caret = null; }
+    render();
+    var next = id ? document.getElementById(id) as HTMLInputElement | null : null;
+    if (!next) return;
+    next.focus();
+    if (caret !== null) { try { next.setSelectionRange(caret, caret); } catch (e) { /* not a text field */ } }
+}
+
+function filterVendors(val: string) { _vendorFilter = (val || "").toLowerCase(); _renderKeepingFocus(renderPanel); }
 window.filterVendors = filterVendors;
-function filterVendorStatus(val: string) { _vendorStatusFilter = val || ""; renderPanel(); }
+function filterVendorStatus(val: string) { _vendorStatusFilter = val || ""; _renderKeepingFocus(renderPanel); }
 window.filterVendorStatus = filterVendorStatus;
-window.filterSubs = function(val: string) { _subFilter = (val || "").toLowerCase(); renderPanel(); };
+window.filterSubs = function(val: string) { _subFilter = (val || "").toLowerCase(); _renderKeepingFocus(renderPanel); };
 
 // Card-based listing of project-wide subcontractors (DORA global identities).
 // Mirrors the vendor list visual language (header + search + cards) so users
@@ -736,7 +751,7 @@ function renderSubcontractorList() {
 
     // Search bar (mirrors vendor list).
     h += '<div class="ct-flex ct-gap-2 ct-mb-3 ct-row-wrap">';
-    h += '<input type="text" placeholder="🔍 ' + esc(t("vendor.search")) + '" value="' + esc(_subFilter) + '" class="ct-flex-1 ct-minw-180 ct-py-1 ct-px-2 ct-bordered ct-r-md ct-text-meta" data-input="filterSubs" data-pass-value>';
+    h += '<input type="text" id="sub-search" placeholder="🔍 ' + esc(t("vendor.search")) + '" value="' + esc(_subFilter) + '" class="ct-flex-1 ct-minw-180 ct-py-1 ct-px-2 ct-bordered ct-r-md ct-text-meta" data-input="filterSubs" data-pass-value>';
     h += '</div>';
 
     if (!subs.length) return h + '<div class="ct-empty-state">' + esc(t("dora.subs.empty")) + '</div>';
@@ -794,7 +809,7 @@ function renderVendorList() {
     // Lazy-load the DORA tree so we can show DORA badges on vendor cards.
     if (window.DoraData && !window.DoraData.getTree()) {
         window.DoraData.ensureLoaded(function(tree) {
-            if (tree) renderPanel();   // re-render once the tree is ready
+            if (tree) _renderKeepingFocus(renderPanel);   // re-render once the tree is ready, typing kept
         });
     }
     // Tab bar: Vendors | Subcontractors (global DORA subs).
@@ -830,8 +845,8 @@ function renderVendorList() {
 
     // Search + filter bar
     h += '<div class="ct-flex ct-gap-2 ct-mb-3 ct-row-wrap">';
-    h += '<input type="text" placeholder="🔍 ' + esc(t("vendor.search")) + '" value="' + esc(_vendorFilter) + '" class="ct-flex-1 ct-minw-180 ct-py-1 ct-px-2 ct-bordered ct-r-md ct-text-meta" data-input="filterVendors" data-pass-value>';
-    h += '<select class="ct-filter" data-change="filterVendorStatus" data-pass-value>';
+    h += '<input type="text" id="vendor-search" placeholder="🔍 ' + esc(t("vendor.search")) + '" value="' + esc(_vendorFilter) + '" class="ct-flex-1 ct-minw-180 ct-py-1 ct-px-2 ct-bordered ct-r-md ct-text-meta" data-input="filterVendors" data-pass-value>';
+    h += '<select id="vendor-status-filter" class="ct-filter" data-change="filterVendorStatus" data-pass-value>';
     h += '<option value="">' + t("vendor.filter_all") + '</option>';
     h += '<option value="active"' + (_vendorStatusFilter === "active" ? ' selected' : '') + '>' + t("vendor.status_active") + '</option>';
     h += '<option value="prospect"' + (_vendorStatusFilter === "prospect" ? ' selected' : '') + '>' + t("vendor.status_prospect") + '</option>';
@@ -1012,7 +1027,7 @@ function renderVendorDetail() {
 function _renderVendorDoraTab(v: any) {
     // Lazy-load the DORA tree on first visit (also pulls codelists).
     if (window.DoraData && !window.DoraData.getTree()) {
-        window.DoraData.ensureLoaded(function() { renderPanel(); });
+        window.DoraData.ensureLoaded(function() { _renderKeepingFocus(renderPanel); });
     }
     var cl = (window.DoraData && window.DoraData.codelists()) || {};
     var personType = cl.person_type || [];
@@ -2574,8 +2589,10 @@ function _onRiskFilterChange() {
     _riskFilterVendor = ((document.getElementById("risk-filter-vendor") as HTMLInputElement | null) || ({} as HTMLInputElement)).value || "";
     _riskFilterCategory = ((document.getElementById("risk-filter-category") as HTMLInputElement | null) || ({} as HTMLInputElement)).value || "";
     _riskFilterStatus = ((document.getElementById("risk-filter-status") as HTMLInputElement | null) || ({} as HTMLInputElement)).value || "";
-    var c = document.getElementById("content");
-    if (c) c.innerHTML = renderRiskList();
+    _renderKeepingFocus(function() {
+        var c = document.getElementById("content");
+        if (c) c.innerHTML = renderRiskList();
+    });
 }
 window._onRiskFilterChange = _onRiskFilterChange;
 

@@ -88,6 +88,7 @@
     // Once the DORA tree is loaded (either by visiting the panel or by
     // calling DoraData.ensureLoaded()), other modules can read the
     // cached arrangements / sub-contractors / signers.
+    var _doraLoading = null; // callbacks of the load in flight
     function _publishCache() {
         window._doraTreeCache = _doraTree;
     }
@@ -101,12 +102,34 @@
                     cb(_doraTree);
                 return;
             }
+            // One load at a time: a caller arriving while it is in flight (a list
+            // re-rendered on each keystroke) waits for it instead of sending another.
+            if (_doraLoading) {
+                if (cb)
+                    _doraLoading.push(cb);
+                return;
+            }
             var pid = window.getActiveProjectId && window.getActiveProjectId();
             if (!pid) {
                 if (cb)
                     cb(null);
                 return;
             }
+            var waiting = cb ? [cb] : [];
+            _doraLoading = waiting;
+            var done = function (tree) {
+                if (_doraLoading === waiting)
+                    _doraLoading = null;
+                // Each caller on its own: one that throws does not reach the others.
+                waiting.forEach(function (f) {
+                    try {
+                        f(tree);
+                    }
+                    catch (e) {
+                        console.error("DoraData caller failed:", e);
+                    }
+                });
+            };
             Promise.all([
                 VendorAPI.doraTree(pid),
                 _doraCodelists ? Promise.resolve(_doraCodelists) : VendorAPI.doraCodelists()
@@ -114,14 +137,13 @@
                 _doraTree = results[0];
                 _doraCodelists = results[1];
                 _publishCache();
-                if (cb)
-                    cb(_doraTree);
-            }).catch(function () { if (cb)
-                cb(null); });
+                done(_doraTree);
+            }, function () { done(null); });
         },
         // Invalidate the cache (called after vendor.dora_* mutations from elsewhere).
         invalidate: function () {
             _doraTree = null;
+            _doraLoading = null; // a load in flight no longer serves the next callers
             window._doraTreeCache = null;
         },
         // List of arrangements where the given vendor is the TPSP.
