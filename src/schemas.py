@@ -622,6 +622,7 @@ class DoraFunctionCreate(BaseModel):
     recovery_point_objective_h: float | None = None
     impact_tolerance_description: str | None = ""
     last_assessment_date: str | None = None
+    rfe_id: str | None = None
 
 
 class DoraFunctionUpdate(BaseModel):
@@ -637,6 +638,7 @@ class DoraFunctionUpdate(BaseModel):
     recovery_point_objective_h: float | None = None
     impact_tolerance_description: str | None = None
     last_assessment_date: str | None = None
+    rfe_id: str | None = None
 
 
 class DoraFunctionResponse(BaseModel):
@@ -656,6 +658,7 @@ class DoraFunctionResponse(BaseModel):
     last_assessment_date: str | None = None
     created_at: datetime
     updated_at: datetime
+    rfe_id: str | None = None
     model_config = {"from_attributes": True}
 
 
@@ -699,6 +702,8 @@ class DoraConsolidationScopeCreate(BaseModel):
     relation_to_rfe: str | None = ""
     inclusion_method: str | None = ""
     country_iso2: str | None = ""
+    entity_type: str | None = ""      # B_01.02.0040 (BUG-112)
+    hierarchy: str | None = ""        # B_01.02.0050
 
 
 class DoraConsolidationScopeUpdate(BaseModel):
@@ -708,6 +713,8 @@ class DoraConsolidationScopeUpdate(BaseModel):
     relation_to_rfe: str | None = None
     inclusion_method: str | None = None
     country_iso2: str | None = None
+    entity_type: str | None = None
+    hierarchy: str | None = None
 
 
 class DoraConsolidationScopeResponse(BaseModel):
@@ -719,6 +726,8 @@ class DoraConsolidationScopeResponse(BaseModel):
     relation_to_rfe: str | None
     inclusion_method: str | None
     country_iso2: str | None
+    entity_type: str | None = None
+    hierarchy: str | None = None
     created_at: datetime
     updated_at: datetime
     model_config = {"from_attributes": True}
@@ -747,7 +756,7 @@ class DoraArrangementCreate(BaseModel):
     substitutability_reason: str | None = ""
     reintegration_level: str | None = ""
     is_substitutable: bool = False
-    exit_strategy_documented: bool = False
+    exit_strategy_documented: bool | None = None
     reintegration_possible: bool = False
     last_audit_date: str | None = ""
     # Migration 011 — EBA RoI completeness
@@ -757,6 +766,9 @@ class DoraArrangementCreate(BaseModel):
     notice_period_tpsp_days: int | None = None
     termination_reason: str | None = None
     parent_arrangement_id: str | None = None
+    open_ended: bool | None = False          # B_02.02.0080 → 9999-12-31 (BUG-112)
+    data_stored: bool | None = None          # B_02.02.0140; None = derived from the storage country
+    linked_arrangement_id: str | None = None  # B_02.03.0020
     rfe_ids: list[str] = Field(default_factory=list)
     service_codes: list[str] = Field(default_factory=list)
 
@@ -792,6 +804,9 @@ class DoraArrangementUpdate(BaseModel):
     notice_period_tpsp_days: int | None = None
     termination_reason: str | None = None
     parent_arrangement_id: str | None = None
+    open_ended: bool | None = None
+    data_stored: bool | None = None
+    linked_arrangement_id: str | None = None
     service_codes: list[str] | None = None
 
 
@@ -819,7 +834,7 @@ class DoraArrangementResponse(BaseModel):
     substitutability_reason: str | None
     reintegration_level: str | None
     is_substitutable: bool
-    exit_strategy_documented: bool
+    exit_strategy_documented: bool | None = None
     reintegration_possible: bool
     last_audit_date: str | None
     # Migration 011 — EBA RoI completeness
@@ -829,6 +844,9 @@ class DoraArrangementResponse(BaseModel):
     notice_period_tpsp_days: int | None = None
     termination_reason: str | None = None
     parent_arrangement_id: str | None = None
+    open_ended: bool | None = None
+    data_stored: bool | None = None
+    linked_arrangement_id: str | None = None
     rfe_ids: list[str] = Field(default_factory=list)
     service_codes: list[str] = Field(default_factory=list)
     subcontractor_links: list["DoraArrangementSubcontractorResponse"] = Field(default_factory=list)

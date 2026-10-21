@@ -33,7 +33,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.csv_common import xlsx_safe_workbook
-from src.dora_validation import roi_required_columns
+from src.dora_validation import lei_is_valid, roi_required_columns
 from src.models import (
     DoraArrangement,
     DoraArrangementFunction,
@@ -393,6 +393,31 @@ def _eba_type_of_code_for_lei(lei: str | None, fallback_type: str | None = None)
     return ""
 
 
+# BUG-112 — conventions of the EBA DORA RoI reporting FAQ (28 March 2025):
+#   an open date (deletion from the register of an entity still in scope,
+#   end of an open-ended contract) is 9999-12-31; a key the ITS asks for
+#   that does not apply is "Not Applicable" (Q64), or the closed-set
+#   "Not applicable" country eba_GA:qx2007 for the storage location (Q61).
+_OPEN_DATE = "9999-12-31"
+_NOT_APPLICABLE = "Not Applicable"
+_COUNTRY_NOT_APPLICABLE = "eba_GA:qx2007"
+
+
+def _tpp_code(v: Any) -> tuple[str, str]:
+    """A provider's identification code and its type: its LEI, else its
+    additional identifier with a type the EBA knows, else nothing — never the
+    app's internal id, which is no EBA code (the empty cell shows red)."""
+    if v is None:
+        return "", ""
+    if getattr(v, "lei", None):
+        return v.lei, "eba_qCO:qx2000"
+    value = getattr(v, "additional_id_value", None) or ""
+    kind = _eba(_EBA_TYPE_OF_CODE, getattr(v, "additional_id_type", None))
+    if value and kind:
+        return value, kind
+    return "", ""
+
+
 # ── Official column specs (id, title) per EBA Data Model ──────────
 # Headers in the workbook are rendered as "{id} - {title}" exactly
 # matching the EBA Data Model PDF.
@@ -711,22 +736,22 @@ async def build_dora_xlsx(
                 e.parent_lei or "",
                 (e.updated_at.date().isoformat() if e.updated_at else ""),
                 (e.created_at.date().isoformat() if e.created_at else ""),
-                "",  # date of deletion — not modelled
+                _OPEN_DATE,  # date of deletion: a deleted entity is erased, every exported one is in scope
                 _eba_currency(e.total_assets_currency or "EUR") if e.total_assets is not None else "",
                 e.total_assets if e.total_assets is not None else "",
             ])
         for c in consolidation:
-            # Consolidation scope rows are not strictly RFEs; entity_type
-            # and hierarchy are left empty since the data model does not
-            # store an EBA entity_type for consolidation entries.
             b0102_rows.append([
                 c.entity_lei or "",
                 c.entity_name or "",
                 _eba_country(c.country_iso2),
-                "",  # entity_type — not modelled on consolidation rows
-                "",  # hierarchy — not declared on consolidation rows
+                _eba(_EBA_ENTITY_TYPE, getattr(c, "entity_type", None)),
+                _eba(_EBA_HIERARCHY, getattr(c, "hierarchy", None)),
                 "",
-                "", "", "", "", "",
+                (c.updated_at.date().isoformat() if c.updated_at else ""),
+                (c.created_at.date().isoformat() if c.created_at else ""),
+                _OPEN_DATE,
+                "", "",
             ])
         _write_sheet(wb, "B_01.02", _COLS_B0102, b0102_rows)
 
@@ -786,22 +811,26 @@ async def build_dora_xlsx(
                         if fn_id:
                             fn_obj = fn_by_id.get(fn_id)
                             fn_code = (getattr(fn_obj, "code", "") or fn_id) if fn_obj else fn_id
+                        tpp_code, tpp_type = _tpp_code(v)
+                        # Stored: as stated; not stated → a storage country says yes,
+                        # otherwise unknown — both cells empty (red), never a silent "No".
+                        stored = a.data_stored if getattr(a, "data_stored", None) is not None else (True if a.data_storage_country else None)
                         b0202_rows.append([
                             a.arrangement_reference or a.id,
                             (rfe.lei if rfe else ""),
-                            (v.lei if v and v.lei else (v.id if v else "")),
-                            _eba_type_of_code_for_lei(v.lei if v else None),
+                            tpp_code,
+                            tpp_type,
                             fn_code,
                             _eba(_EBA_ICT_SERVICE, svc) if svc else "",
                             a.start_date or "",
-                            a.end_date or "",
+                            a.end_date or (_OPEN_DATE if getattr(a, "open_ended", False) else ""),
                             _eba(_EBA_TERMINATION_REASON, a.termination_reason),
                             a.notice_period_days if a.notice_period_days is not None else "",
                             a.notice_period_tpsp_days if a.notice_period_tpsp_days is not None else "",
                             _eba_country(a.governing_law_country),
                             _eba_country(a.jurisdiction_country),
-                            _eba_yesno(bool(a.data_storage_country)),
-                            _eba_country(a.data_storage_country),
+                            ("" if stored is None else _eba_yesno(stored)),
+                            ("" if stored is None else (_eba_country(a.data_storage_country) if stored else _COUNTRY_NOT_APPLICABLE)),
                             _eba_country(a.data_processing_country),
                             _eba(_EBA_DATA_SENSITIVITY, a.data_sensitivity),
                             _eba(_EBA_RELIANCE_LEVEL, a.reliance_level),
@@ -809,22 +838,30 @@ async def build_dora_xlsx(
         _write_sheet(wb, "B_02.02", _COLS_B0202, b0202_rows)
 
         # ── B_02.03 — Intra-group arrangements ─────────────────────────
-        rfe_lei_set = {(e.lei or "").upper() for e in entities if e.lei}
-        b0203_rows: list[list[Any]] = []
-        for a in arrangements:
-            v = vendor_by_id.get(a.vendor_id)
-            if not v:
-                continue
-            is_intra = False
+        # Intra-group: the provider, or its ultimate parent, carries the LEI
+        # of an entity of the group (reporting entities and consolidation).
+        group_leis = {(e.lei or "").upper() for e in entities if e.lei}
+        group_leis |= {(c.entity_lei or "").upper() for c in consolidation if c.entity_lei}
+
+        def _is_intra_group(v: Any) -> bool:
+            if v is None:
+                return False
+            if v.lei and v.lei.upper() in group_leis:
+                return True
             if v.ultimate_parent_id:
                 pv = vendor_by_id.get(v.ultimate_parent_id)
-                if pv and pv.lei and pv.lei.upper() in rfe_lei_set:
-                    is_intra = True
-            if not is_intra:
-                continue
+                parent_lei = pv.lei if pv else v.ultimate_parent_id
+                if parent_lei and str(parent_lei).upper() in group_leis:
+                    return True
+            return False
+
+        intra_arrangements = [a for a in arrangements if _is_intra_group(vendor_by_id.get(a.vendor_id))]
+        b0203_rows: list[list[Any]] = []
+        for a in intra_arrangements:
+            linked = arr_by_id.get(a.linked_arrangement_id) if getattr(a, "linked_arrangement_id", None) else None
             b0203_rows.append([
                 a.arrangement_reference or a.id,
-                "",  # linked external arrangement — not modelled
+                (linked.arrangement_reference or linked.id) if linked else "",
             ])
         _write_sheet(wb, "B_02.03", _COLS_B0203, b0203_rows)
 
@@ -845,24 +882,30 @@ async def build_dora_xlsx(
         for a in arrangements:
             v = vendor_by_id.get(a.vendor_id)
             if v:
-                b0302_rows.append([
-                    a.arrangement_reference or a.id,
-                    v.lei or v.id or "",
-                    _eba_type_of_code_for_lei(v.lei, v.additional_id_type),
-                ])
+                code, kind = _tpp_code(v)
+                b0302_rows.append([a.arrangement_reference or a.id, code, kind])
+        seen_0302 = {(r[0], r[1]) for r in b0302_rows}
         for s in signers:
             if (s.signer_role or "").lower() != "tpp":
                 continue
             a = arr_by_id.get(s.arrangement_id)
-            b0302_rows.append([
-                (a.arrangement_reference if a else s.arrangement_id),
-                s.signer_lei or "",
-                _eba_type_of_code_for_lei(s.signer_lei),
-            ])
+            if s.signer_lei:
+                code, kind = s.signer_lei, _eba_type_of_code_for_lei(s.signer_lei)
+            else:   # the provider signs for itself
+                code, kind = _tpp_code(vendor_by_id.get(a.vendor_id) if a else None)
+            ref = a.arrangement_reference if a else s.arrangement_id
+            if (ref, code) in seen_0302:
+                continue   # the provider signing for itself is already the row above (one key, one row)
+            seen_0302.add((ref, code))
+            b0302_rows.append([ref, code, kind])
         _write_sheet(wb, "B_03.02", _COLS_B0302, b0302_rows)
 
-        # ── B_03.03 — Intra-group entity providing ICT (placeholder) ───
-        _write_sheet(wb, "B_03.03", _COLS_B0303, [])
+        # ── B_03.03 — Intra-group entity providing the ICT service ─────
+        b0303_rows: list[list[Any]] = []
+        for a in intra_arrangements:
+            v = vendor_by_id.get(a.vendor_id)
+            b0303_rows.append([a.arrangement_reference or a.id, (v.lei if v and v.lei else "")])
+        _write_sheet(wb, "B_03.03", _COLS_B0303, b0303_rows)
 
         # ── B_04.01 — Entities making use of ICT services ──────────────
         b0401_rows: list[list[Any]] = []
@@ -873,7 +916,7 @@ async def build_dora_xlsx(
                 (a.arrangement_reference if a else link.arrangement_id),
                 (rfe.lei if rfe else ""),
                 _EBA_IS_BRANCH["not_branch"],  # RFE rows are FEs, not branches
-                "",
+                _NOT_APPLICABLE,               # B_04.01.0040: not a branch (FAQ Q64)
             ])
         # Branch usage rows — emit when a branch is explicitly recorded as
         # a user. The current model does not link branches to arrangements
@@ -882,13 +925,36 @@ async def build_dora_xlsx(
 
         # ── B_05.01 — TPSP catalog ─────────────────────────────────────
         b0501_rows: list[list[Any]] = []
+        # A parent cited in 0110 is reported as a row of its own (its code in
+        # 0010), even without an arrangement of its own.
+        reported_ids = set(used_vendor_ids)
+        for vid in list(used_vendor_ids):
+            seen_chain: set[str] = set()
+            cur = vendor_by_id.get(vid)
+            while cur is not None and cur.ultimate_parent_id and cur.ultimate_parent_id not in seen_chain:
+                seen_chain.add(cur.ultimate_parent_id)
+                parent = vendor_by_id.get(cur.ultimate_parent_id)
+                if parent is None:
+                    break
+                reported_ids.add(parent.id)
+                cur = parent
         for v in vendors:
-            if v.id not in used_vendor_ids:
+            if v.id not in reported_ids:
                 continue
             ult = vendor_by_id.get(v.ultimate_parent_id) if v.ultimate_parent_id else None
+            own_code, own_type = _tpp_code(v)
+            if ult is not None:
+                parent_code, parent_type = _tpp_code(ult)
+            elif v.ultimate_parent_id and lei_is_valid(str(v.ultimate_parent_id).upper()):
+                # a LEI stored before parents were picked among vendors
+                parent_code, parent_type = str(v.ultimate_parent_id).upper(), _eba_type_of_code_for_lei(v.ultimate_parent_id)
+            elif v.ultimate_parent_id:   # a parent no longer in the register: not stated (red)
+                parent_code, parent_type = "", ""
+            else:                        # not part of a group: its own code (FAQ Q99)
+                parent_code, parent_type = own_code, own_type
             b0501_rows.append([
-                v.lei or v.id or "",
-                _eba_type_of_code_for_lei(v.lei),
+                own_code,
+                own_type,
                 v.additional_id_value or "",
                 _eba(_EBA_TYPE_OF_CODE, v.additional_id_type),
                 v.name or "",
@@ -897,8 +963,8 @@ async def build_dora_xlsx(
                 _eba_country(v.country_iso2),
                 _eba_currency(vendor_cur_by_id.get(v.id, "")),
                 vendor_total_by_id.get(v.id, ""),
-                (ult.lei if ult and ult.lei else (v.ultimate_parent_id or "")),
-                _eba_type_of_code_for_lei(ult.lei if ult else None),
+                parent_code,
+                parent_type,
             ])
         _write_sheet(wb, "B_05.01", _COLS_B0501, b0501_rows)
 
@@ -922,11 +988,12 @@ async def build_dora_xlsx(
             v = vendor_by_id.get(a.vendor_id)
             if not v:
                 continue
-            vendor_lei = (v.lei if v.lei else v.id) or ""
-            vendor_code_type = _eba_type_of_code_for_lei(v.lei)
+            vendor_lei, vendor_code_type = _tpp_code(v)
             svc_codes = svc_by_arr.get(a.id, [])
             if not svc_codes and a.nature_of_service:
                 svc_codes = [a.nature_of_service]
+            if not svc_codes:
+                svc_codes = [None]   # the rank-1 row is due anyway; its empty service shows red
             for svc in svc_codes:
                 b0502_rows.append([
                     a.arrangement_reference or a.id,
@@ -946,19 +1013,20 @@ async def build_dora_xlsx(
             sub = sub_by_id.get(link.subcontractor_id)
             if not sub:
                 continue
-            sub_lei = (sub.lei if sub.lei else sub.id) or link.subcontractor_id
+            sub_lei = sub.lei or ""   # a subcontractor is identified by its LEI (no other code in the app)
             sub_code_type = _eba_type_of_code_for_lei(sub.lei)
             tier = link.tier if link.tier is not None else 2
-            if tier <= 2 or not link.parent_subcontractor_id:
-                recipient_lei = (v.lei if v and v.lei else (v.id if v else "")) or ""
-                recipient_code_type = _eba_type_of_code_for_lei(v.lei if v else None)
+            if tier <= 2:
+                recipient_lei, recipient_code_type = _tpp_code(v)
+            elif not link.parent_subcontractor_id:   # rank n-1 not stated: empty (red), not the direct provider
+                recipient_lei, recipient_code_type = "", ""
             else:
                 parent_sub = sub_by_id.get(link.parent_subcontractor_id)
                 if parent_sub:
-                    recipient_lei = (parent_sub.lei if parent_sub.lei else parent_sub.id) or link.parent_subcontractor_id
+                    recipient_lei = parent_sub.lei or ""
                     recipient_code_type = _eba_type_of_code_for_lei(parent_sub.lei)
                 else:
-                    recipient_lei = link.parent_subcontractor_id or ""
+                    recipient_lei = ""
                     recipient_code_type = _eba_type_of_code_for_lei(None)
             b0502_rows.append([
                 (a.arrangement_reference if a else link.arrangement_id),
@@ -982,7 +1050,7 @@ async def build_dora_xlsx(
                 (getattr(f, "code", "") or "") or f.id,
                 _eba_from_codelist("licenced_activity", f.business_line),
                 f.name or "",
-                holder_lei,
+                (rfe_by_id[f.rfe_id].lei if getattr(f, "rfe_id", None) and f.rfe_id in rfe_by_id and rfe_by_id[f.rfe_id].lei else holder_lei),
                 _eba_yesno_or_na(f.is_critical_or_important),
                 f.criticality_rationale or "",
                 f.last_assessment_date or "",  # B_06.01.0070
@@ -1006,17 +1074,19 @@ async def build_dora_xlsx(
             # 0110 alternative TPP "yes/no/na" boolean is derived from whether
             # an alternative TPSP id was recorded; the actual identifier flows
             # into the column when present, otherwise leave empty.
-            alt_present = bool((a.alternative_tpp_id or "").strip())
+            # B_07.01.0110: an alternative named → yes; none named once the
+            # substitutability is assessed → no; not assessed → not performed.
+            alt_present = True if (a.alternative_tpp_id or "").strip() else (False if a.substitutability_level else None)
             for svc in svc_codes:
                 b0701_rows.append([
                     a.arrangement_reference or a.id,
-                    (v.lei if v and v.lei else (v.id if v else "")),
-                    _eba_type_of_code_for_lei(v.lei if v else None),
+                    _tpp_code(v)[0],
+                    _tpp_code(v)[1],
                     _eba(_EBA_ICT_SERVICE, svc) if svc else "",
                     _eba(_EBA_SUBSTITUTABILITY, a.substitutability_level),
                     _eba(_EBA_SUBSTITUTABILITY_REASON, a.substitutability_reason),
                     a.last_audit_date or "",
-                    _eba_yesno(bool(a.exit_strategy_documented)),
+                    ("" if a.exit_strategy_documented is None else _eba_yesno(a.exit_strategy_documented)),  # not stated → empty (red)
                     _eba(_EBA_REINTEGRATION_LEVEL, a.reintegration_level),
                     _eba(_EBA_IMPACT_LEVEL, a.impact_discontinuing_level),  # B_07.01.0100
                     _eba_yesno_or_na(alt_present),                          # B_07.01.0110 yes/no/na

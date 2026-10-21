@@ -228,10 +228,22 @@ window.DoraData = {
     naceDatalist: function() { return _naceDatalist(); }
 };
 
+// BUG-112 — a codelist value the EBA has no code for (eba_code null) exports
+// as an empty cell: it is no longer offered, unless it is the stored value
+// (shown, so it can be seen and changed).
+function _doraOffered(it: any, keep: string[], items: any[]): boolean {
+    // Only lists whose values carry EBA codes; a value of such a list with
+    // no code (key absent or empty) is the one that exports empty.
+    var coded = items.some(function(x: any) { return x && typeof x === "object" && x.eba_code; });
+    if (!coded || !it || typeof it !== "object" || it.eba_code) return true;
+    return keep.indexOf(String(it.code)) >= 0;
+}
+
 function _codelistOptions(key: string, current: string | null | undefined) {
     var items = (_doraCodelists && _doraCodelists[key]) || [];
     var h = '<option value=""></option>';
     items.forEach(function(it: any) {
+        if (!_doraOffered(it, current ? [String(current)] : [], items)) return;
         var code = it.code !== undefined ? it.code : it;
         var label = it.label !== undefined ? it.label : it;
         var display = _doraCodeI18n(key, String(code), String(label));
@@ -466,6 +478,8 @@ function _renderEntityOverview() {
                 + _fld(_doraT("dora.overview.f.cs_name", "Nom de l'entité (B_01.02.0020)"), '<input value="' + esc(r.entity_name || "") + '" data-input="doraPatchCs" data-args=\'["' + esc(r.id) + '","entity_name"]\' data-pass-value>')
                 + _fld(_doraT("dora.overview.f.lei", "LEI (B_01.02.0010)"), '<input value="' + esc(r.entity_lei || "") + '" maxlength="20" data-input="doraPatchCs" data-args=\'["' + esc(r.id) + '","entity_lei"]\' data-pass-value class="ct-mono ct-upper">')
                 + _fld(_doraT("dora.overview.f.country_cs", "Pays (B_01.02.0030)"), '<select data-change="doraPatchCs" data-args=\'["' + esc(r.id) + '","country_iso2"]\' data-pass-value>' + _countryOptions(r.country_iso2) + '</select>')
+                + _fld(_doraT("dora.overview.f.entity_type", "Type d'entité (B_01.02.0040)"), '<select data-change="doraPatchCs" data-args=\'["' + esc(r.id) + '","entity_type"]\' data-pass-value>' + _codelistOptions("entity_type", r.entity_type) + '</select>')
+                + _fld(_doraT("dora.overview.f.hierarchy", "Hiérarchie (B_01.02.0050)"), '<select data-change="doraPatchCs" data-args=\'["' + esc(r.id) + '","hierarchy"]\' data-pass-value>' + _codelistOptions("hierarchy", r.hierarchy) + '</select>')
             );
         });
     }
@@ -1023,7 +1037,7 @@ function _doraRenderArrSignerSlot(arrangementId: string, modeOverride?: string |
            + '</div>';
     } else {
         h += '<table class="ct-table ct-w-full ct-text-data ct-mb-2"><thead><tr>'
-           + '<th class="ct-w-170">' + esc(_doraT("dora.signer.lei", "LEI (B_03.03.0020)")) + '</th>'
+           + '<th class="ct-w-170">' + esc(_doraT("dora.signer.lei", "LEI (B_03.01.0020 / B_03.02.0020)")) + '</th>'
            + '<th>' + esc(_doraT("dora.signer.name", "Name")) + '</th>'
            + '<th class="ct-w-170">' + esc(_doraT("dora.signer.role", "Role")) + '</th>'
            + '<th style="width:36px"></th></tr></thead><tbody>';
@@ -1101,7 +1115,7 @@ window.doraOpenSignerCreateModal = function(arrangementId: string) {
     var bodyHtml = ''
         + '<div class="ct-form-2col">'
         + '  <label class="ct-col-span-2">' + esc(_doraT("dora.signer.name", "Name")) + ' *<input id="sig-name" required class="ct-w-full"></label>'
-        + '  <label>' + esc(_doraT("dora.signer.lei", "LEI (B_03.03.0020)")) + '<div class="ct-flex ct-items-center ct-gap-1"><input id="sig-lei" maxlength="20" class="ct-flex-1 ct-mono ct-upper">' + _gleifTriggerHtml("sig-lei") + '</div></label>'
+        + '  <label>' + esc(_doraT("dora.signer.lei", "LEI (B_03.01.0020 / B_03.02.0020)")) + '<div class="ct-flex ct-items-center ct-gap-1"><input id="sig-lei" maxlength="20" class="ct-flex-1 ct-mono ct-upper">' + _gleifTriggerHtml("sig-lei") + '</div></label>'
         + '  <label>' + esc(_doraT("dora.signer.role", "Role")) + '<select id="sig-role" class="ct-w-full">' + _codelistOptions("signer_role", "") + '</select></label>'
         + '</div>';
     var buttons: CtModalButton[] = [
@@ -1516,9 +1530,10 @@ function _doraCodeI18n(key: string, code: string, jsonLabel?: string) {
     return jsonLabel || code;
 }
 
-function _doraCodeItems(key: string) {
+function _doraCodeItems(key: string, keep?: string[] | string | null) {
     var items = (_doraCodelists && _doraCodelists[key]) || [];
-    return items.map(function(it: any) {
+    var kept = !keep ? [] : (Array.isArray(keep) ? keep : [keep]);
+    return items.filter(function(it: any) { return _doraOffered(it, kept, items); }).map(function(it: any) {
         var code = it.code !== undefined ? it.code : it;
         var label = it.label !== undefined ? it.label : it;
         return { id: String(code), label: _doraCodeI18n(key, String(code), String(label)) };
@@ -1690,6 +1705,7 @@ window.doraOpenFunctionModal = function(functionId: string | null, opts: any) {
         + _fld(_doraT("dora.fn.rto", "RTO hours (B_06.01.0080)"), '<input id="fn-rto" type="number" step="0.5" value="' + esc(f.recovery_time_objective_h != null ? f.recovery_time_objective_h : "") + '" class="ct-w-full">')
         + _fld(_doraT("dora.fn.rpo", "RPO hours (B_06.01.0090)"), '<input id="fn-rpo" type="number" step="0.5" value="' + esc(f.recovery_point_objective_h != null ? f.recovery_point_objective_h : "") + '" class="ct-w-full">')
         + _fld(_doraT("dora.fn.impact_tolerance", "Impact of discontinuing the function (B_06.01.0100)"), _doraRefSelect("fn-impact", f.impact_tolerance_description, _doraCodeItems("impact_level")), true)
+        + _fld(_doraT("dora.fn.rfe", "Financial entity performing the function (B_06.01.0040)"), _doraRefSelect("fn-rfe", (f as any).rfe_id || "", _doraRfeItems()), true)
         + _fld(_doraT("dora.fn.last_assessment", "Date of last assessment (B_06.01.0070)"), '<input id="fn-last-assess" type="date" value="' + esc(f.last_assessment_date || "") + '" class="ct-w-full">')
         + '</div>';
 
@@ -1726,6 +1742,7 @@ window.doraOpenFunctionModal = function(functionId: string | null, opts: any) {
             recovery_time_objective_h: _n(_v("fn-rto")),
             recovery_point_objective_h: _n(_v("fn-rpo")),
             impact_tolerance_description: _doraRefValue("fn-impact"),
+            rfe_id: _doraRefValue("fn-rfe") || null,
             last_assessment_date: _v("fn-last-assess") || null
         };
         if (isNew) {
@@ -1905,7 +1922,7 @@ window.doraOpenArrangementModal = function(arrangementId: string, vendorIdHint: 
         )
         + _fld(
             _doraT("dora.modal.arr_services", "Type of ICT services (B_02.02.0060)"),
-            _doraRefSelect("arr-services", (a.service_codes || []).join(","), _doraCodeItems("ict_service_type"), { multi: true })
+            _doraRefSelect("arr-services", (a.service_codes || []).join(","), _doraCodeItems("ict_service_type", a.service_codes || []), { multi: true })
               + '<div class="ct-mt-1 ct-text-label ct-muted">' + esc(_doraT("dora.modal.arr_services_hint", "Pick one or more ICT service types — one B_02.02 row will be emitted per service.")) + '</div>',
             true
         )
@@ -1921,14 +1938,21 @@ window.doraOpenArrangementModal = function(arrangementId: string, vendorIdHint: 
         var lab = (p.arrangement_reference || p.id);
         return '<option value="' + esc(p.id) + '"' + sel + '>' + esc(lab) + '</option>';
     }).join("");
+    var _linkedOpts = '<option value="">—</option>' + _otherArrs.map(function(p: any) {
+        var sel = (a!.linked_arrangement_id === p.id) ? " selected" : "";
+        return '<option value="' + esc(p.id) + '"' + sel + '>' + esc(p.arrangement_reference || p.id) + '</option>';
+    }).join("");
+    var _stored = a.data_stored === true ? "yes" : a.data_stored === false ? "no" : "";
     var sectionLifecycle = ''
         + '<div><div class="ct-mb-1">' + _doraT("dora.modal.arr_start", "Start date (B_02.02.0070)") + '</div><input id="arr-start" type="date" value="' + esc(a.start_date || "") + '" class="ct-w-full"></div>'
-        + '<div><div class="ct-mb-1">' + _doraT("dora.modal.arr_end", "End date (B_02.02.0080)") + '</div><input id="arr-end" type="date" value="' + esc(a.end_date || "") + '" class="ct-w-full"></div>'
+        + '<div><div class="ct-mb-1">' + _doraT("dora.modal.arr_end", "End date (B_02.02.0080)") + '</div><input id="arr-end" type="date" value="' + esc(a.end_date || "") + '" class="ct-w-full">'
+        + '<label class="ct-inline-flex ct-items-center ct-gap-1 ct-mt-1"><input type="checkbox" id="arr-open-ended"' + (a.open_ended ? " checked" : "") + '> ' + esc(_doraT("dora.modal.arr_open_ended", "Open-ended (no end date)")) + '</label></div>'
         + '<div><div class="ct-mb-1">' + _doraT("dora.modal.arr_notice", "FE notice period in days (B_02.02.0100)") + '</div><input id="arr-notice" type="number" value="' + esc(a.notice_period_days != null ? a.notice_period_days : "") + '" class="ct-w-full"></div>'
         + '<div><div class="ct-mb-1">' + _doraT("dora.modal.arr_notice_tpsp", "TPSP notice period in days (B_02.02.0110)") + '</div><input id="arr-notice-tpsp" type="number" value="' + esc(a.notice_period_tpsp_days != null ? a.notice_period_tpsp_days : "") + '" class="ct-w-full"></div>'
         + '<div><div class="ct-mb-1">' + _doraT("dora.modal.arr_last_audit", "Last audit (B_07.01.0070)") + '</div><input id="arr-audit" type="date" value="' + esc(a.last_audit_date || "") + '" class="ct-w-full"></div>'
         + _fld(_doraT("dora.modal.arr_termination", "Termination reason (B_02.02.0090)"), _doraRefSelect("arr-term", a.termination_reason, _doraCodeItems("termination_reason")))
         + _fld(_doraT("dora.modal.arr_parent", "Overarching arrangement (B_02.01.0030)"), '<select id="arr-parent" class="ct-w-full">' + _parentOpts + '</select>', true)
+        + _fld(_doraT("dora.modal.arr_linked", "Linked arrangement with an ICT third-party provider — intra-group arrangement (B_02.03.0020)"), '<select id="arr-linked" class="ct-w-full">' + _linkedOpts + '</select>', true)
         + _fld(_doraT("dora.modal.arr_gov", "Governing law country (B_02.02.0120)"), _doraRefSelect("arr-gov", a.governing_law_country, _doraCodeItems("country_iso3166_1")))
         + _fld(_doraT("dora.modal.arr_juris", "Country of provision of the ICT services (B_02.02.0130)"), _doraRefSelect("arr-juris", a.jurisdiction_country, _doraCodeItems("country_iso3166_1")));
 
@@ -1938,6 +1962,10 @@ window.doraOpenArrangementModal = function(arrangementId: string, vendorIdHint: 
         + _fld(_doraT("dora.modal.arr_currency", "Currency (B_02.01.0040)"), _doraRefSelect("arr-currency", a.currency || "EUR", _doraCurrencyItems()))
         + _fld(_doraT("dora.modal.arr_reliance", "Level of reliance (B_02.02.0180)"), _doraRefSelect("arr-reliance", a.reliance_level, _doraCodeItems("reliance_level")))
         + _fld(_doraT("dora.modal.arr_sensitivity", "Data sensitivity (B_02.02.0170)"), _doraRefSelect("arr-sens", a.data_sensitivity, _doraCodeItems("data_sensitivity")))
+        + _fld(_doraT("dora.modal.arr_stored", "Data stored by the provider (B_02.02.0140)"), '<select id="arr-stored" class="ct-w-full">'
+            + '<option value=""' + (_stored === "" ? " selected" : "") + '>' + esc(_doraT("dora.modal.arr_stored_derived", "— (from the storage country)")) + '</option>'
+            + '<option value="yes"' + (_stored === "yes" ? " selected" : "") + '>' + esc(_doraT("dora.yes", "Yes")) + '</option>'
+            + '<option value="no"' + (_stored === "no" ? " selected" : "") + '>' + esc(_doraT("dora.no", "No")) + '</option></select>')
         + _fld(_doraT("dora.modal.arr_storage", "Data storage country (B_02.02.0150)"), _doraRefSelect("arr-storage", a.data_storage_country, _doraCodeItems("country_iso3166_1")))
         + _fld(_doraT("dora.modal.arr_processing", "Data processing country (B_02.02.0160)"), _doraRefSelect("arr-processing", a.data_processing_country, _doraCodeItems("country_iso3166_1")));
 
@@ -1952,7 +1980,10 @@ window.doraOpenArrangementModal = function(arrangementId: string, vendorIdHint: 
         + '</div>'
         + _fld(_doraT("dora.modal.arr_impact", "Impact of discontinuing (B_07.01.0100)"), _doraRefSelect("arr-impact", a.impact_discontinuing_level, _doraCodeItems("impact_level")))
         + _fld(_doraT("dora.modal.arr_alt_tpp", "Identification of alternative ICT TPP (B_07.01.0110/0120)"), '<input id="arr-alt-tpp" value="' + esc(a.alternative_tpp_id || "") + '" placeholder="' + esc(_doraT("dora.modal.arr_alt_tpp_ph", "LEI or name — leave empty if none identified")) + '" class="ct-w-full">')
-        + '<label class="ct-col-span-2 ct-inline-flex ct-items-center ct-gap-1"><input type="checkbox" id="arr-exit"' + (a.exit_strategy_documented ? " checked" : "") + '> ' + _doraT("dora.modal.arr_exit", "Exit plan documented (B_07.01.0080)") + '</label>';
+        + _fld(_doraT("dora.modal.arr_exit", "Exit plan documented (B_07.01.0080)"), '<select id="arr-exit" class="ct-w-full">'
+            + '<option value=""' + (a.exit_strategy_documented == null ? " selected" : "") + '>—</option>'
+            + '<option value="yes"' + (a.exit_strategy_documented === true ? " selected" : "") + '>' + esc(_doraT("dora.yes", "Yes")) + '</option>'
+            + '<option value="no"' + (a.exit_strategy_documented === false ? " selected" : "") + '>' + esc(_doraT("dora.no", "No")) + '</option></select>');
 
     // ── Section 1bis: Signers (B_03.03) ──
     // Determine the initial mode from the existing signer rows attached
@@ -2048,6 +2079,9 @@ window.doraOpenArrangementModal = function(arrangementId: string, vendorIdHint: 
             // functions; do not send a client value.
             start_date: _v("arr-start"),
             end_date: _v("arr-end"),
+            open_ended: _b("arr-open-ended"),
+            data_stored: _v("arr-stored") === "yes" ? true : _v("arr-stored") === "no" ? false : null,
+            linked_arrangement_id: _v("arr-linked") || null,
             notice_period_days: _nFromV(_v("arr-notice")),
             notice_period_tpsp_days: _nFromV(_v("arr-notice-tpsp")),
             termination_reason: _doraRefValue("arr-term") || null,
@@ -2067,7 +2101,7 @@ window.doraOpenArrangementModal = function(arrangementId: string, vendorIdHint: 
             reintegration_level: reintLvl,
             impact_discontinuing_level: _doraRefValue("arr-impact") || null,
             alternative_tpp_id: _v("arr-alt-tpp") || null,
-            exit_strategy_documented: _b("arr-exit"),
+            exit_strategy_documented: _v("arr-exit") === "yes" ? true : _v("arr-exit") === "no" ? false : null,
             rfe_ids: _doraRefValues("arr-rfes")
         };
     }
@@ -2291,6 +2325,12 @@ window.doraOpenSubcontractorModal = function(arrangementId: string, subId: strin
     // The rank is picked directly from a dropdown: "directly from the
     // TPSP" (rank 2) or an explicit deeper rank (3..6).
     var initTier = Math.min(Math.max(Number(l.tier) || 2, 2), 6);
+    // Rank n-1 for rank ≥ 3 (BUG-112): another subcontractor of this arrangement.
+    var _parentSubOpts = allLinks.filter(function(x: any) { return x.subcontractor_id !== l!.subcontractor_id; }).map(function(x: any) {
+        var sx = subById[x.subcontractor_id];
+        var sel = (l!.parent_subcontractor_id === x.subcontractor_id) ? " selected" : "";
+        return '<option value="' + esc(x.subcontractor_id) + '"' + sel + '>' + esc((sx && sx.name) || x.subcontractor_id) + ' (' + esc(_doraT("dora.modal.rank_label", "Rank")) + ' ' + esc(String(x.tier || 2)) + ')</option>';
+    }).join("");
 
     function _section(titleKey: any, fallback: string, gridHtml: any) {
         return ''
@@ -2310,18 +2350,23 @@ window.doraOpenSubcontractorModal = function(arrangementId: string, subId: strin
             +     '<option value="2"' + (initTier === 2 ? ' selected' : '') + '>2 - ' + _doraT("dora.modal.rank_direct", "Directly from the TPSP") + '</option>'
             +     [3, 4, 5, 6].map(function(r) { return '<option value="' + r + '"' + (initTier === r ? ' selected' : '') + '>' + r + '</option>'; }).join('')
             +   '</select>'
+            + '</div>'
+            + '<div class="ct-col-span-2">'
+            +   '<div class="ct-mb-1">' + _doraT("dora.modal.link_parent", "Subcontractor at rank n-1 — for rank 3 and beyond (B_05.02.0060)") + '</div>'
+            +   '<select id="link-parent"><option value="">—</option>' + _parentSubOpts + '</select>'
             + '</div>')
         + _section("dora.modal.link_section_scope", "Scope of the link",
-              _fld(_doraT("dora.modal.sub_service", "Service provided"), _doraRefSelect("link-service", l.service_provided || "", _doraCodeItems("ict_service_type")))
+              _fld(_doraT("dora.modal.sub_service", "Service provided"), _doraRefSelect("link-service", l.service_provided || "", _doraCodeItems("ict_service_type", l.service_provided || "")))
             + '  <label class="ct-flex ct-items-center ct-gap-1 ct-mt-4"><input type="checkbox" id="link-crit"' + (l.is_critical_function_support ? " checked" : "") + '> ' + _doraT("dora.modal.sub_critical", "Supports a critical/important function") + '</label>');
 
     function _collect() {
         function _b(id: string) { var el = document.getElementById(id) as HTMLInputElement | null; return el ? !!el.checked : false; }
         var rankEl = document.getElementById("link-rank") as HTMLSelectElement | null;
         var tier = Math.max(parseInt((rankEl && rankEl.value) as string, 10) || 2, 2);
+        var parentEl = document.getElementById("link-parent") as HTMLSelectElement | null;
         return {
             tier: tier,
-            parent_subcontractor_id: null,
+            parent_subcontractor_id: tier >= 3 && parentEl && parentEl.value ? parentEl.value : null,
             service_provided: _doraRefValue("link-service"),
             is_critical_function_support: _b("link-crit")
         };
@@ -2337,6 +2382,16 @@ window.doraOpenSubcontractorModal = function(arrangementId: string, subId: strin
     }
     buttons.push({ id: "save", label: _doraT("btn_save", "Save"), primary: true, result: function() {
         var data = _collect();
+        // Rank n-1 (BUG-112): the server refuses another rank — say it here,
+        // the modal stays open.
+        if (data.parent_subcontractor_id) {
+            var parentLink = allLinks.find(function(x: any) { return x.subcontractor_id === data.parent_subcontractor_id; });
+            var parentRank = parentLink ? (Number(parentLink.tier) || 2) : 0;
+            if (parentRank !== data.tier - 1) {
+                window.alert(_doraT("dora.modal.link_parent_rank", "The subcontractor at rank n-1 must be at rank {n}.").replace("{n}", String(data.tier - 1)));
+                return false;
+            }
+        }
         if (isNew) {
             var sid = _doraRefValue("link-sub-pick");
             if (!sid) {

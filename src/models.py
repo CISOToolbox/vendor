@@ -353,6 +353,7 @@ class DoraFunction(Base):
     recovery_point_objective_h = Column(Float, nullable=True)
     impact_tolerance_description = Column(Text, nullable=True, default="")
     last_assessment_date = Column(String(10), nullable=True)  # B_06.01.0070 — YYYY-MM-DD
+    rfe_id = Column(String(20), nullable=True)   # B_06.01.0040: the financial entity performing it (BUG-112); NULL = the register holder
 
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), server_default=text("NOW()"))
     updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), server_default=text("NOW()"))
@@ -396,6 +397,8 @@ class DoraConsolidationScope(Base):
     entity_lei = Column(String(20), nullable=False)
     entity_name = Column(String(255), nullable=True, default="")
     relation_to_rfe = Column(String(50), nullable=True, default="")    # parent / subsidiary / branch / joint_venture
+    entity_type = Column(String(50), nullable=True, default="")        # B_01.02.0040 — codelist entity_type (BUG-112)
+    hierarchy = Column(String(50), nullable=True, default="")          # B_01.02.0050 — codelist hierarchy
     inclusion_method = Column(String(30), nullable=True, default="")   # full / proportional / equity_method
     country_iso2 = Column(String(2), nullable=True, default="")
 
@@ -430,7 +433,7 @@ class DoraArrangement(Base):
     substitutability_level = Column(String(30), nullable=True, default="")     # B.07.01.0050: not_substitutable | highly_complex | medium_complexity | easy
     substitutability_reason = Column(String(30), nullable=True, default="")    # B.07.01.0060: no_alternatives | migration_difficulties | both (required iff level in {not_substitutable, highly_complex})
     reintegration_level = Column(String(30), nullable=True, default="")        # B.07.01.0090: easy | difficult | highly_complex
-    exit_strategy_documented = Column(Boolean, nullable=False, default=False)  # B.07.01.0080
+    exit_strategy_documented = Column(Boolean, nullable=True)  # B.07.01.0080; NULL = not stated (BUG-112)
     # Legacy boolean fields (kept for back-compat — derived from the level fields above)
     is_substitutable = Column(Boolean, nullable=False, default=False)
     reintegration_possible = Column(Boolean, nullable=False, default=False)
@@ -442,6 +445,9 @@ class DoraArrangement(Base):
     notice_period_tpsp_days = Column(Integer, nullable=True)          # B_02.02.0110: TPSP-side notice period
     termination_reason = Column(String(30), nullable=True)            # B_02.02.0090: expired_not_renewed | breach_of_law | impediments | data_security_weakness | competent_authority | other
     parent_arrangement_id = Column(String(30), nullable=True)         # B_02.01.0030: reference of the overarching arrangement
+    open_ended = Column(Boolean, nullable=False, default=False, server_default=text("false"))  # B_02.02.0080: no end date → 9999-12-31 (BUG-112)
+    data_stored = Column(Boolean, nullable=True)                      # B_02.02.0140; NULL = derived from data_storage_country
+    linked_arrangement_id = Column(String(30), nullable=True)         # B_02.03.0020: the arrangement with the TPP the intra-group provider relies on
 
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), server_default=text("NOW()"))
     updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), server_default=text("NOW()"))

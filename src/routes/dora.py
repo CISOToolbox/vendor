@@ -65,7 +65,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Response
-from sqlalchemy import delete, select
+from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth import auth_enabled, get_current_user
@@ -146,6 +146,18 @@ async def get_codelists(
     if auth_enabled() and user is None:
         raise HTTPException(401, "Authentication required")
     return codelists()
+
+
+async def _check_linked_arrangement(db: AsyncSession, project_id: uuid.UUID,
+                                    linked: Optional[str], own_id: Optional[str]) -> None:
+    """B_02.03.0020 (BUG-112): the linked arrangement is another arrangement
+    of the same project."""
+    if not linked:
+        return
+    if own_id and linked == own_id:
+        raise HTTPException(422, "linked_arrangement_id: an arrangement cannot be linked to itself")
+    if not await db.get(DoraArrangement, (project_id, linked)):
+        raise HTTPException(422, f"linked_arrangement_id '{linked}' does not exist")
 
 
 async def _touch_project(db: AsyncSession, project: Project) -> None:
@@ -237,6 +249,9 @@ async def delete_entity(
     obj = await db.get(DoraEntity, (project_id, entity_id))
     if not obj:
         raise HTTPException(404, "Entity not found")
+    # BUG-112: a function performed by this entity falls back to the register holder.
+    await db.execute(update(DoraFunction).where(DoraFunction.project_id == project_id,
+                                                DoraFunction.rfe_id == entity_id).values(rfe_id=None))
     await db.delete(obj)
     await _touch_project(db, project)
     await db.commit()
@@ -277,6 +292,8 @@ async def create_function(
     project = await get_project_or_404(project_id, user, db, require_perm="edit")
     payload = body.model_dump()
     validate_dora_function(payload)
+    if payload.get("rfe_id") and not await db.get(DoraEntity, (project_id, payload["rfe_id"])):
+        raise HTTPException(422, f"rfe_id '{payload['rfe_id']}' does not exist")
     if await db.get(DoraFunction, (project_id, body.id)):
         raise HTTPException(409, "Function id already exists")
     obj = DoraFunction(project_id=project_id, **payload)
@@ -304,6 +321,8 @@ async def update_function(
         raise HTTPException(404, "Function not found")
     patch = body.model_dump(exclude_unset=True)
     validate_dora_function(patch)
+    if patch.get("rfe_id") and not await db.get(DoraEntity, (project_id, patch["rfe_id"])):
+        raise HTTPException(422, f"rfe_id '{patch['rfe_id']}' does not exist")
     for k, v in patch.items():
         setattr(obj, k, v)
     obj.updated_at = datetime.now(timezone.utc)
@@ -604,6 +623,10 @@ async def _arrangement_to_response(
         "notice_period_tpsp_days": obj.notice_period_tpsp_days,
         "termination_reason": obj.termination_reason,
         "parent_arrangement_id": obj.parent_arrangement_id,
+        # Migration 019 — BUG-112
+        "open_ended": bool(obj.open_ended),
+        "data_stored": obj.data_stored,
+        "linked_arrangement_id": obj.linked_arrangement_id,
         "rfe_ids": rfe_ids,
         "service_codes": service_codes,
         "subcontractor_links": subcontractor_links,
@@ -661,6 +684,9 @@ async def create_arrangement(
             any_critical = True
     func_critical: Optional[bool] = any_critical if function_ids else None
     validate_dora_arrangement(payload, function_is_critical=func_critical)
+    if payload.get("open_ended") is None:
+        payload["open_ended"] = False
+    await _check_linked_arrangement(db, project_id, payload.get("linked_arrangement_id"), payload.get("id"))
     # Server-derive flags (not trusted from client):
     # - is_critical_function_support = OR(linked function is critical)
     # - is_substitutable = (substitutability_level == 'easy')
@@ -737,6 +763,10 @@ async def update_arrangement(
             any_critical = True
     func_critical: Optional[bool] = any_critical if target_function_ids else None
     validate_dora_arrangement(patch, function_is_critical=func_critical)
+    if "open_ended" in patch and patch["open_ended"] is None:
+        patch.pop("open_ended")
+    if "linked_arrangement_id" in patch:
+        await _check_linked_arrangement(db, project_id, patch.get("linked_arrangement_id"), arrangement_id)
     # Server-derive flags (not trusted from client). Mirror create_arrangement.
     if new_function_ids is not None:
         patch["is_critical_function_support"] = bool(any_critical) if target_function_ids else False
@@ -808,6 +838,10 @@ async def delete_arrangement(
     obj = await db.get(DoraArrangement, (project_id, arrangement_id))
     if not obj:
         raise HTTPException(404, "Arrangement not found")
+    # BUG-112: no arrangement keeps pointing at it as its linked one.
+    await db.execute(update(DoraArrangement).where(DoraArrangement.project_id == project_id,
+                                                   DoraArrangement.linked_arrangement_id == arrangement_id)
+                     .values(linked_arrangement_id=None))
     await db.delete(obj)
     await _touch_project(db, project)
     await db.commit()
@@ -1037,17 +1071,21 @@ async def _validate_link_chain(
     arrangement_id: str,
     sub_id: str,
     new_parent: str | None,
+    tier: int | None = None,
 ) -> None:
     """R7 (depth ≤ MAX_DEPTH) and R15 (no cycle / no self-ref) on the
-    parent chain inside one arrangement."""
+    parent chain inside one arrangement; the parent is at rank n-1."""
     if new_parent and new_parent == sub_id:
         raise HTTPException(422, "parent_subcontractor_id cannot equal subcontractor_id")
     if new_parent:
-        if not await db.get(DoraArrangementSubcontractor, (project_id, arrangement_id, new_parent)):
+        parent_link = await db.get(DoraArrangementSubcontractor, (project_id, arrangement_id, new_parent))
+        if not parent_link:
             raise HTTPException(
                 422,
                 f"parent_subcontractor_id '{new_parent}' is not linked to this arrangement",
             )
+        if tier is not None and (parent_link.tier or 2) != tier - 1:
+            raise HTTPException(422, f"the parent subcontractor is at rank {parent_link.tier or 2}, rank {tier - 1} expected")
     res = await db.execute(
         select(
             DoraArrangementSubcontractor.subcontractor_id,
@@ -1089,6 +1127,7 @@ async def link_subcontractor(
         raise HTTPException(409, "Subcontractor already linked to this arrangement")
     await _validate_link_chain(
         db, project_id, arrangement_id, body.subcontractor_id, body.parent_subcontractor_id,
+        body.tier if body.tier is not None else 2,
     )
     # Server-derive: a subcontractor supports a critical function iff its parent
     # arrangement does. Never trusted from client (mass-assignment guard).
@@ -1122,8 +1161,10 @@ async def update_subcontractor_link(
     patch = body.model_dump(exclude_unset=True)
     validate_dora_arrangement_subcontractor(patch, self_subcontractor_id=sub_id)
     new_parent = patch.get("parent_subcontractor_id", obj.parent_subcontractor_id)
-    if new_parent != obj.parent_subcontractor_id:
-        await _validate_link_chain(db, project_id, arrangement_id, sub_id, new_parent)
+    new_tier = patch.get("tier", obj.tier)
+    if new_parent != obj.parent_subcontractor_id or new_tier != obj.tier:
+        await _validate_link_chain(db, project_id, arrangement_id, sub_id, new_parent,
+                                   new_tier if new_tier is not None else 2)
     for k, v in patch.items():
         setattr(obj, k, v)
     obj.updated_at = datetime.now(timezone.utc)
@@ -1172,7 +1213,8 @@ async def patch_vendor_roi(
     if not vendor:
         raise HTTPException(404, "Vendor not found")
     patch = body.model_dump(exclude_unset=True)
-    validate_vendor_roi(patch)
+    vendor_ids = set((await db.execute(select(Vendor.id).where(Vendor.project_id == project_id))).scalars().all())
+    validate_vendor_roi(patch, vendor_ids=vendor_ids, self_id=vendor_id)
     for k, v in patch.items():
         setattr(vendor, k, v)
     vendor.updated_at = datetime.now(timezone.utc)

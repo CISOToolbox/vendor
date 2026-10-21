@@ -1031,7 +1031,10 @@ function _renderVendorDoraTab(v: any) {
     }
     var cl = (window.DoraData && window.DoraData.codelists()) || {};
     var personType = cl.person_type || [];
-    var idTypes = cl.additional_id_type || [];
+    // BUG-112 — a type the EBA has no code for is not offered (unless stored).
+    var idTypes = (cl.additional_id_type || []).filter(function(it: any) {
+        return !it || typeof it !== "object" || it.eba_code || it.code === v.additional_id_type;
+    });
     var countries = cl.country_iso3166_1 || [];
 
     // Render an <option> list with translated labels (i18n) and English

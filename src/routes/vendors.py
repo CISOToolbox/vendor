@@ -128,6 +128,18 @@ async def delete_vendor(
     await revoke_for_subject(db, Derogation, NC_SUBJECT, f"{project_id}:{vendor_id}",
                              "the third party was removed from the register",
                              actor=(user.email if user is not None else "") or "system")
+    # BUG-112: a vendor whose ultimate parent this was has no stated parent any more.
+    from sqlalchemy import update as _update
+    await db.execute(_update(Vendor).where(Vendor.project_id == project_id,
+                                           Vendor.ultimate_parent_id == vendor_id).values(ultimate_parent_id=None))
+    # Its arrangements go with it (cascade): none stays cited as a linked arrangement.
+    from src.models import DoraArrangement
+    from sqlalchemy import select as _select
+    gone = _select(DoraArrangement.id).where(DoraArrangement.project_id == project_id,
+                                             DoraArrangement.vendor_id == vendor_id)
+    await db.execute(_update(DoraArrangement).where(DoraArrangement.project_id == project_id,
+                                                    DoraArrangement.linked_arrangement_id.in_(gone))
+                     .values(linked_arrangement_id=None))
     await db.delete(vendor)
     project.updated_at = datetime.now(timezone.utc)
     await db.commit()

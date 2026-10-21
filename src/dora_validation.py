@@ -295,6 +295,9 @@ def validate_dora_entity(payload: dict[str, Any]) -> None:
 
 
 def validate_dora_function(payload: dict[str, Any]) -> None:
+    # B_06.01.0100 (BUG-112): a code of the impact_level list, never free text.
+    if "impact_tolerance_description" in payload:
+        validate_codelist(payload.get("impact_tolerance_description"), "impact_level")
     if "id" in payload:
         validate_eba_code(payload.get("id"), field="id")
     if "code" in payload:
@@ -325,6 +328,12 @@ def validate_dora_consolidation(payload: dict[str, Any]) -> None:
         validate_codelist(payload.get("relation_to_rfe"), "relation_to_rfe")
     if "inclusion_method" in payload:
         validate_codelist(payload.get("inclusion_method"), "inclusion_method")
+    # B_01.02.0040 / 0050 on consolidation rows (BUG-112): same codelists as
+    # the reporting entities.
+    if "entity_type" in payload:
+        validate_codelist(payload.get("entity_type"), "entity_type")
+    if "hierarchy" in payload:
+        validate_codelist(payload.get("hierarchy"), "hierarchy")
 
 
 def validate_dora_arrangement(
@@ -417,12 +426,22 @@ def validate_dora_arrangement_subcontractor(
         raise HTTPException(422, "parent_subcontractor_id cannot equal subcontractor_id")
 
 
-def validate_vendor_roi(payload: dict[str, Any]) -> None:
-    """Vendor-level RoI fields (lei, country_iso2, person_type, etc.)."""
+def validate_vendor_roi(payload: dict[str, Any], vendor_ids: set[str] | None = None,
+                        self_id: str | None = None) -> None:
+    """Vendor-level RoI fields (lei, country_iso2, person_type, etc.).
+
+    ``ultimate_parent_id`` is another vendor of the project (the app's picker
+    sends its id), or a LEI (values stored before); never the vendor itself.
+    """
     if "lei" in payload:
         validate_lei(payload.get("lei"), required=False)
     if "ultimate_parent_id" in payload:
-        validate_lei(payload.get("ultimate_parent_id"), required=False, field="ultimate_parent_id")
+        parent = payload.get("ultimate_parent_id")
+        if parent and self_id is not None and parent == self_id:
+            raise HTTPException(422, "ultimate_parent_id: a vendor cannot be its own ultimate parent "
+                                     "(leave it empty: the export repeats the vendor's code)")
+        if parent and not (vendor_ids and parent in vendor_ids):
+            validate_lei(parent, required=False, field="ultimate_parent_id")
     if "country_iso2" in payload:
         validate_country(payload.get("country_iso2"))
     if "person_type" in payload:
