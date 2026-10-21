@@ -2040,7 +2040,9 @@ function _renderVendorAssessments(v) {
         h += '</div>';
         h += '<div class="ct-flex ct-items-center ct-gap-2">';
         h += '<span class="ct-text-label ct-ink-1">' + esc(a.date || "") + '</span>';
-        h += '<button class="ct-btn ct-py-1 ct-px-2 ct-text-label" data-variant="danger" data-size="sm" data-click="deleteAssessment" data-args=\'' + _da(a.id) + '\' data-stop title="' + esc(t("vendor.delete")) + '">\u00d7</button>';
+        if (!_assessmentLocked(a)) {
+            h += '<button class="ct-btn ct-py-1 ct-px-2 ct-text-label" data-variant="danger" data-size="sm" data-click="deleteAssessment" data-args=\'' + _da(a.id) + '\' data-stop title="' + esc(t("vendor.delete")) + '">\u00d7</button>';
+        }
         h += '</div>';
         h += '</div>';
         // Progress bar + score
@@ -2319,6 +2321,10 @@ function openAssessmentFromVendor(assessId, vendorIdx) {
 }
 window.openAssessmentFromVendor = openAssessmentFromVendor;
 function deleteAssessment(assessId) {
+    if (_assessmentLocked(_findAssessment(assessId))) {
+        showStatus(t("assessment.locked_notice"), true);
+        return;
+    }
     if (!confirm(t("assessment.confirm_delete")))
         return;
     var idx = D.assessments.findIndex(function (a) { return a.id === assessId; });
@@ -2710,20 +2716,75 @@ function _ensureDefaultTemplate() {
         _autoSave();
     var lang = (typeof _locale === "string" && _locale === "en") ? "en" : "fr";
     var added = false;
-    // Seed the default vendor questionnaire if absent
-    if (!D.questionnaire_templates.some(function (tp) { return tp.id === "TPL-001"; })) {
-        if (typeof TPRM_QUESTIONS !== "undefined" && TPRM_QUESTIONS.length) {
-            D.questionnaire_templates.push(_buildDefaultQuestionnaireTemplate(lang));
+    // FEAT-62 — each default template exists in French and in English: two
+    // distinct templates, identical question for question. The first one keeps
+    // its historical id (TPL-001 / TPL-002, in whatever language it was
+    // created); the other language gets <id>-EN or <id>-FR.
+    var defaults = [
+        // the standard questionnaire needs the question bank
+        { id: "TPL-001", build: _buildDefaultQuestionnaireTemplate, ready: typeof TPRM_QUESTIONS !== "undefined" && TPRM_QUESTIONS.length > 0 },
+        // the ANSSI audit (42 hygiene rules)
+        { id: "TPL-002", build: _buildAnssi42AuditTemplate, ready: true },
+    ];
+    defaults.forEach(function (d) {
+        if (!d.ready)
+            return;
+        var family = D.questionnaire_templates.filter(function (tp) { return tp.id === d.id || tp.id.indexOf(d.id + "-") === 0; });
+        if (!family.length) {
+            // A new project: both languages, the session's under the historical id.
+            [lang, lang === "fr" ? "en" : "fr"].forEach(function (l, i) {
+                var tpl = d.build(l);
+                if (i > 0)
+                    tpl.id = d.id + "-" + l.toUpperCase();
+                D.questionnaire_templates.push(tpl);
+            });
             added = true;
+            return;
         }
-    }
-    // Seed the default audit template (ANSSI — 42 hygiene rules)
-    if (!D.questionnaire_templates.some(function (tp) { return tp.id === "TPL-002"; })) {
-        D.questionnaire_templates.push(_buildAnssi42AuditTemplate(lang));
-        added = true;
-    }
+        // An existing project: add the missing language. A template without a
+        // language field (created before it existed) is recognised by its
+        // default name; renamed by its owner, it is left alone.
+        var langs = {};
+        var unknown = false;
+        family.forEach(function (tp) {
+            var l = tp.language || _defaultTemplateLanguage(d.build, tp);
+            if (l) {
+                langs[l] = true;
+                if (!tp.language) {
+                    tp.language = l;
+                    added = true;
+                }
+            }
+            else
+                unknown = true;
+        });
+        if (unknown)
+            return;
+        ["fr", "en"].forEach(function (l) {
+            if (langs[l])
+                return;
+            var id = d.id + "-" + l.toUpperCase();
+            // Its id already taken (the user changed that template's language):
+            // their edit stands, nothing is duplicated.
+            if (D.questionnaire_templates.some(function (tp) { return tp.id === id; }))
+                return;
+            var tpl = d.build(l);
+            tpl.id = id;
+            D.questionnaire_templates.push(tpl);
+            added = true;
+        });
+    });
     if (added)
         _autoSave();
+}
+// The language of a default template stored without one: by its untouched
+// default name, else null (renamed: its owner's own template).
+function _defaultTemplateLanguage(build, tp) {
+    if (tp.name === build("fr").name)
+        return "fr";
+    if (tp.name === build("en").name)
+        return "en";
+    return null;
 }
 function _buildDefaultQuestionnaireTemplate(lang) {
     var tpl = {
@@ -3395,8 +3456,8 @@ function openAssessmentV2(assessId) {
     if (!a)
         return;
     if (!a.template_snapshot)
-        _migrateAssessmentToV2(a); // legacy V1 → V2 on the fly
-    if (!a.template_snapshot)
+        a = _migrateAssessmentToV2(a); // legacy V1 → V2 on the fly (a copy when locked)
+    if (!a || !a.template_snapshot)
         return; // migration impossible (no default template)
     // Recompute stats every time we render — covers cases where the assessment
     // was touched before the latest stats algorithm change.
@@ -3446,7 +3507,9 @@ function openAssessmentV2(assessId) {
         h += '<button class="ct-btn" data-variant="primary" data-click="_exportAssessmentLink" data-args=\'' + _da(a.id) + '\'>' + esc(t("assessment.export_link")) + '</button>';
     }
     h += '<button class="ct-btn" data-variant="primary" data-click="_exportAssessmentExcel" data-args=\'' + _da(a.id) + '\'>' + esc(_tk(a, "assessment.export_excel")) + '</button>';
-    h += '<button class="ct-btn" data-variant="primary" data-click="_importAssessmentIntoExisting" data-args=\'' + _da(a.id) + '\'>' + esc(_tk(a, "assessment.import_response")) + '</button>';
+    if (!_assessmentLocked(a)) {
+        h += '<button class="ct-btn" data-variant="primary" data-click="_importAssessmentIntoExisting" data-args=\'' + _da(a.id) + '\'>' + esc(_tk(a, "assessment.import_response")) + '</button>';
+    }
     h += '<span class="ct-flex-1"></span>';
     if (a.status === "pending_approval") {
         h += '<button class="ct-btn" data-variant="primary" data-click="_approveAssessment" data-args=\'' + _da(a.id) + '\'>' + esc(t("assessment.approve")) + '</button>';
@@ -3462,13 +3525,17 @@ function openAssessmentV2(assessId) {
             h += '<div class="ct-hint ct-mb-3">' + esc(t("assessment.approve_materialize_hint", { n: _apN })) + '</div>';
         }
     }
+    if (_assessmentLocked(a)) {
+        h += '<div class="ct-hint ct-mb-3" id="evalv2-locked">' + esc(t("assessment.locked_notice")) + '</div>';
+    }
+    h += '<div id="evalv2-body">';
     // ── Sections + questions ──
     tpl.sections.forEach(function (section) {
         h += '<div class="tpl-section">';
         h += '<div class="tpl-section-header">';
         h += '<span class="tpl-section-id">' + esc(section.id) + '</span>';
         h += '<span class="tpl-section-title">' + esc(section.title) + '</span>';
-        if (typeof _aiIsEnabled === "function" && _aiIsEnabled() && a.status !== "validated") {
+        if (typeof _aiIsEnabled === "function" && _aiIsEnabled() && !_assessmentLocked(a)) {
             h += '<button class="ct-btn btn-ai ct-ml-auto" data-size="xs" data-click="aiSuggestSectionV2" data-args=\'' + _da(a.id, section.id) + '\' title="' + esc(t("ai.btn")) + '">&#10024;</button>';
         }
         h += '</div>';
@@ -3503,6 +3570,7 @@ function openAssessmentV2(assessId) {
         h += '<div id="evalv2-validated-on" class="ct-text-label ct-ink-1 ct-mt-1">' + esc(t("assessment.self_validated_on")) + ' ' + esc(a.self_validated_at) + '</div>';
     }
     h += '</div>';
+    h += '</div>'; // #evalv2-body
     // Footer: Save + Submit for approval
     h += '<div class="form-actions">';
     h += '<button class="ct-btn" data-variant="ghost" data-size="sm" data-click="_backFromAssessmentV2">' + esc(t("common.close")) + '</button>';
@@ -3510,6 +3578,11 @@ function openAssessmentV2(assessId) {
     h += '</div>';
     var c = document.getElementById("content");
     c.innerHTML = h;
+    // Approved: every field and button of the questionnaire is read-only.
+    if (_assessmentLocked(a)) {
+        c.querySelectorAll("#evalv2-body input, #evalv2-body select, #evalv2-body textarea, #evalv2-body button")
+            .forEach(function (el) { el.disabled = true; });
+    }
 }
 window.openAssessmentV2 = openAssessmentV2;
 // BUG-17: AI assist INSIDE a V2 assessment. Fills coverage + justification for a
@@ -3521,7 +3594,7 @@ function aiSuggestSectionV2(assessId, sectionId) {
     var a = _findAssessment(assessId);
     if (!a || !a.template_snapshot || typeof _aiCallAPI !== "function")
         return;
-    if (a.status === "validated")
+    if (_assessmentLocked(a))
         return;
     var v = D.vendors.find(function (x) { return x.id === a.vendor_id; });
     var section = (a.template_snapshot.sections || []).find(function (s) { return s.id === sectionId; });
@@ -3544,6 +3617,10 @@ function aiSuggestSectionV2(assessId, sectionId) {
     }).join("\n");
     showStatus(t("measure.ai_loading"));
     _aiCallAPI(systemPrompt, userPrompt).then(function (raw) {
+        // Approved while the answer was pending: nothing is written (BUG-111;
+        // no server here to refuse it).
+        if (_assessmentLocked(a))
+            return;
         try {
             var suggestions = _aiParseJSON(raw);
             if (!Array.isArray(suggestions))
@@ -3598,12 +3675,21 @@ window.aiSuggestSectionV2 = aiSuggestSectionV2;
 function _migrateAssessmentToV2(a) {
     if (!a || a.template_snapshot)
         return a; // already V2 or invalid
-    if (typeof _ensureDefaultTemplate === "function")
+    // Locked (BUG-111): an approved or legacy-completed assessment is migrated
+    // on a copy, for display only — the stored one is neither changed nor written.
+    var locked = _assessmentLocked(a);
+    if (!locked && typeof _ensureDefaultTemplate === "function")
         _ensureDefaultTemplate();
     var tpl = (D.questionnaire_templates || []).find(function (tp) { return tp.id === "TPL-001"; })
         || (D.questionnaire_templates || [])[0];
+    // A locked one is only displayed: the default template is built for the
+    // copy, not added to the project.
+    if (!tpl && locked)
+        tpl = _buildDefaultQuestionnaireTemplate((typeof _locale === "string" && _locale === "en") ? "en" : "fr");
     if (!tpl)
         return a;
+    if (locked)
+        a = JSON.parse(JSON.stringify(a));
     var covMap = { compliant: "covered", partial: "partial", non_compliant: "not_covered", na: "not_applicable" };
     var oldByNum = {};
     (a.responses || []).forEach(function (r) {
@@ -3634,6 +3720,8 @@ function _migrateAssessmentToV2(a) {
         a.status = "validated";
     else if (!a.status)
         a.status = "in_progress";
+    if (locked)
+        return a;
     if (typeof _touchAssessment === "function")
         _touchAssessment(a);
     // Persist the snapshot too (_touchAssessment only sends score/completion/status/responses).
@@ -3647,7 +3735,7 @@ function _migrateAssessmentToV2(a) {
 function _migrateAllLegacyAssessments() {
     var n = 0;
     (D.assessments || []).forEach(function (a) {
-        if (a && !a.template_snapshot) {
+        if (a && !a.template_snapshot && !_assessmentLocked(a)) {
             _migrateAssessmentToV2(a);
             n++;
         }
@@ -3759,15 +3847,31 @@ function _renderActionPlanForm(a, qId, ap, api) {
 function _findAssessment(assessId) {
     return (D.assessments || []).find(function (a) { return a.id === assessId; });
 }
+// BUG-111 — an approved (validated) assessment is locked: the handlers that
+// change one look it up through this, and do nothing on a locked one.
+function _assessmentLocked(a) {
+    return !!a && (a.status === "validated" || a.status === "completed");
+}
+// What the assessment screen shows: the stored one, or for a legacy one (no
+// template) its V2 migration — a display copy when it is locked. Exports use
+// it so they carry what the user sees.
+function _assessmentView(assessId) {
+    var a = _findAssessment(assessId);
+    return a && !a.template_snapshot ? _migrateAssessmentToV2(a) : a;
+}
+function _editableAssessment(assessId) {
+    var a = _findAssessment(assessId);
+    return a && !_assessmentLocked(a) ? a : null;
+}
 function _findAssessmentResp(a, questionId) {
     if (!a || !a.responses)
         return null;
     return a.responses.find(function (r) { return r.question_id === questionId; });
 }
 function _renderSubmitButton(a, completion) {
-    var canSubmit = a.self_validation && completion === 100 && a.status !== "validated" && a.status !== "pending_approval";
+    var canSubmit = a.self_validation && completion === 100 && !_assessmentLocked(a) && a.status !== "pending_approval";
     var reason = "";
-    if (a.status === "validated")
+    if (_assessmentLocked(a))
         reason = t("assessment.already_validated");
     else if (a.status === "pending_approval")
         reason = t("assessment.already_submitted");
@@ -3861,6 +3965,10 @@ function _healAssessmentQuestionIds(a) {
     });
 }
 function _touchAssessment(a) {
+    // Locked (BUG-111): an approved assessment is shown as it was saved
+    // (score and completion included) — nothing is healed, recomputed or written.
+    if (_assessmentLocked(a))
+        return;
     _healAssessmentQuestionIds(a);
     var stats = _assessmentStats(a);
     a.completion_rate = stats.total > 0 ? Math.round((stats.answered / stats.total) * 100) : 0;
@@ -3870,7 +3978,7 @@ function _touchAssessment(a) {
     _persist("assessment", a.id, { score: a.score, completion_rate: a.completion_rate, status: a.status, responses: a.responses });
 }
 function _setCoverage(assessId, questionId, coverage) {
-    var a = _findAssessment(assessId);
+    var a = _editableAssessment(assessId);
     var resp = _findAssessmentResp(a, questionId);
     if (!resp)
         return;
@@ -3884,7 +3992,7 @@ function _setCoverage(assessId, questionId, coverage) {
 }
 window._setCoverage = _setCoverage;
 function _setAnswerV2Text(assessId, questionId, value) {
-    var a = _findAssessment(assessId);
+    var a = _editableAssessment(assessId);
     var resp = _findAssessmentResp(a, questionId);
     if (!resp)
         return;
@@ -3983,7 +4091,7 @@ function _refreshAssessmentLiveState(assessId, questionId) {
         submitWrap.innerHTML = _renderSubmitButton(a, completion);
 }
 function _onAssessmentCommentChange(assessId, questionId, value) {
-    var a = _findAssessment(assessId);
+    var a = _editableAssessment(assessId);
     var resp = _findAssessmentResp(a, questionId);
     if (!resp)
         return;
@@ -3993,7 +4101,7 @@ function _onAssessmentCommentChange(assessId, questionId, value) {
 }
 window._onAssessmentCommentChange = _onAssessmentCommentChange;
 function _onAssessmentJustificationChange(assessId, questionId, value) {
-    var a = _findAssessment(assessId);
+    var a = _editableAssessment(assessId);
     var resp = _findAssessmentResp(a, questionId);
     if (!resp)
         return;
@@ -4002,7 +4110,7 @@ function _onAssessmentJustificationChange(assessId, questionId, value) {
 }
 window._onAssessmentJustificationChange = _onAssessmentJustificationChange;
 function _addActionPlan(assessId, questionId) {
-    var a = _findAssessment(assessId);
+    var a = _editableAssessment(assessId);
     var resp = _findAssessmentResp(a, questionId);
     if (!resp)
         return;
@@ -4021,7 +4129,7 @@ function _addActionPlan(assessId, questionId) {
 }
 window._addActionPlan = _addActionPlan;
 function _removeActionPlan(assessId, questionId, apIdx) {
-    var a = _findAssessment(assessId);
+    var a = _editableAssessment(assessId);
     var resp = _findAssessmentResp(a, questionId);
     if (!resp || !resp.action_plans)
         return;
@@ -4031,7 +4139,7 @@ function _removeActionPlan(assessId, questionId, apIdx) {
 }
 window._removeActionPlan = _removeActionPlan;
 function _updateActionPlanField(assessId, questionId, apIdx, field, value) {
-    var a = _findAssessment(assessId);
+    var a = _editableAssessment(assessId);
     var resp = _findAssessmentResp(a, questionId);
     if (!resp || !resp.action_plans || !resp.action_plans[apIdx])
         return;
@@ -4040,7 +4148,7 @@ function _updateActionPlanField(assessId, questionId, apIdx, field, value) {
 }
 window._updateActionPlanField = _updateActionPlanField;
 function _toggleSelfValidation(assessId, checked) {
-    var a = _findAssessment(assessId);
+    var a = _editableAssessment(assessId);
     if (!a)
         return;
     a.self_validation = !!checked;
@@ -4205,7 +4313,7 @@ function _quartersBetween(dateStr, now) {
 function _computeVendorMaturityDetail(vendorId) {
     var cfg = _maturityConfig();
     var all = (D.assessments || []).filter(function (a) {
-        return a.vendor_id === vendorId && a.status === "validated";
+        return a.vendor_id === vendorId && _assessmentLocked(a); // approved, or a legacy completed one
     });
     var now = new Date();
     var rows = [];
@@ -4423,7 +4531,7 @@ function _buildExportPayload(a) {
     };
 }
 function _exportAssessmentJSON(assessId) {
-    var a = _findAssessment(assessId);
+    var a = _assessmentView(assessId);
     if (!a)
         return;
     _showModal('<h3>' + esc(t("assessment.export_json_title")) + '</h3>' +
@@ -4444,7 +4552,7 @@ function _doExportJSONAuto(assessId) {
 window._doExportJSONAuto = _doExportJSONAuto;
 // Dedicated modal for generating a portal link.
 function _exportAssessmentLink(assessId) {
-    var a = _findAssessment(assessId);
+    var a = _assessmentView(assessId);
     if (!a)
         return;
     _showModal('<h3>' + esc(t("assessment.export_link_title")) + '</h3>' +
@@ -4456,7 +4564,7 @@ function _exportAssessmentLink(assessId) {
 }
 window._exportAssessmentLink = _exportAssessmentLink;
 function _doExportJSON(assessId, encrypted) {
-    var a = _findAssessment(assessId);
+    var a = _assessmentView(assessId);
     if (!a)
         return;
     var payload = _buildExportPayload(a);
@@ -4531,7 +4639,7 @@ function _portalBaseURL() {
     return loc.origin + folder + "portal/";
 }
 async function _generatePortalLink(assessId) {
-    var a = _findAssessment(assessId);
+    var a = _assessmentView(assessId);
     if (!a)
         return;
     var pwd = (document.getElementById("exp-password") || {}).value || "";
@@ -4623,10 +4731,21 @@ function _copyEmailTemplate(assessId) {
     var vendorName = _vendorName(a.vendor_id);
     var templateName = tpl ? tpl.name : "";
     var dueDate = a.due_date || "-";
-    var subject = t("assessment.email_subject").replace("{vendor}", vendorName);
-    var bodyTemplate = t("assessment.email_body")
-        .replace("{template}", templateName)
-        .replace("{due_date}", dueDate);
+    // FEAT-62 — the e-mail goes to the vendor: in the questionnaire's language.
+    var sessionLocale = _locale;
+    if (tpl && tpl.language && _translations[tpl.language])
+        _locale = tpl.language;
+    var subject, bodyTemplate, linkLabel;
+    try {
+        linkLabel = t("assessment.email_link_label");
+        subject = t("assessment.email_subject").replace("{vendor}", vendorName);
+        bodyTemplate = t("assessment.email_body")
+            .replace("{template}", templateName)
+            .replace("{due_date}", dueDate);
+    }
+    finally {
+        _locale = sessionLocale;
+    }
     // Plain text version (fallback): the link appears as raw URL
     var plainBody = bodyTemplate.replace("{link}", link);
     var plainClipboard = subject + "\n\n" + plainBody;
@@ -4642,7 +4761,7 @@ function _copyEmailTemplate(assessId) {
     //   4. Substitute the placeholder with the real <a href="...">.
     var PLACEHOLDER = "\u0001LINK\u0001";
     var htmlSource = bodyTemplate.replace("{link}", PLACEHOLDER);
-    var anchor = '<a href="' + esc(link) + '">' + esc(t("assessment.email_link_label")) + '</a>';
+    var anchor = '<a href="' + esc(link) + '">' + esc(linkLabel) + '</a>';
     var htmlBody = esc(htmlSource)
         .split("\n")
         .map(function (line) { return line === "" ? "<br>" : "<p style=\"margin:0 0 8px\">" + line + "</p>"; })
@@ -4680,7 +4799,7 @@ function _triggerDownload(blob, filename) {
     _downloadBlob(blob, _safeFileName(filename));
 }
 function _exportAssessmentExcel(assessId) {
-    var a = _findAssessment(assessId);
+    var a = _assessmentView(assessId);
     if (!a)
         return;
     var tpl = _getAssessmentTemplate(a);
@@ -4688,192 +4807,203 @@ function _exportAssessmentExcel(assessId) {
         return;
     _loadExcelJS().then(function () {
         var wb = new ExcelJS.Workbook();
-        // Sheet 1: Instructions
-        var ws1 = wb.addWorksheet(t("assessment.instructions_sheet"));
-        ws1.columns = [{ width: 100 }];
-        [
-            t("assessment.instructions_line1"),
-            "",
-            t("assessment.instructions_line2"),
-            t("assessment.instructions_line3"),
-            t("assessment.instructions_line4"),
-            t("assessment.instructions_line5"),
-            "",
-            t("assessment.instructions_line6"),
-            "",
-            t("assessment.instructions_coverage_covered"),
-            t("assessment.instructions_coverage_partial"),
-            t("assessment.instructions_coverage_not_covered"),
-            t("assessment.instructions_coverage_not_applicable"),
-            "",
-            t("assessment.instructions_id") + ": " + a.id,
-            t("assessment.instructions_vendor") + ": " + _vendorName(a.vendor_id),
-            t("assessment.instructions_template") + ": " + tpl.name + " v" + (a.template_version || 1),
-            t("assessment.instructions_due_date") + ": " + (a.due_date || "-")
-        ].forEach(function (line) { ws1.addRow([line]); });
-        ws1.getRow(1).font = { bold: true, size: 14 };
-        // Sheet 2: Questionnaire (simplified — only free_text questions)
-        var ws2 = wb.addWorksheet(t("assessment.questionnaire_sheet"));
-        ws2.columns = [
-            { header: "ID", key: "id", width: 10 },
-            { header: t("assessment.col_section"), key: "section", width: 22 },
-            { header: t("assessment.col_question"), key: "question", width: 50 },
-            { header: t("assessment.col_expected"), key: "expected", width: 40 },
-            { header: t("assessment.col_answer"), key: "answer", width: 40 },
-            { header: t("assessment.col_coverage"), key: "coverage", width: 16 },
-            { header: t("assessment.col_comment"), key: "comment", width: 30 },
-            { header: t("assessment.col_ap_title"), key: "ap_title", width: 30 },
-            { header: t("assessment.col_ap_desc"), key: "ap_desc", width: 30 },
-            { header: t("assessment.col_ap_date"), key: "ap_date", width: 14 },
-            { header: t("assessment.col_ap_owner"), key: "ap_owner", width: 20 },
-            { header: t("assessment.col_justification"), key: "justification", width: 30 }
-        ];
-        // Header style: dark navy background, bold white text, frozen first row
-        ws2.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF0B1F3A" } };
-        ws2.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
-        ws2.getRow(1).alignment = { vertical: "middle" };
-        ws2.views = [{ state: "frozen", ySplit: 1 }];
-        // Column indices (1-based)
-        var COL_ID = 1;
-        var COL_SECTION = 2;
-        var COL_QUESTION = 3;
-        var COL_EXPECTED = 4;
-        var COL_ANSWER = 5;
-        var COL_COVERAGE = 6;
-        var COL_COMMENT = 7;
-        var COL_AP_TITLE = 8;
-        var COL_AP_DESC = 9;
-        var COL_AP_DATE = 10;
-        var COL_AP_OWNER = 11;
-        var COL_JUSTIFICATION = 12;
-        var COVERAGE_OPTIONS = ["covered", "partial", "not_covered", "not_applicable"];
-        function _setListValidation(cell, values, errorMsg) {
-            cell.dataValidation = {
-                type: "list",
-                allowBlank: true,
-                formulae: ['"' + values.join(",") + '"'],
-                showErrorMessage: true,
-                errorStyle: "warning",
-                errorTitle: "Valeur invalide",
-                error: errorMsg || "Choisissez une valeur dans la liste."
-            };
-        }
-        // Lock the question metadata columns (id, section, question, expected)
-        // — those are filled by the client and must not be edited by the
-        // vendor. We do not enable sheet protection (would require a
-        // password); the locked attribute simply communicates intent.
-        function _lockCell(cell) {
-            cell.protection = { locked: true };
-            cell.font = Object.assign({}, cell.font, { color: { argb: "FF1E293B" } });
-        }
-        (tpl.sections || []).forEach(function (section) {
-            (section.questions || []).forEach(function (q) {
-                var r = _findAssessmentResp(a, q.id) || {};
-                var firstAp = (r.action_plans && r.action_plans[0]) || {};
-                var answerStr = "";
-                if (Array.isArray(r.answer))
-                    answerStr = r.answer.join("; ");
-                else if (r.answer && typeof r.answer === "object" && r.answer.name)
-                    answerStr = r.answer.name;
-                else if (r.answer != null)
-                    answerStr = String(r.answer);
-                var row = ws2.addRow({
-                    id: q.id,
-                    section: section.title,
-                    question: q.text,
-                    expected: q.expected || "",
-                    answer: answerStr,
-                    coverage: r.coverage || "",
-                    comment: r.comment || "",
-                    ap_title: firstAp.title || "",
-                    ap_desc: firstAp.description || "",
-                    ap_date: firstAp.target_date || "",
-                    ap_owner: firstAp.owner || "",
-                    justification: r.justification || ""
+        // FEAT-62 — the file goes to the vendor: it is written in the
+        // questionnaire's language, whatever the session's (built
+        // synchronously, the session's language is restored right after).
+        var sessionLocale = _locale;
+        if (tpl.language && _translations[tpl.language])
+            _locale = tpl.language;
+        try {
+            // Sheet 1: Instructions
+            var ws1 = wb.addWorksheet(t("assessment.instructions_sheet"));
+            ws1.columns = [{ width: 100 }];
+            [
+                t("assessment.instructions_line1"),
+                "",
+                t("assessment.instructions_line2"),
+                t("assessment.instructions_line3"),
+                t("assessment.instructions_line4"),
+                t("assessment.instructions_line5"),
+                "",
+                t("assessment.instructions_line6"),
+                "",
+                t("assessment.instructions_coverage_covered"),
+                t("assessment.instructions_coverage_partial"),
+                t("assessment.instructions_coverage_not_covered"),
+                t("assessment.instructions_coverage_not_applicable"),
+                "",
+                t("assessment.instructions_id") + ": " + a.id,
+                t("assessment.instructions_vendor") + ": " + _vendorName(a.vendor_id),
+                t("assessment.instructions_template") + ": " + tpl.name + " v" + (a.template_version || 1),
+                t("assessment.instructions_due_date") + ": " + (a.due_date || "-")
+            ].forEach(function (line) { ws1.addRow([line]); });
+            ws1.getRow(1).font = { bold: true, size: 14 };
+            // Sheet 2: Questionnaire (simplified — only free_text questions)
+            var ws2 = wb.addWorksheet(t("assessment.questionnaire_sheet"));
+            ws2.columns = [
+                { header: "ID", key: "id", width: 10 },
+                { header: t("assessment.col_section"), key: "section", width: 22 },
+                { header: t("assessment.col_question"), key: "question", width: 50 },
+                { header: t("assessment.col_expected"), key: "expected", width: 40 },
+                { header: t("assessment.col_answer"), key: "answer", width: 40 },
+                { header: t("assessment.col_coverage"), key: "coverage", width: 16 },
+                { header: t("assessment.col_comment"), key: "comment", width: 30 },
+                { header: t("assessment.col_ap_title"), key: "ap_title", width: 30 },
+                { header: t("assessment.col_ap_desc"), key: "ap_desc", width: 30 },
+                { header: t("assessment.col_ap_date"), key: "ap_date", width: 14 },
+                { header: t("assessment.col_ap_owner"), key: "ap_owner", width: 20 },
+                { header: t("assessment.col_justification"), key: "justification", width: 30 }
+            ];
+            // Header style: dark navy background, bold white text, frozen first row
+            ws2.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF0B1F3A" } };
+            ws2.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
+            ws2.getRow(1).alignment = { vertical: "middle" };
+            ws2.views = [{ state: "frozen", ySplit: 1 }];
+            // Column indices (1-based)
+            var COL_ID = 1;
+            var COL_SECTION = 2;
+            var COL_QUESTION = 3;
+            var COL_EXPECTED = 4;
+            var COL_ANSWER = 5;
+            var COL_COVERAGE = 6;
+            var COL_COMMENT = 7;
+            var COL_AP_TITLE = 8;
+            var COL_AP_DESC = 9;
+            var COL_AP_DATE = 10;
+            var COL_AP_OWNER = 11;
+            var COL_JUSTIFICATION = 12;
+            var COVERAGE_OPTIONS = ["covered", "partial", "not_covered", "not_applicable"];
+            function _setListValidation(cell, values, errorMsg) {
+                cell.dataValidation = {
+                    type: "list",
+                    allowBlank: true,
+                    formulae: ['"' + values.join(",") + '"'],
+                    showErrorMessage: true,
+                    errorStyle: "warning",
+                    errorTitle: t("assessment.xlsx_invalid_title"),
+                    error: errorMsg || t("assessment.xlsx_invalid_body")
+                };
+            }
+            // Lock the question metadata columns (id, section, question, expected)
+            // — those are filled by the client and must not be edited by the
+            // vendor. We do not enable sheet protection (would require a
+            // password); the locked attribute simply communicates intent.
+            function _lockCell(cell) {
+                cell.protection = { locked: true };
+                cell.font = Object.assign({}, cell.font, { color: { argb: "FF1E293B" } });
+            }
+            (tpl.sections || []).forEach(function (section) {
+                (section.questions || []).forEach(function (q) {
+                    var r = _findAssessmentResp(a, q.id) || {};
+                    var firstAp = (r.action_plans && r.action_plans[0]) || {};
+                    var answerStr = "";
+                    if (Array.isArray(r.answer))
+                        answerStr = r.answer.join("; ");
+                    else if (r.answer && typeof r.answer === "object" && r.answer.name)
+                        answerStr = r.answer.name;
+                    else if (r.answer != null)
+                        answerStr = String(r.answer);
+                    var row = ws2.addRow({
+                        id: q.id,
+                        section: section.title,
+                        question: q.text,
+                        expected: q.expected || "",
+                        answer: answerStr,
+                        coverage: r.coverage || "",
+                        comment: r.comment || "",
+                        ap_title: firstAp.title || "",
+                        ap_desc: firstAp.description || "",
+                        ap_date: firstAp.target_date || "",
+                        ap_owner: firstAp.owner || "",
+                        justification: r.justification || ""
+                    });
+                    row.alignment = { vertical: "top", wrapText: true };
+                    // Lock metadata columns
+                    _lockCell(row.getCell(COL_ID));
+                    _lockCell(row.getCell(COL_SECTION));
+                    _lockCell(row.getCell(COL_QUESTION));
+                    _lockCell(row.getCell(COL_EXPECTED));
+                    // Coverage dropdown — every row gets the same list
+                    _setListValidation(row.getCell(COL_COVERAGE), COVERAGE_OPTIONS);
+                    // Date format on ap_date
+                    row.getCell(COL_AP_DATE).numFmt = "yyyy-mm-dd";
                 });
-                row.alignment = { vertical: "top", wrapText: true };
-                // Lock metadata columns
-                _lockCell(row.getCell(COL_ID));
-                _lockCell(row.getCell(COL_SECTION));
-                _lockCell(row.getCell(COL_QUESTION));
-                _lockCell(row.getCell(COL_EXPECTED));
-                // Coverage dropdown — every row gets the same list
-                _setListValidation(row.getCell(COL_COVERAGE), COVERAGE_OPTIONS);
-                // Date format on ap_date
-                row.getCell(COL_AP_DATE).numFmt = "yyyy-mm-dd";
             });
-        });
-        // Conditional formatting: highlight ap_title and justification cells
-        // when coverage is "partial" or "not_covered" AND both fields are
-        // empty. The formula uses ISBLANK() and absolute column references on
-        // the coverage column ($F = 6th column) so each row evaluates
-        // independently.
-        var lastRow = ws2.rowCount;
-        if (lastRow > 1) {
-            var coverageColLetter = "F"; // 6th column
-            var apTitleColLetter = "H"; // 8th column
-            var justColLetter = "L"; // 12th column
-            // Range covering ap_title cells from row 2 to lastRow
-            var apTitleRange = apTitleColLetter + "2:" + apTitleColLetter + lastRow;
-            var justRange = justColLetter + "2:" + justColLetter + lastRow;
-            // Formula: TRUE when coverage ∈ {partial, not_covered} AND both
-            // ap_title (H) and justification (L) are blank on the same row.
-            // The reference uses $F2 (relative row, fixed column) so Excel
-            // re-evaluates per row.
-            var needAction = 'AND(OR($' + coverageColLetter + '2="partial",$' + coverageColLetter + '2="not_covered"),'
-                + 'TRIM($' + apTitleColLetter + '2)="",'
-                + 'TRIM($' + justColLetter + '2)="")';
-            ws2.addConditionalFormatting({
-                ref: apTitleRange + " " + justRange,
-                rules: [
-                    {
-                        type: "expression",
-                        formulae: [needAction],
-                        style: {
-                            fill: { type: "pattern", pattern: "solid", bgColor: { argb: "FFFEE2E2" } },
-                            font: { color: { argb: "FF7F1D1D" }, bold: true },
-                            border: {
-                                left: { style: "thin", color: { argb: "FFB91C1C" } },
-                                right: { style: "thin", color: { argb: "FFB91C1C" } },
-                                top: { style: "thin", color: { argb: "FFB91C1C" } },
-                                bottom: { style: "thin", color: { argb: "FFB91C1C" } }
+            // Conditional formatting: highlight ap_title and justification cells
+            // when coverage is "partial" or "not_covered" AND both fields are
+            // empty. The formula uses ISBLANK() and absolute column references on
+            // the coverage column ($F = 6th column) so each row evaluates
+            // independently.
+            var lastRow = ws2.rowCount;
+            if (lastRow > 1) {
+                var coverageColLetter = "F"; // 6th column
+                var apTitleColLetter = "H"; // 8th column
+                var justColLetter = "L"; // 12th column
+                // Range covering ap_title cells from row 2 to lastRow
+                var apTitleRange = apTitleColLetter + "2:" + apTitleColLetter + lastRow;
+                var justRange = justColLetter + "2:" + justColLetter + lastRow;
+                // Formula: TRUE when coverage ∈ {partial, not_covered} AND both
+                // ap_title (H) and justification (L) are blank on the same row.
+                // The reference uses $F2 (relative row, fixed column) so Excel
+                // re-evaluates per row.
+                var needAction = 'AND(OR($' + coverageColLetter + '2="partial",$' + coverageColLetter + '2="not_covered"),'
+                    + 'TRIM($' + apTitleColLetter + '2)="",'
+                    + 'TRIM($' + justColLetter + '2)="")';
+                ws2.addConditionalFormatting({
+                    ref: apTitleRange + " " + justRange,
+                    rules: [
+                        {
+                            type: "expression",
+                            formulae: [needAction],
+                            style: {
+                                fill: { type: "pattern", pattern: "solid", bgColor: { argb: "FFFEE2E2" } },
+                                font: { color: { argb: "FF7F1D1D" }, bold: true },
+                                border: {
+                                    left: { style: "thin", color: { argb: "FFB91C1C" } },
+                                    right: { style: "thin", color: { argb: "FFB91C1C" } },
+                                    top: { style: "thin", color: { argb: "FFB91C1C" } },
+                                    bottom: { style: "thin", color: { argb: "FFB91C1C" } }
+                                }
                             }
                         }
-                    }
-                ]
-            });
-            // Bonus: also highlight the coverage cell itself in green when
-            // it is "covered" or "not_applicable" (visual confirmation).
-            ws2.addConditionalFormatting({
-                ref: coverageColLetter + "2:" + coverageColLetter + lastRow,
-                rules: [
-                    {
-                        type: "expression",
-                        formulae: ['OR($' + coverageColLetter + '2="covered",$' + coverageColLetter + '2="not_applicable")'],
-                        style: {
-                            fill: { type: "pattern", pattern: "solid", bgColor: { argb: "FFD1FAE5" } },
-                            font: { color: { argb: "FF065F46" } }
+                    ]
+                });
+                // Bonus: also highlight the coverage cell itself in green when
+                // it is "covered" or "not_applicable" (visual confirmation).
+                ws2.addConditionalFormatting({
+                    ref: coverageColLetter + "2:" + coverageColLetter + lastRow,
+                    rules: [
+                        {
+                            type: "expression",
+                            formulae: ['OR($' + coverageColLetter + '2="covered",$' + coverageColLetter + '2="not_applicable")'],
+                            style: {
+                                fill: { type: "pattern", pattern: "solid", bgColor: { argb: "FFD1FAE5" } },
+                                font: { color: { argb: "FF065F46" } }
+                            }
+                        },
+                        {
+                            type: "expression",
+                            formulae: ['OR($' + coverageColLetter + '2="partial",$' + coverageColLetter + '2="not_covered")'],
+                            style: {
+                                fill: { type: "pattern", pattern: "solid", bgColor: { argb: "FFFEF3C7" } },
+                                font: { color: { argb: "FF92400E" } }
+                            }
                         }
-                    },
-                    {
-                        type: "expression",
-                        formulae: ['OR($' + coverageColLetter + '2="partial",$' + coverageColLetter + '2="not_covered")'],
-                        style: {
-                            fill: { type: "pattern", pattern: "solid", bgColor: { argb: "FFFEF3C7" } },
-                            font: { color: { argb: "FF92400E" } }
-                        }
-                    }
-                ]
-            });
+                    ]
+                });
+            }
+            // Sheet 3: Self validation
+            var ws3 = wb.addWorksheet(t("assessment.self_validation_sheet"));
+            ws3.columns = [{ width: 80 }];
+            ws3.addRow([t("assessment.self_validation_title")]);
+            ws3.addRow([t("assessment.self_validation_hint")]);
+            ws3.addRow([""]);
+            ws3.addRow([t("assessment.self_validation_check_label") + ": [   ]  " + t("assessment.self_validation_tick_hint")]);
+            ws3.getRow(1).font = { bold: true, size: 14 };
         }
-        // Sheet 3: Self validation
-        var ws3 = wb.addWorksheet(t("assessment.self_validation_sheet"));
-        ws3.columns = [{ width: 80 }];
-        ws3.addRow([t("assessment.self_validation_title")]);
-        ws3.addRow([t("assessment.self_validation_hint")]);
-        ws3.addRow([""]);
-        ws3.addRow([t("assessment.self_validation_check_label") + ": [   ]  " + t("assessment.self_validation_tick_hint")]);
-        ws3.getRow(1).font = { bold: true, size: 14 };
+        finally {
+            _locale = sessionLocale;
+        }
         wb.xlsx.writeBuffer().then(function (buf) {
             var blob = new Blob([buf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
             var baseName = (a.id + "_" + _vendorName(a.vendor_id).replace(/\s+/g, "_") + "_questionnaire").replace(/[^a-z0-9_.-]/gi, "");
@@ -4890,6 +5020,8 @@ function _importAssessmentResponse(vendorId) {
 }
 window._importAssessmentResponse = _importAssessmentResponse;
 function _importAssessmentIntoExisting(assessId) {
+    if (!_editableAssessment(assessId))
+        return; // locked (BUG-111)
     _pickAssessmentFile(assessId, null);
 }
 window._importAssessmentIntoExisting = _importAssessmentIntoExisting;
@@ -4964,6 +5096,12 @@ function _applyImportedPayload(payload, existingAssessId, vendorId) {
     else {
         // Look up by payload assessment_id first
         a = _findAssessment(payload.assessment_id);
+    }
+    if (_assessmentLocked(a)) {
+        alert(t("assessment.import_locked"));
+        return;
+    }
+    if (!existingAssessId) {
         if (!a) {
             // Create a new assessment anchored to the vendor
             var targetVendor = vendorId || payload.vendor_id;
@@ -4986,6 +5124,8 @@ function _applyImportedPayload(payload, existingAssessId, vendorId) {
             D.assessments.push(a);
         }
     }
+    if (!a)
+        return;
     // Merge responses from payload
     a.responses = (payload.responses || []).map(function (r) { return JSON.parse(JSON.stringify(r)); });
     a.status = "pending_approval";
@@ -5119,6 +5259,10 @@ function _handleImportedExcel(file, existingAssessId, vendorId) {
                 var a;
                 if (existingAssessId)
                     a = _findAssessment(existingAssessId);
+                if (_assessmentLocked(a)) {
+                    alert(t("assessment.import_locked"));
+                    return;
+                }
                 if (!a) {
                     // Heuristic: find an assessment whose responses intersect
                     // with the imported question ids. This lets the user
@@ -5126,7 +5270,7 @@ function _handleImportedExcel(file, existingAssessId, vendorId) {
                     // having opened a specific assessment first.
                     var qIds = Object.keys(respByQ);
                     var candidate = (D.assessments || []).find(function (x) {
-                        if (!x.template_snapshot)
+                        if (!x.template_snapshot || _assessmentLocked(x))
                             return false;
                         if (vendorId && x.vendor_id !== vendorId)
                             return false;
@@ -6398,7 +6542,7 @@ function _applyAiData(v, data) {
             // Reuse an existing non-validated V2 assessment, else create one.
             // Legacy V1 assessments (no template_snapshot) are never touched.
             var assessment = D.assessments.find(function (a) {
-                return a.vendor_id === v.id && a.status !== "validated" && a.template_snapshot;
+                return a.vendor_id === v.id && !_assessmentLocked(a) && a.template_snapshot;
             });
             var _assessmentIsNew = false;
             if (!assessment) {
