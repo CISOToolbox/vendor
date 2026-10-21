@@ -1100,9 +1100,10 @@ function _renderVendorDoraTab(v) {
     // with the rest of the grid.
     if (addIdShown) {
         h += '<div class="ct-form-row ct-col-span-2"><label>' + esc(t("dora.vtab.additional_id_type")) + '</label>';
-        h += '<select data-change="patchVendorRoi" data-args=\'' + _da("additional_id_type") + '\' data-pass-value>' + _opts("additional_id_type", idTypes, v.additional_id_type) + '</select></div>';
+        h += '<select id="vroi-addtype" data-change="patchVendorRoi" data-args=\'' + _da("additional_id_type") + '\' data-pass-value>' + _opts("additional_id_type", idTypes, v.additional_id_type) + '</select></div>';
         h += '<div class="ct-form-row"><label>' + esc(t("dora.vtab.additional_id_value")) + '</label>';
-        h += '<input value="' + esc(v.additional_id_value || "") + '" data-input="patchVendorRoi" data-args=\'' + _da("additional_id_value") + '\' data-pass-value></div>';
+        // Saved when left (data-change): a value typed key by key is never sent half-way (BUG-114).
+        h += '<input id="vroi-addval" value="' + esc(v.additional_id_value || "") + '" data-change="patchVendorRoi" data-args=\'' + _da("additional_id_value") + '\' data-pass-value></div>';
     }
     // Legal name (full width).
     h += '<div class="ct-form-row ct-col-span-2"><label>' + esc(t("dora.vtab.legal_name_latin")) + '</label>';
@@ -1199,10 +1200,84 @@ function _vendorRoiCountryField(value, list) {
     return h;
 }
 var _vroiRenderTimer = null;
+// A LEI as a key: trimmed, upper case — as the server compares (lei_key).
+function _leiKey(value) { return String(value || "").trim().toUpperCase(); }
+// The name of another record carrying the same LEI or additional
+// identifier, or "" — one record, one key (BUG-114, as the server refuses it).
+function _codeKeys(r) {
+    if (!r)
+        return [];
+    var keys = [];
+    if (_leiKey(r.lei))
+        keys.push("lei:" + _leiKey(r.lei));
+    var addType = r.additional_id_type || "", addValue = String(r.additional_id_value || "").trim();
+    if (addType && addValue) {
+        // By the EBA code of its type, as the server: VAT and tax_id are one code.
+        var cl = (window.DoraData && DoraData.codelists && DoraData.codelists()) || {};
+        var it = (cl.additional_id_type || []).find(function (x) { return x && x.code === addType; });
+        keys.push("id:" + ((it && it.eba_code) || addType) + ":" + addValue);
+    }
+    return keys;
+}
+function _codeOwner(records, selfId, values) {
+    // Only a key the record gains: a duplicate stored before blocks nothing.
+    var self = (records || []).find(function (r) { return r && r.id === selfId; });
+    var had = _codeKeys(self);
+    var gained = _codeKeys(values).filter(function (k) { return had.indexOf(k) < 0; });
+    if (!gained.length)
+        return "";
+    var other = (records || []).find(function (r) {
+        return !!r && r.id !== selfId && _codeKeys(r).some(function (k) { return gained.indexOf(k) >= 0; });
+    });
+    return other ? (other.name || other.id) : "";
+}
+// Says, under the field (el, else the one being typed in), that its code is
+// taken (owner) — or clears it (owner ""). The value is not kept: nothing is sent.
+function _markCodeTaken(owner, el) {
+    el = el || document.activeElement;
+    if (!el || (el.tagName !== "INPUT" && el.tagName !== "SELECT"))
+        return;
+    var host = el.closest(".ct-form-row, td, label") || el.parentElement;
+    if (!host)
+        return;
+    var msgEl = host.querySelector(".ct-error[data-code-taken]");
+    if (!owner) {
+        el.classList.remove("ct-field-error");
+        el.removeAttribute("aria-invalid");
+        if (msgEl)
+            msgEl.remove();
+        return;
+    }
+    el.classList.add("ct-field-error");
+    el.setAttribute("aria-invalid", "true");
+    if (!msgEl) {
+        msgEl = document.createElement("div");
+        msgEl.className = "ct-error";
+        msgEl.setAttribute("data-code-taken", "");
+        host.appendChild(msgEl);
+    }
+    msgEl.textContent = t("dora.vtab.code_taken").replace("{name}", owner);
+}
 window.patchVendorRoi = function (field, value) {
     var v = D.vendors[_selectedVendor];
     if (!v)
         return;
+    if (field === "lei" && value && !/^[A-Za-z0-9]{18}[0-9]{2}$/.test(value.trim())) {
+        _markCodeTaken("", document.getElementById("vroi-lei"));
+        return; // a LEI being typed: kept in the field only, never half-way in D or the server (BUG-114)
+    }
+    if (field === "lei" || field === "additional_id_type" || field === "additional_id_value") {
+        var candidate = Object.assign({}, v);
+        candidate[field] = value;
+        var owner = _codeOwner(D.vendors, v.id, candidate);
+        var fieldEl = document.getElementById(field === "lei" ? "vroi-lei" : field === "additional_id_type" ? "vroi-addtype" : "vroi-addval");
+        _markCodeTaken(owner, fieldEl);
+        if (owner) { // refused before it is kept: said under the field, nothing sent
+            if (_vroiRenderTimer)
+                clearTimeout(_vroiRenderTimer);
+            return;
+        }
+    }
     v[field] = value;
     var payload = {};
     payload[field] = value;
@@ -1219,8 +1294,19 @@ window.patchVendorRoi = function (field, value) {
     // indicators catch up once the user pauses typing or tabs out.
     if (_vroiRenderTimer)
         clearTimeout(_vroiRenderTimer);
-    _vroiRenderTimer = setTimeout(function () { renderPanel(); }, 700);
+    _vroiRenderTimer = setTimeout(_vroiRender, 700);
 };
+// The deferred re-render waits while a field of the tab is being edited: a
+// rebuilt form would drop what is being typed in it (BUG-114).
+function _vroiRender() {
+    var el = document.activeElement;
+    var editing = !!el && (el.getAttribute("data-input") === "patchVendorRoi" || el.getAttribute("data-change") === "patchVendorRoi");
+    if (editing) {
+        _vroiRenderTimer = setTimeout(_vroiRender, 700);
+        return;
+    }
+    renderPanel();
+}
 // ── Informal subcontractors (vendor.sub_contractors list) ──
 // These live OUTSIDE the formal DORA tree (no arrangement, no link row).
 // They reference an existing global subcontractor identity by name (the

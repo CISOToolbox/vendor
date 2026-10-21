@@ -15,6 +15,7 @@ from src.assessment_validation import validate_blob
 from src.auth import ADMIN_MODULE_ROLES, VIEWER_MODULE_ROLES, auth_enabled, get_current_user, perms_for_module_role
 from src.calculations import compute_project_stats, recalculate_all
 from src.database import get_db
+from src.dora_validation import new_duplicate_codes
 from src.models import (
     DoraArrangement,
     DoraArrangementFunction,
@@ -680,6 +681,17 @@ async def update_project(
             if a.get("status") == "validated" and not a.get("approved_at"):
                 a["approved_at"] = now.isoformat()
                 a["approved_by"] = a.get("approved_by") or current_email
+        # One record, one code (BUG-114): the blob may not create a duplicate
+        # LEI or identifier the granular routes refuse.
+        stored_vendors = (await db.execute(select(Vendor).where(Vendor.project_id == project.id))).scalars().all()
+        dup = new_duplicate_codes(list(recalculated.get("vendors") or []), list(stored_vendors))
+        dora_blob = recalculated.get("dora") if isinstance(recalculated.get("dora"), dict) else {}
+        if dora_blob.get("subcontractors"):
+            stored_subs = (await db.execute(
+                select(DoraSubcontractor).where(DoraSubcontractor.project_id == project.id))).scalars().all()
+            dup += new_duplicate_codes(list(dora_blob["subcontractors"]), list(stored_subs))
+        if dup:
+            raise HTTPException(422, "a code identifies one vendor or subcontractor only: " + "; ".join(dup))
         await _delete_children(db, project.id)
         await _decompose_data(db, project.id, recalculated)
 

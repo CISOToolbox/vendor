@@ -399,6 +399,15 @@
         alert(t("chrome.stale_conflict"));
         window.location.reload();
     }
+    // BUG-114: the project save refused a code two records carry — say so, then
+    // reload what the server keeps (every later save would fail the same way).
+    function _codeRefused(msg) {
+        if (msg.indexOf("API 422") !== 0 || msg.indexOf("identifies one vendor or subcontractor") < 0)
+            return false;
+        alert(t("dora.save_code_refused"));
+        window.location.reload();
+        return true;
+    }
     window._autoSave = function () {
         if (!_dataReady)
             return;
@@ -424,6 +433,8 @@
                     _staleConflict();
                     return;
                 }
+                if (_codeRefused(msg))
+                    return;
                 console.error("Autosave failed:", err);
             });
         }, 500);
@@ -440,7 +451,10 @@
             _origLoadBuffer(buffer, filename);
             setTimeout(function () {
                 if (_activeId) {
-                    VendorAPI.saveFull(_activeId, D);
+                    VendorAPI.saveFull(_activeId, D).catch(function (err) {
+                        if (!_codeRefused(String((err && err.message) || "")))
+                            console.error("Import save failed:", err);
+                    });
                 }
                 else {
                     VendorAPI.create({

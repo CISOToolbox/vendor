@@ -900,6 +900,8 @@ class DoraSubcontractorCreate(BaseModel):
     country_iso2: str | None = ""
     sector: str | None = None
     person_type: str | None = ""                # B_05.01.0070
+    additional_id_type: str | None = None        # B_05.01.0040 (a LEI-less subcontractor is known by it)
+    additional_id_value: str | None = None       # B_05.01.0030
 
 
 class DoraSubcontractorUpdate(BaseModel):
@@ -909,6 +911,8 @@ class DoraSubcontractorUpdate(BaseModel):
     country_iso2: str | None = None
     sector: str | None = None
     person_type: str | None = None
+    additional_id_type: str | None = None
+    additional_id_value: str | None = None
 
 
 class DoraSubcontractorResponse(BaseModel):
@@ -920,6 +924,8 @@ class DoraSubcontractorResponse(BaseModel):
     country_iso2: str | None
     sector: str | None
     person_type: str | None = None
+    additional_id_type: str | None = None
+    additional_id_value: str | None = None
     created_at: datetime
     updated_at: datetime
     model_config = {"from_attributes": True}

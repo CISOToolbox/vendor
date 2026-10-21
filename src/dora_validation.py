@@ -91,6 +91,65 @@ def lei_key(value: Any) -> str:
     return str(value or "").strip().upper()
 
 
+def _eba_id_type(code: str) -> str:
+    """The EBA code of an additional identifier type ("" if it has none)."""
+    for it in _CODELISTS.get("additional_id_type", []):
+        if isinstance(it, dict) and it.get("code") == code:
+            return it.get("eba_code") or ""
+    return ""
+
+
+def validate_additional_id_type(value: str | None) -> None:
+    """An additional identifier type the EBA has a code for (BUG-114): a type
+    without one (``other``) exports empty."""
+    if value is None or value == "":
+        return
+    validate_codelist(value, "additional_id_type")
+    if not _eba_id_type(value):
+        raise HTTPException(422, f"additional_id_type '{value}' has no EBA code: the register cannot report it")
+
+
+def _validate_gained_id_type(value: str | None, current: Any) -> None:
+    """A type the record gains must have an EBA code; the one it already
+    carries is kept as it is (re-sent by a whole-identity save)."""
+    if current is not None and value and value == getattr(current, "additional_id_type", None):
+        validate_codelist(value, "additional_id_type")
+        return
+    validate_additional_id_type(value)
+
+
+def code_keys(record: Any) -> list[tuple[str, ...]]:
+    """The keys a vendor or subcontractor reports under (dict or object): its
+    LEI, and its additional identifier by the EBA code of its type — two app
+    types with one EBA code are one key."""
+    if record is None:
+        return []
+    get = record.get if isinstance(record, dict) else (lambda k, d=None: getattr(record, k, d))
+    keys: list[tuple[str, ...]] = []
+    if lei_key(get("lei")):
+        keys.append(("lei", lei_key(get("lei"))))
+    add_type, add_value = get("additional_id_type") or "", str(get("additional_id_value") or "").strip()
+    if add_type and add_value:
+        keys.append(("id", _eba_id_type(add_type) or add_type, add_value))
+    return keys
+
+
+def new_duplicate_codes(incoming: list[Any], stored: list[Any]) -> list[str]:
+    """Codes several incoming records carry that were not already shared in
+    the stored ones (BUG-114): a whole-project save must not create the
+    duplicate a granular write refuses, nor fail on one that predates it."""
+    def _dups(records: list[Any]) -> dict[tuple[str, ...], list[str]]:
+        seen: dict[tuple[str, ...], list[str]] = {}
+        for r in records:
+            name = (r.get("name") if isinstance(r, dict) else getattr(r, "name", "")) or ""
+            for k in code_keys(r):
+                seen.setdefault(k, []).append(name)
+        return {k: v for k, v in seen.items() if len(v) > 1}
+    old = _dups(stored)
+    return [f"{k[-1]} is carried by {', '.join(repr(n) for n in names)}"
+            for k, names in _dups(incoming).items() if k not in old]
+
+
 def is_intra_group(vendor: Any, vendor_by_id: dict[str, Any], group_leis: set[str]) -> bool:
     """A provider of the group: it, or its ultimate parent (a vendor of the
     project or a LEI), carries the LEI of an entity of the register
@@ -424,7 +483,7 @@ def validate_dora_signer(payload: dict[str, Any]) -> None:
         validate_date(payload.get("signed_on"), field="signed_on")
 
 
-def validate_dora_subcontractor(payload: dict[str, Any]) -> None:
+def validate_dora_subcontractor(payload: dict[str, Any], current: Any = None) -> None:
     """Validate the global subcontractor identity (no per-link fields)."""
     if "lei" in payload:
         validate_lei(payload.get("lei"), required=False)
@@ -432,6 +491,8 @@ def validate_dora_subcontractor(payload: dict[str, Any]) -> None:
         validate_country(payload.get("country_iso2"))
     if "person_type" in payload:
         validate_codelist(payload.get("person_type"), "person_type")
+    if "additional_id_type" in payload:
+        _validate_gained_id_type(payload.get("additional_id_type"), current)
 
 
 def validate_dora_arrangement_subcontractor(
@@ -451,7 +512,7 @@ def validate_dora_arrangement_subcontractor(
 
 
 def validate_vendor_roi(payload: dict[str, Any], vendor_ids: set[str] | None = None,
-                        self_id: str | None = None) -> None:
+                        self_id: str | None = None, current: Any = None) -> None:
     """Vendor-level RoI fields (lei, country_iso2, person_type, etc.).
 
     ``ultimate_parent_id`` is another vendor of the project (the app's picker
@@ -473,7 +534,7 @@ def validate_vendor_roi(payload: dict[str, Any], vendor_ids: set[str] | None = N
     if "entity_nature" in payload:
         validate_codelist(payload.get("entity_nature"), "entity_nature")
     if "additional_id_type" in payload:
-        validate_codelist(payload.get("additional_id_type"), "additional_id_type")
+        _validate_gained_id_type(payload.get("additional_id_type"), current)
     # R17: legal persons established in the EEA must report a valid LEI.
     # Only enforced when the caller provides BOTH person_type AND
     # country_iso2 in the same payload (avoids false positives during

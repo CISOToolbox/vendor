@@ -62,7 +62,7 @@ from __future__ import annotations
 import re
 import uuid
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy import delete, select, update
@@ -71,6 +71,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.auth import auth_enabled, get_current_user
 from src.database import get_db
 from src.dora_validation import (
+    code_keys,
     codelists,
     is_intra_group,
     lei_key,
@@ -171,6 +172,24 @@ async def _check_linked_arrangement(db: AsyncSession, project_id: uuid.UUID,
     if not is_intra_group(vendor_by_id.get(vendor_id or ""), vendor_by_id, group_leis):
         raise HTTPException(422, "linked_arrangement_id: only an arrangement with an intra-group provider "
                                  "is linked to another one (B_02.03)")
+
+
+async def _check_unique_code(db: AsyncSession, model: Any, project_id: uuid.UUID, self_id: Optional[str],
+                             values: dict[str, Any], current: Any = None) -> None:
+    """One record, one key (BUG-114): a LEI, or an additional identifier of a
+    type, carried by another record of the same kind is refused — the
+    register would report the key twice (EBA rule 806). Only a key the record
+    gains is checked: a duplicate stored before never blocks another edit."""
+    keys = set(code_keys(values)) - set(code_keys(current))
+    if not keys:
+        return
+    rows = (await db.execute(select(model).where(model.project_id == project_id))).scalars().all()
+    for other in rows:
+        shared = keys & set(code_keys(other)) if other.id != self_id else set()
+        if shared:
+            key = sorted(shared)[0]
+            what = f"lei '{key[1]}'" if key[0] == "lei" else f"{key[1]} '{key[2]}'"
+            raise HTTPException(422, f"{what} already identifies '{other.name or other.id}'")
 
 
 async def _touch_project(db: AsyncSession, project: Project) -> None:
@@ -1022,6 +1041,7 @@ async def create_subcontractor(
     validate_dora_subcontractor(payload)
     if await db.get(DoraSubcontractor, (project_id, body.id)):
         raise HTTPException(409, "Subcontractor id already exists")
+    await _check_unique_code(db, DoraSubcontractor, project_id, body.id, payload)
     obj = DoraSubcontractor(project_id=project_id, **payload)
     db.add(obj)
     await _touch_project(db, project)
@@ -1046,7 +1066,10 @@ async def update_subcontractor(
     if not obj:
         raise HTTPException(404, "Subcontractor not found")
     patch = body.model_dump(exclude_unset=True)
-    validate_dora_subcontractor(patch)
+    validate_dora_subcontractor(patch, current=obj)
+    if {"lei", "additional_id_type", "additional_id_value"} & patch.keys():
+        await _check_unique_code(db, DoraSubcontractor, project_id, sub_id, {
+            k: patch.get(k, getattr(obj, k)) for k in ("lei", "additional_id_type", "additional_id_value")}, obj)
     for k, v in patch.items():
         setattr(obj, k, v)
     obj.updated_at = datetime.now(timezone.utc)
@@ -1257,7 +1280,10 @@ async def patch_vendor_roi(
         raise HTTPException(404, "Vendor not found")
     patch = body.model_dump(exclude_unset=True)
     vendor_ids = set((await db.execute(select(Vendor.id).where(Vendor.project_id == project_id))).scalars().all())
-    validate_vendor_roi(patch, vendor_ids=vendor_ids, self_id=vendor_id)
+    validate_vendor_roi(patch, vendor_ids=vendor_ids, self_id=vendor_id, current=vendor)
+    if {"lei", "additional_id_type", "additional_id_value"} & patch.keys():
+        await _check_unique_code(db, Vendor, project_id, vendor_id, {
+            k: patch.get(k, getattr(vendor, k)) for k in ("lei", "additional_id_type", "additional_id_value")}, vendor)
     for k, v in patch.items():
         setattr(vendor, k, v)
     vendor.updated_at = datetime.now(timezone.utc)

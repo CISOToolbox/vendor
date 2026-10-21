@@ -991,27 +991,37 @@ async def build_dora_xlsx(
             if sub.lei:
                 sub_by_lei.setdefault(lei_key(sub.lei), sub)
 
-        def _code_row(lei: str) -> None:
-            if not lei or lei in reported_codes:
+        def _sub_row(sub: Any) -> None:
+            """A subcontractor's row: its code is its LEI, else its additional
+            identifier (BUG-114); no code: B_05.02 already shows it red."""
+            code, kind = _tpp_code(sub)
+            if not code or code in reported_codes:
                 return
-            reported_codes.add(lei)
-            kind = _eba_type_of_code_for_lei(lei)
-            sub = sub_by_lei.get(lei)
-            if sub is None:   # nothing known but its LEI: the rest shows red
-                b0501_rows.append([lei, kind, "", "", "", "", "", "", "", "", lei, kind])
-                return
+            reported_codes.add(code)
             b0501_rows.append([
-                lei, kind, "", "", sub.name or "", "",
+                code, kind,
+                sub.additional_id_value or "", _eba(_EBA_TYPE_OF_CODE, sub.additional_id_type),
+                sub.name or "", "",
                 _eba(_EBA_PERSON_TYPE, getattr(sub, "person_type", None)),
                 _eba_country(sub.country_iso2),
                 "", "",
-                lei, kind,   # its group is not entered: its own code (FAQ Q99)
+                code, kind,   # its group is not entered: its own code (FAQ Q99)
             ])
+
+        def _code_row(lei: str) -> None:
+            if not lei or lei in reported_codes:
+                return
+            if lei in sub_by_lei:
+                _sub_row(sub_by_lei[lei])
+                return
+            reported_codes.add(lei)   # nothing known but its LEI: the rest shows red
+            kind = _eba_type_of_code_for_lei(lei)
+            b0501_rows.append([lei, kind, "", "", "", "", "", "", "", "", lei, kind])
 
         linked_sub_ids = {link.subcontractor_id for link in subcontractor_links}
         for sub in subcontractors:
             if sub.id in linked_sub_ids:
-                _code_row(lei_key(sub.lei))   # no code: B_05.02 already shows it red
+                _sub_row(sub)
         for lei in lei_parents:
             _code_row(lei)
         for s in signers:   # a provider's group entity signing for it (B_03.02)
@@ -1064,8 +1074,7 @@ async def build_dora_xlsx(
             sub = sub_by_id.get(link.subcontractor_id)
             if not sub:
                 continue
-            sub_lei = lei_key(sub.lei)   # a subcontractor is identified by its LEI (no other code in the app)
-            sub_code_type = _eba_type_of_code_for_lei(sub.lei)
+            sub_lei, sub_code_type = _tpp_code(sub)   # its LEI, else its additional identifier (BUG-114)
             tier = link.tier if link.tier is not None else 2
             if tier <= 2:
                 recipient_lei, recipient_code_type = _tpp_code(v)
@@ -1073,12 +1082,7 @@ async def build_dora_xlsx(
                 recipient_lei, recipient_code_type = "", ""
             else:
                 parent_sub = sub_by_id.get(link.parent_subcontractor_id)
-                if parent_sub:
-                    recipient_lei = lei_key(parent_sub.lei)
-                    recipient_code_type = _eba_type_of_code_for_lei(parent_sub.lei)
-                else:
-                    recipient_lei = ""
-                    recipient_code_type = _eba_type_of_code_for_lei(None)
+                recipient_lei, recipient_code_type = _tpp_code(parent_sub)
             b0502_rows.append([
                 (a.arrangement_reference if a else link.arrangement_id),
                 _eba(_EBA_ICT_SERVICE, link.service_provided),

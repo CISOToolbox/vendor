@@ -1206,7 +1206,7 @@
             h += '<tr>';
             h += '<td>' + esc(s.id) + '</td>';
             h += '<td><input value="' + esc(s.name || "") + '" data-input="doraPatchSub" data-args=\'["' + esc(s.id) + '","name"]\' data-pass-value></td>';
-            h += '<td><input value="' + esc(s.lei || "") + '" data-input="doraPatchSub" data-args=\'["' + esc(s.id) + '","lei"]\' data-pass-value class="ct-w-160"> '
+            h += '<td><input id="sub-row-lei-' + esc(s.id) + '" value="' + esc(s.lei || "") + '" data-input="doraPatchSub" data-args=\'["' + esc(s.id) + '","lei"]\' data-pass-value class="ct-w-160"> '
                 + (window.DoraData.gleifTriggerHtml ? window.DoraData.gleifTriggerHtml("sub-row-lei-" + s.id, function (rec) {
                     // GLEIF picker callback: updates the input via data-click handler.
                 }) : '')
@@ -1293,6 +1293,18 @@
     };
     window.doraPatchSub = function (subId, field, value) {
         var r = (_doraTree.subcontractors || []).find(function (x) { return x.id === subId; });
+        if (field === "lei" && r) { // one record, one key (BUG-114): said under the field, nothing sent
+            if (value && !/^[A-Za-z0-9]{18}[0-9]{2}$/.test(value.trim())) { // being typed: not kept half-way
+                _markCodeTaken("", document.getElementById("sub-row-lei-" + subId));
+                return;
+            }
+            var candidate = Object.assign({}, r);
+            candidate.lei = value;
+            var owner = _codeOwner(_doraTree.subcontractors || [], subId, candidate);
+            _markCodeTaken(owner, document.getElementById("sub-row-lei-" + subId));
+            if (owner)
+                return;
+        }
         if (r)
             r[field] = value;
         var f = {};
@@ -1606,26 +1618,25 @@
     // A provider of the group: it, or its ultimate parent, carries the LEI of an
     // entity of the register (reporting entities, consolidation) — same test as
     // the export and the server (is_intra_group).
-    function _doraLeiKey(value) { return String(value || "").trim().toUpperCase(); }
     function _doraIsIntraGroup(vendorId) {
         if (!vendorId || !_doraTree)
             return false;
         var leis = {};
         (_doraTree.entities || []).forEach(function (e) { if (e.lei)
-            leis[_doraLeiKey(e.lei)] = true; });
+            leis[_leiKey(e.lei)] = true; });
         (_doraTree.consolidation || []).forEach(function (c) { if (c.entity_lei)
-            leis[_doraLeiKey(c.entity_lei)] = true; });
+            leis[_leiKey(c.entity_lei)] = true; });
         var vendors = (window.D && D.vendors) || [];
         var v = vendors.find(function (x) { return x.id === vendorId; });
         if (!v)
             return false;
-        if (v.lei && leis[_doraLeiKey(v.lei)])
+        if (v.lei && leis[_leiKey(v.lei)])
             return true;
         if (!v.ultimate_parent_id)
             return false;
         var parent = vendors.find(function (x) { return x.id === v.ultimate_parent_id; });
         var parentLei = parent ? parent.lei : v.ultimate_parent_id;
-        return !!parentLei && !!leis[_doraLeiKey(parentLei)];
+        return !!parentLei && !!leis[_leiKey(parentLei)];
     }
     function _doraVendorItems() {
         var vendors = (window.D && D.vendors) || [];
@@ -2339,6 +2350,9 @@
             + '  <label>' + _doraT("dora.modal.sub_lei", "LEI") + '<div class="ct-flex ct-items-center ct-gap-1"><input id="sub-id-lei" value="' + esc(s.lei || "") + '" class="ct-flex-1">' + _gleifTriggerHtml("sub-id-lei") + '</div></label>'
             + _fld(_doraT("dora.modal.sub_country", "Country"), _doraRefSelect("sub-id-country", s.country_iso2, _doraCodeItems("country_iso3166_1")))
             + _fld(_doraT("dora.modal.sub_person_type", "Type of person (B_05.01.0070)"), _doraRefSelect("sub-id-person", s.person_type || "", _doraCodeItems("person_type", s.person_type ? [s.person_type] : [])))
+            + _fld(_doraT("dora.vtab.additional_id_type", "Additional ID — type (B_05.01.0040)"), _doraRefSelect("sub-id-addtype", s.additional_id_type || "", _doraCodeItems("additional_id_type", s.additional_id_type ? [s.additional_id_type] : [])))
+            + '  <label>' + _doraT("dora.vtab.additional_id_value", "Additional ID — value (B_05.01.0030)") + '<input id="sub-id-addval" value="' + esc(s.additional_id_value || "") + '"></label>'
+            + '<div class="ct-col-span-2 ct-hint">' + esc(_doraT("dora.modal.sub_code_hint", "Without a LEI, the register identifies the subcontractor by its additional identifier (B_05.02.0030).")) + '</div>'
             + '</div>'
             + '<hr style="margin:var(--ct-s3) 0;border:none;border-top:1px solid var(--ct-line)">'
             + '<div class="ct-strong ct-mb-1">' + _doraT("dora.subs.linked_arrangements", "Linked arrangements") + '</div>'
@@ -2349,7 +2363,9 @@
                 name: _v("sub-id-name"),
                 lei: _v("sub-id-lei"),
                 country_iso2: _doraRefValue("sub-id-country"),
-                person_type: _doraRefValue("sub-id-person") || ""
+                person_type: _doraRefValue("sub-id-person") || "",
+                additional_id_type: _doraRefValue("sub-id-addtype") || null,
+                additional_id_value: _v("sub-id-addval").trim() || null
             };
         }
         var buttons = [{ id: "cancel", label: _doraT("btn_cancel", "Cancel") }];
@@ -2363,6 +2379,11 @@
                 var data = _collect();
                 if (!data.name) {
                     window.alert(_doraT("dora.modal.sub_name_required", "Name is required."));
+                    return false;
+                }
+                var owner = _codeOwner(_doraTree.subcontractors || [], s.id, data);
+                if (owner) { // one record, one key (BUG-114)
+                    window.alert(_doraT("dora.vtab.code_taken", "This code already identifies {name}.").replace("{name}", owner));
                     return false;
                 }
                 Object.assign(s, data);
