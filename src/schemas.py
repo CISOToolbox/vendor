@@ -899,6 +899,7 @@ class DoraSubcontractorCreate(BaseModel):
     name: str = ""
     country_iso2: str | None = ""
     sector: str | None = None
+    person_type: str | None = ""                # B_05.01.0070
 
 
 class DoraSubcontractorUpdate(BaseModel):
@@ -907,6 +908,7 @@ class DoraSubcontractorUpdate(BaseModel):
     name: str | None = None
     country_iso2: str | None = None
     sector: str | None = None
+    person_type: str | None = None
 
 
 class DoraSubcontractorResponse(BaseModel):
@@ -917,6 +919,7 @@ class DoraSubcontractorResponse(BaseModel):
     name: str
     country_iso2: str | None
     sector: str | None
+    person_type: str | None = None
     created_at: datetime
     updated_at: datetime
     model_config = {"from_attributes": True}

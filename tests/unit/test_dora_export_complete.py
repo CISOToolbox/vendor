@@ -92,10 +92,12 @@ async def _seed(db, pid, extra=None):
         db.add(DoraArrangementFunction(project_id=pid, arrangement_id=a, function_id="FN-001"))
         db.add(DoraArrangementRfe(project_id=pid, arrangement_id=a, rfe_id="ENT-001"))
         db.add(DoraSigner(project_id=pid, arrangement_id=a, id="SIG-" + a, signer_lei=LEI_FE, signer_name="CISO", signer_role="fe"))
-    db.add(DoraSubcontractor(project_id=pid, id="SUB-001", lei=LEI_SUBC, name="DC Ops", country_iso2="IE"))
+    db.add(DoraSubcontractor(project_id=pid, id="SUB-001", lei=LEI_SUBC, name="DC Ops", country_iso2="IE",
+                                  person_type=_code("person_type")))
     db.add(DoraArrangementSubcontractor(project_id=pid, arrangement_id="ARR-001", subcontractor_id="SUB-001",
                                         tier=2, service_provided="S_01"))
-    db.add(DoraSubcontractor(project_id=pid, id="SUB-002", lei="5493000IBP32UQZ0KL24", name="Power Ops", country_iso2="IE"))
+    db.add(DoraSubcontractor(project_id=pid, id="SUB-002", lei="5493000IBP32UQZ0KL24", name="Power Ops", country_iso2="IE",
+                                  person_type=_code("person_type")))
     db.add(DoraArrangementSubcontractor(project_id=pid, arrangement_id="ARR-001", subcontractor_id="SUB-002",
                                         tier=3, service_provided="S_01", parent_subcontractor_id="SUB-001"))
     for k, v in (extra or {}).items():
@@ -165,8 +167,9 @@ async def test_a_complete_register_has_no_required_cell_left_empty():
     ((DoraArrangement, ("ARR-001",), "exit_strategy_documented", None), "B_07.01.0080"),
     ((DoraArrangementSubcontractor, ("ARR-001", "SUB-002"), "parent_subcontractor_id", None), "B_05.02.0060"),
     ((Vendor, ("PP-002",), "ultimate_parent_id", "PP-GONE"), "B_05.01.0110"),        # orphan, not a LEI
-    ((DoraArrangement, ("ARR-002",), "data_stored", None), "B_02.02.0150"),            # not stated, no country: unknown (0140 is undetermined in the model)
+    ((DoraArrangement, ("ARR-002",), "data_stored", None), "B_02.02.0140"),            # not stated, no country: unknown, never a silent "No"
     ((Vendor, ("PP-004",), "additional_id_value", ""), "B_05.01.0010"),               # no code at all
+    ((DoraSubcontractor, ("SUB-001",), "person_type", ""), "B_05.01.0070"),            # a subcontractor is a B_05.01 row too
 ])
 async def test_an_unstated_value_shows_red(change, red):
     async with _engine.begin() as conn:

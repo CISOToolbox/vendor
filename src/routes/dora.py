@@ -72,6 +72,8 @@ from src.auth import auth_enabled, get_current_user
 from src.database import get_db
 from src.dora_validation import (
     codelists,
+    is_intra_group,
+    lei_key,
     validate_dora_arrangement,
     validate_dora_arrangement_subcontractor,
     validate_dora_branch,
@@ -149,15 +151,26 @@ async def get_codelists(
 
 
 async def _check_linked_arrangement(db: AsyncSession, project_id: uuid.UUID,
-                                    linked: Optional[str], own_id: Optional[str]) -> None:
+                                    linked: Optional[str], own_id: Optional[str],
+                                    vendor_id: Optional[str]) -> None:
     """B_02.03.0020 (BUG-112): the linked arrangement is another arrangement
-    of the same project."""
+    of the same project, and only an intra-group arrangement has one (B_02.03
+    lists intra-group arrangements, BUG-113)."""
     if not linked:
         return
     if own_id and linked == own_id:
         raise HTTPException(422, "linked_arrangement_id: an arrangement cannot be linked to itself")
     if not await db.get(DoraArrangement, (project_id, linked)):
         raise HTTPException(422, f"linked_arrangement_id '{linked}' does not exist")
+    vendors = (await db.execute(select(Vendor).where(Vendor.project_id == project_id))).scalars().all()
+    vendor_by_id = {v.id: v for v in vendors}
+    group_leis = {lei_key(lei) for (lei,) in (await db.execute(
+        select(DoraEntity.lei).where(DoraEntity.project_id == project_id))).all() if lei}
+    group_leis |= {lei_key(lei) for (lei,) in (await db.execute(
+        select(DoraConsolidationScope.entity_lei).where(DoraConsolidationScope.project_id == project_id))).all() if lei}
+    if not is_intra_group(vendor_by_id.get(vendor_id or ""), vendor_by_id, group_leis):
+        raise HTTPException(422, "linked_arrangement_id: only an arrangement with an intra-group provider "
+                                 "is linked to another one (B_02.03)")
 
 
 async def _touch_project(db: AsyncSession, project: Project) -> None:
@@ -686,7 +699,8 @@ async def create_arrangement(
     validate_dora_arrangement(payload, function_is_critical=func_critical)
     if payload.get("open_ended") is None:
         payload["open_ended"] = False
-    await _check_linked_arrangement(db, project_id, payload.get("linked_arrangement_id"), payload.get("id"))
+    await _check_linked_arrangement(db, project_id, payload.get("linked_arrangement_id"), payload.get("id"),
+                                    body.vendor_id)
     # Server-derive flags (not trusted from client):
     # - is_critical_function_support = OR(linked function is critical)
     # - is_substitutable = (substitutability_level == 'easy')
@@ -765,8 +779,8 @@ async def update_arrangement(
     validate_dora_arrangement(patch, function_is_critical=func_critical)
     if "open_ended" in patch and patch["open_ended"] is None:
         patch.pop("open_ended")
-    if "linked_arrangement_id" in patch:
-        await _check_linked_arrangement(db, project_id, patch.get("linked_arrangement_id"), arrangement_id)
+    if "linked_arrangement_id" in patch:   # the vendor does not change on update
+        await _check_linked_arrangement(db, project_id, patch.get("linked_arrangement_id"), arrangement_id, obj.vendor_id)
     # Server-derive flags (not trusted from client). Mirror create_arrangement.
     if new_function_ids is not None:
         patch["is_critical_function_support"] = bool(any_critical) if target_function_ids else False
@@ -1056,7 +1070,14 @@ async def delete_subcontractor(
     obj = await db.get(DoraSubcontractor, (project_id, sub_id))
     if not obj:
         raise HTTPException(404, "Subcontractor not found")
-    # Cascading deletes drop all junction rows referencing this sub.
+    # Cascading deletes drop all junction rows referencing this sub; the
+    # links it served lose their rank n-1 (BUG-113).
+    await db.execute(
+        update(DoraArrangementSubcontractor)
+        .where(DoraArrangementSubcontractor.project_id == project_id,
+               DoraArrangementSubcontractor.parent_subcontractor_id == sub_id)
+        .values(parent_subcontractor_id=None)
+    )
     await db.delete(obj)
     await _touch_project(db, project)
     await db.commit()
@@ -1090,12 +1111,24 @@ async def _validate_link_chain(
         select(
             DoraArrangementSubcontractor.subcontractor_id,
             DoraArrangementSubcontractor.parent_subcontractor_id,
+            DoraArrangementSubcontractor.tier,
         ).where(
             DoraArrangementSubcontractor.project_id == project_id,
             DoraArrangementSubcontractor.arrangement_id == arrangement_id,
         )
     )
-    edges = {r[0]: r[1] for r in res.all()}
+    rows = res.all()
+    # The subcontractors it serves stay at the next rank (BUG-113).
+    if tier is not None:
+        broken_ids = [r[0] for r in rows if r[1] == sub_id and r[0] != sub_id and (r[2] or 2) != tier + 1]
+        if broken_ids:
+            names = {sid: name for sid, name in (await db.execute(
+                select(DoraSubcontractor.id, DoraSubcontractor.name).where(
+                    DoraSubcontractor.project_id == project_id, DoraSubcontractor.id.in_(broken_ids)))).all()}
+            broken = sorted(names.get(sid) or sid for sid in broken_ids)
+            raise HTTPException(422, f"rank {tier} breaks the chain: {', '.join(broken)} "
+                                     f"(rank n-1 = this subcontractor) must then be at rank {tier + 1}")
+    edges = {r[0]: r[1] for r in rows}
     edges[sub_id] = new_parent
     validate_parent_chain(edges, sub_id, field="subcontractor parent")
 
@@ -1189,6 +1222,16 @@ async def unlink_subcontractor(
     obj = await db.get(DoraArrangementSubcontractor, (project_id, arrangement_id, sub_id))
     if not obj:
         raise HTTPException(404, "Subcontractor link not found")
+    # Its children lose their rank n-1 (shown red), never a stale recipient.
+    await db.execute(
+        update(DoraArrangementSubcontractor)
+        .where(
+            DoraArrangementSubcontractor.project_id == project_id,
+            DoraArrangementSubcontractor.arrangement_id == arrangement_id,
+            DoraArrangementSubcontractor.parent_subcontractor_id == sub_id,
+        )
+        .values(parent_subcontractor_id=None)
+    )
     await db.delete(obj)
     await _touch_project(db, project)
     await db.commit()

@@ -33,7 +33,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.csv_common import xlsx_safe_workbook
-from src.dora_validation import lei_is_valid, roi_required_columns
+from src.dora_validation import is_intra_group, lei_is_valid, lei_key, roi_required_columns
 from src.models import (
     DoraArrangement,
     DoraArrangementFunction,
@@ -410,7 +410,7 @@ def _tpp_code(v: Any) -> tuple[str, str]:
     if v is None:
         return "", ""
     if getattr(v, "lei", None):
-        return v.lei, "eba_qCO:qx2000"
+        return lei_key(v.lei), "eba_qCO:qx2000"
     value = getattr(v, "additional_id_value", None) or ""
     kind = _eba(_EBA_TYPE_OF_CODE, getattr(v, "additional_id_type", None))
     if value and kind:
@@ -646,7 +646,10 @@ async def build_dora_xlsx(
         select(Vendor).where(Vendor.project_id == project_id).order_by(Vendor.name)
     )).scalars().all()
     vendor_by_id = {v.id: v for v in vendors}
-    vendor_by_lei = {(v.lei or "").upper(): v for v in vendors if v.lei}
+    vendor_by_lei: dict[str, Any] = {}
+    for _v in vendors:   # two vendors with one LEI: the first one (by name) is the provider
+        if _v.lei:
+            vendor_by_lei.setdefault(lei_key(_v.lei), _v)
 
     fn_by_id = {f.id: f for f in functions}
     rfe_by_id = {e.id: e for e in entities}
@@ -715,7 +718,7 @@ async def build_dora_xlsx(
         if register_holder:
             e = register_holder
             holder_rows.append([
-                e.lei or "",
+                lei_key(e.lei),
                 e.name or "",
                 _eba_country(e.country_iso2),
                 _eba(_EBA_ENTITY_TYPE, e.entity_type),
@@ -728,21 +731,25 @@ async def build_dora_xlsx(
         b0102_rows: list[list[Any]] = []
         for e in entities:
             b0102_rows.append([
-                e.lei or "",
+                lei_key(e.lei),
                 e.name or "",
                 _eba_country(e.country_iso2),
                 _eba(_EBA_ENTITY_TYPE, e.entity_type),
                 _eba(_EBA_HIERARCHY, e.hierarchy),
-                e.parent_lei or "",
+                lei_key(e.parent_lei),
                 (e.updated_at.date().isoformat() if e.updated_at else ""),
                 (e.created_at.date().isoformat() if e.created_at else ""),
                 _OPEN_DATE,  # date of deletion: a deleted entity is erased, every exported one is in scope
                 _eba_currency(e.total_assets_currency or "EUR") if e.total_assets is not None else "",
                 e.total_assets if e.total_assets is not None else "",
             ])
+        listed_0102 = {r[0] for r in b0102_rows if r[0]}
         for c in consolidation:
+            if c.entity_lei and lei_key(c.entity_lei) in listed_0102:
+                continue   # a reporting entity listed again in the scope: one key, one row
+            listed_0102.add(lei_key(c.entity_lei))
             b0102_rows.append([
-                c.entity_lei or "",
+                lei_key(c.entity_lei),
                 c.entity_name or "",
                 _eba_country(c.country_iso2),
                 _eba(_EBA_ENTITY_TYPE, getattr(c, "entity_type", None)),
@@ -761,7 +768,7 @@ async def build_dora_xlsx(
             head_rfe = rfe_by_id.get(b.rfe_id or "")
             b0103_rows.append([
                 b.branch_code or b.id,
-                (head_rfe.lei if head_rfe else ""),
+                lei_key(head_rfe.lei if head_rfe else ""),
                 b.name or "",
                 _eba_country(b.country_iso2),
             ])
@@ -817,7 +824,7 @@ async def build_dora_xlsx(
                         stored = a.data_stored if getattr(a, "data_stored", None) is not None else (True if a.data_storage_country else None)
                         b0202_rows.append([
                             a.arrangement_reference or a.id,
-                            (rfe.lei if rfe else ""),
+                            lei_key(rfe.lei if rfe else ""),
                             tpp_code,
                             tpp_type,
                             fn_code,
@@ -840,29 +847,17 @@ async def build_dora_xlsx(
         # ── B_02.03 — Intra-group arrangements ─────────────────────────
         # Intra-group: the provider, or its ultimate parent, carries the LEI
         # of an entity of the group (reporting entities and consolidation).
-        group_leis = {(e.lei or "").upper() for e in entities if e.lei}
-        group_leis |= {(c.entity_lei or "").upper() for c in consolidation if c.entity_lei}
-
-        def _is_intra_group(v: Any) -> bool:
-            if v is None:
-                return False
-            if v.lei and v.lei.upper() in group_leis:
-                return True
-            if v.ultimate_parent_id:
-                pv = vendor_by_id.get(v.ultimate_parent_id)
-                parent_lei = pv.lei if pv else v.ultimate_parent_id
-                if parent_lei and str(parent_lei).upper() in group_leis:
-                    return True
-            return False
-
-        intra_arrangements = [a for a in arrangements if _is_intra_group(vendor_by_id.get(a.vendor_id))]
+        # These are the LEIs of the B_01.02 rows.
+        group_leis = {lei_key(e.lei) for e in entities if e.lei}
+        group_leis |= {lei_key(c.entity_lei) for c in consolidation if c.entity_lei}
+        intra_arrangements = [a for a in arrangements
+                              if is_intra_group(vendor_by_id.get(a.vendor_id), vendor_by_id, group_leis)]
+        # A row links two arrangements (FAQ Q74, Q89): none without a link.
         b0203_rows: list[list[Any]] = []
         for a in intra_arrangements:
             linked = arr_by_id.get(a.linked_arrangement_id) if getattr(a, "linked_arrangement_id", None) else None
-            b0203_rows.append([
-                a.arrangement_reference or a.id,
-                (linked.arrangement_reference or linked.id) if linked else "",
-            ])
+            if linked is not None:
+                b0203_rows.append([a.arrangement_reference or a.id, linked.arrangement_reference or linked.id])
         _write_sheet(wb, "B_02.03", _COLS_B0203, b0203_rows)
 
         # ── B_03.01 — Entities signing (FE side) ───────────────────────
@@ -873,7 +868,7 @@ async def build_dora_xlsx(
             a = arr_by_id.get(s.arrangement_id)
             b0301_rows.append([
                 (a.arrangement_reference if a else s.arrangement_id),
-                s.signer_lei or "",
+                lei_key(s.signer_lei),
             ])
         _write_sheet(wb, "B_03.01", _COLS_B0301, b0301_rows)
 
@@ -890,7 +885,7 @@ async def build_dora_xlsx(
                 continue
             a = arr_by_id.get(s.arrangement_id)
             if s.signer_lei:
-                code, kind = s.signer_lei, _eba_type_of_code_for_lei(s.signer_lei)
+                code, kind = lei_key(s.signer_lei), _eba_type_of_code_for_lei(s.signer_lei)
             else:   # the provider signs for itself
                 code, kind = _tpp_code(vendor_by_id.get(a.vendor_id) if a else None)
             ref = a.arrangement_reference if a else s.arrangement_id
@@ -902,9 +897,12 @@ async def build_dora_xlsx(
 
         # ── B_03.03 — Intra-group entity providing the ICT service ─────
         b0303_rows: list[list[Any]] = []
+        # 0020 is a B_01.02 entity: a provider of the group outside the
+        # consolidation scope leaves it empty (red) until it is added there.
         for a in intra_arrangements:
             v = vendor_by_id.get(a.vendor_id)
-            b0303_rows.append([a.arrangement_reference or a.id, (v.lei if v and v.lei else "")])
+            lei = lei_key(v.lei) if v else ""
+            b0303_rows.append([a.arrangement_reference or a.id, lei if lei in group_leis else ""])
         _write_sheet(wb, "B_03.03", _COLS_B0303, b0303_rows)
 
         # ── B_04.01 — Entities making use of ICT services ──────────────
@@ -914,7 +912,7 @@ async def build_dora_xlsx(
             rfe = rfe_by_id.get(link.rfe_id)
             b0401_rows.append([
                 (a.arrangement_reference if a else link.arrangement_id),
-                (rfe.lei if rfe else ""),
+                lei_key(rfe.lei if rfe else ""),
                 _EBA_IS_BRANCH["not_branch"],  # RFE rows are FEs, not branches
                 _NOT_APPLICABLE,               # B_04.01.0040: not a branch (FAQ Q64)
             ])
@@ -927,27 +925,45 @@ async def build_dora_xlsx(
         b0501_rows: list[list[Any]] = []
         # A parent cited in 0110 is reported as a row of its own (its code in
         # 0010), even without an arrangement of its own.
+        def _parent_of(v: Any) -> Any:
+            """The parent as a vendor: picked among vendors, or a LEI stored
+            before that a vendor of the register carries."""
+            pid_ = v.ultimate_parent_id
+            if not pid_:
+                return None
+            found = vendor_by_id.get(pid_) or vendor_by_lei.get(lei_key(pid_))
+            return found if found is not None and found.id != v.id else None
+
         reported_ids = set(used_vendor_ids)
-        for vid in list(used_vendor_ids):
+        for s in signers:   # a vendor of the register signing for a provider (B_03.02) is reported in full
+            signer_vendor = vendor_by_lei.get(lei_key(s.signer_lei)) if (s.signer_role or "").lower() == "tpp" and s.signer_lei else None
+            if signer_vendor is not None:
+                reported_ids.add(signer_vendor.id)
+        for vid in list(reported_ids):   # signing vendors included: their parents are cited in 0110
             seen_chain: set[str] = set()
             cur = vendor_by_id.get(vid)
-            while cur is not None and cur.ultimate_parent_id and cur.ultimate_parent_id not in seen_chain:
-                seen_chain.add(cur.ultimate_parent_id)
-                parent = vendor_by_id.get(cur.ultimate_parent_id)
-                if parent is None:
-                    break
-                reported_ids.add(parent.id)
-                cur = parent
+            while cur is not None and cur.id not in seen_chain:
+                seen_chain.add(cur.id)
+                cur = _parent_of(cur)
+                if cur is not None:
+                    reported_ids.add(cur.id)
+        lei_parents: list[str] = []   # parents known by their LEI alone
+        reported_codes: set[str] = set()
         for v in vendors:
             if v.id not in reported_ids:
                 continue
-            ult = vendor_by_id.get(v.ultimate_parent_id) if v.ultimate_parent_id else None
+            ult = _parent_of(v)
             own_code, own_type = _tpp_code(v)
+            if own_code and own_code in reported_codes:
+                continue   # another vendor with the same code: one key, one row (rule 806)
+            if own_code:
+                reported_codes.add(own_code)
             if ult is not None:
                 parent_code, parent_type = _tpp_code(ult)
-            elif v.ultimate_parent_id and lei_is_valid(str(v.ultimate_parent_id).upper()):
+            elif v.ultimate_parent_id and lei_is_valid(lei_key(v.ultimate_parent_id)):
                 # a LEI stored before parents were picked among vendors
-                parent_code, parent_type = str(v.ultimate_parent_id).upper(), _eba_type_of_code_for_lei(v.ultimate_parent_id)
+                parent_code, parent_type = lei_key(v.ultimate_parent_id), _eba_type_of_code_for_lei(v.ultimate_parent_id)
+                lei_parents.append(parent_code)
             elif v.ultimate_parent_id:   # a parent no longer in the register: not stated (red)
                 parent_code, parent_type = "", ""
             else:                        # not part of a group: its own code (FAQ Q99)
@@ -966,6 +982,41 @@ async def build_dora_xlsx(
                 parent_code,
                 parent_type,
             ])
+
+        # Every code cited in 0110, B_03.02 or B_05.02 is a row of its own
+        # (rule 807, FAQ Q70), reported once (rule 806). A code the register
+        # knows as a subcontractor carries the subcontractor's data.
+        sub_by_lei: dict[str, Any] = {}
+        for sub in subcontractors:
+            if sub.lei:
+                sub_by_lei.setdefault(lei_key(sub.lei), sub)
+
+        def _code_row(lei: str) -> None:
+            if not lei or lei in reported_codes:
+                return
+            reported_codes.add(lei)
+            kind = _eba_type_of_code_for_lei(lei)
+            sub = sub_by_lei.get(lei)
+            if sub is None:   # nothing known but its LEI: the rest shows red
+                b0501_rows.append([lei, kind, "", "", "", "", "", "", "", "", lei, kind])
+                return
+            b0501_rows.append([
+                lei, kind, "", "", sub.name or "", "",
+                _eba(_EBA_PERSON_TYPE, getattr(sub, "person_type", None)),
+                _eba_country(sub.country_iso2),
+                "", "",
+                lei, kind,   # its group is not entered: its own code (FAQ Q99)
+            ])
+
+        linked_sub_ids = {link.subcontractor_id for link in subcontractor_links}
+        for sub in subcontractors:
+            if sub.id in linked_sub_ids:
+                _code_row(lei_key(sub.lei))   # no code: B_05.02 already shows it red
+        for lei in lei_parents:
+            _code_row(lei)
+        for s in signers:   # a provider's group entity signing for it (B_03.02)
+            if (s.signer_role or "").lower() == "tpp" and s.signer_lei:
+                _code_row(lei_key(s.signer_lei))
         _write_sheet(wb, "B_05.01", _COLS_B0501, b0501_rows)
 
         # ── B_05.02 — Supply chains ────────────────────────────────────
@@ -1013,7 +1064,7 @@ async def build_dora_xlsx(
             sub = sub_by_id.get(link.subcontractor_id)
             if not sub:
                 continue
-            sub_lei = sub.lei or ""   # a subcontractor is identified by its LEI (no other code in the app)
+            sub_lei = lei_key(sub.lei)   # a subcontractor is identified by its LEI (no other code in the app)
             sub_code_type = _eba_type_of_code_for_lei(sub.lei)
             tier = link.tier if link.tier is not None else 2
             if tier <= 2:
@@ -1023,7 +1074,7 @@ async def build_dora_xlsx(
             else:
                 parent_sub = sub_by_id.get(link.parent_subcontractor_id)
                 if parent_sub:
-                    recipient_lei = parent_sub.lei or ""
+                    recipient_lei = lei_key(parent_sub.lei)
                     recipient_code_type = _eba_type_of_code_for_lei(parent_sub.lei)
                 else:
                     recipient_lei = ""
@@ -1037,20 +1088,29 @@ async def build_dora_xlsx(
                 recipient_lei,       # 0060 = entity at rank n-1 (EBA Q81)
                 recipient_code_type,
             ])
-        _write_sheet(wb, "B_05.02", _COLS_B0502, b0502_rows)
+        # Two subcontractor records with one LEI on one chain: one key, one row (rule 806).
+        seen_0502: set[tuple[Any, ...]] = set()
+        unique_0502: list[list[Any]] = []
+        for r in b0502_rows:
+            key = (r[0], r[1], r[2], r[4], r[5])
+            if r[2] and key in seen_0502:
+                continue
+            seen_0502.add(key)
+            unique_0502.append(r)
+        _write_sheet(wb, "B_05.02", _COLS_B0502, unique_0502)
 
         # ── B_06.01 — Functions identification ─────────────────────────
         # Functions are project-level in this model, not RFE-specific.
         # The "LEI of the financial entity" column is filled with the
         # register holder's LEI as a sensible default.
-        holder_lei = (register_holder.lei if register_holder else "") or ""
+        holder_lei = lei_key(register_holder.lei if register_holder else "")
         b0601_rows: list[list[Any]] = []
         for f in functions:
             b0601_rows.append([
                 (getattr(f, "code", "") or "") or f.id,
                 _eba_from_codelist("licenced_activity", f.business_line),
                 f.name or "",
-                (rfe_by_id[f.rfe_id].lei if getattr(f, "rfe_id", None) and f.rfe_id in rfe_by_id and rfe_by_id[f.rfe_id].lei else holder_lei),
+                (lei_key(rfe_by_id[f.rfe_id].lei) if getattr(f, "rfe_id", None) and f.rfe_id in rfe_by_id and rfe_by_id[f.rfe_id].lei else holder_lei),
                 _eba_yesno_or_na(f.is_critical_or_important),
                 f.criticality_rationale or "",
                 f.last_assessment_date or "",  # B_06.01.0070
@@ -1122,7 +1182,7 @@ async def build_dora_xlsx(
         )
 
         # Mark unused references explicit (silences static analysis):
-        _ = (vendor_by_lei, branch_by_id, fn_by_id)
+        _ = (branch_by_id, fn_by_id)
 
         # Formula-injection guard. Every value above comes from user-editable
         # vendor/entity records, and openpyxl turns any string starting with

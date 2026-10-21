@@ -64,7 +64,7 @@ except FileNotFoundError:
 
 # EBA "Data Model for DORA RoI": per template (B_01.01 … B_07.01), each
 # column with its code and whether the model requires it (Nullable = No);
-# ``required`` is None where the model's cell could not be read.
+# a flag the model's cell does not show carries its ``required_source``.
 _ROI_MODEL_PATH = os.path.join(os.path.dirname(__file__), "dora_roi_model.json")
 try:
     with open(_ROI_MODEL_PATH, encoding="utf-8") as _f:
@@ -83,6 +83,28 @@ def roi_required_columns() -> set[str]:
     return {f"{table}.{col['code']}"
             for table, cols in (_ROI_MODEL.get("tables") or {}).items()
             for col in cols if col.get("required") is True}
+
+
+def lei_key(value: Any) -> str:
+    """A LEI as a key: one spelling (trimmed, upper case), whatever was typed —
+    the same LEI must match across templates (EBA rules 806 / 807)."""
+    return str(value or "").strip().upper()
+
+
+def is_intra_group(vendor: Any, vendor_by_id: dict[str, Any], group_leis: set[str]) -> bool:
+    """A provider of the group: it, or its ultimate parent (a vendor of the
+    project or a LEI), carries the LEI of an entity of the register
+    (reporting entities and consolidation scope, as ``lei_key``)."""
+    if vendor is None:
+        return False
+    if vendor.lei and lei_key(vendor.lei) in group_leis:
+        return True
+    if vendor.ultimate_parent_id:
+        parent = vendor_by_id.get(vendor.ultimate_parent_id)
+        parent_lei = parent.lei if parent else vendor.ultimate_parent_id
+        if parent_lei and lei_key(parent_lei) in group_leis:
+            return True
+    return False
 
 
 def codelists() -> dict[str, Any]:
@@ -408,6 +430,8 @@ def validate_dora_subcontractor(payload: dict[str, Any]) -> None:
         validate_lei(payload.get("lei"), required=False)
     if "country_iso2" in payload:
         validate_country(payload.get("country_iso2"))
+    if "person_type" in payload:
+        validate_codelist(payload.get("person_type"), "person_type")
 
 
 def validate_dora_arrangement_subcontractor(

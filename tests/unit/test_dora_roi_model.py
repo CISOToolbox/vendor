@@ -2,8 +2,8 @@
 required cells from.
 
 One source: ``src/dora_roi_model.json``, extracted from the EBA "Data Model
-for DORA RoI" (a column is required when Nullable = No); ``required`` is
-None where the model's cell could not be read.
+for DORA RoI" (a column is required when Nullable = No); a flag the model's
+cell does not show carries its ``required_source`` (BUG-113).
 """
 import os
 import sys
@@ -24,7 +24,7 @@ def test_every_template_of_the_model_is_there():
 
 def test_required_flags_match_the_model():
     req = roi_required_columns()
-    assert len(req) == 73
+    assert len(req) == 74
     # Keys and identifiers are required.
     for col in ("B_01.01.0010", "B_01.02.0010", "B_02.01.0010", "B_02.02.0010", "B_05.01.0010", "B_06.01.0010"):
         assert col in req, col
@@ -33,11 +33,14 @@ def test_required_flags_match_the_model():
         assert col not in req, col
 
 
-def test_unreadable_cells_are_not_shown_as_required():
+def test_every_flag_is_known_and_the_unreadable_ones_are_sourced():
     tables = roi_model()["tables"]
-    unknown = sorted(f"{t}.{c['code']}" for t, cols in tables.items() for c in cols if c["required"] is None)
-    assert unknown == ["B_02.02.0140", "B_06.01.0060", "B_07.01.0030"]
-    assert not set(unknown) & roi_required_columns()
+    assert not [f"{t}.{c['code']}" for t, cols in tables.items() for c in cols if c["required"] is None]
+    sourced = sorted(f"{t}.{c['code']}" for t, cols in tables.items() for c in cols if c.get("required_source"))
+    assert sourced == ["B_02.02.0140", "B_06.01.0060", "B_07.01.0030"]
+    # Storage of data decides the key B_02.02.0150; the reasons are optional (ITS).
+    assert "B_02.02.0140" in roi_required_columns()
+    assert not {"B_06.01.0060", "B_07.01.0030"} & roi_required_columns()
 
 
 def test_column_codes_are_unique_per_template():

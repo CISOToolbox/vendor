@@ -1559,6 +1559,26 @@ function _doraCurrencyItems() {
     });
 }
 
+// A provider of the group: it, or its ultimate parent, carries the LEI of an
+// entity of the register (reporting entities, consolidation) — same test as
+// the export and the server (is_intra_group).
+function _doraLeiKey(value: any): string { return String(value || "").trim().toUpperCase(); }
+
+function _doraIsIntraGroup(vendorId: string | null | undefined): boolean {
+    if (!vendorId || !_doraTree) return false;
+    var leis: Record<string, boolean> = {};
+    (_doraTree!.entities || []).forEach(function(e: any) { if (e.lei) leis[_doraLeiKey(e.lei)] = true; });
+    (_doraTree!.consolidation || []).forEach(function(c: any) { if (c.entity_lei) leis[_doraLeiKey(c.entity_lei)] = true; });
+    var vendors = (window.D && D.vendors) || [];
+    var v = vendors.find(function(x) { return x.id === vendorId; });
+    if (!v) return false;
+    if (v.lei && leis[_doraLeiKey(v.lei)]) return true;
+    if (!v.ultimate_parent_id) return false;
+    var parent = vendors.find(function(x) { return x.id === v!.ultimate_parent_id; });
+    var parentLei = parent ? parent.lei : v.ultimate_parent_id;
+    return !!parentLei && !!leis[_doraLeiKey(parentLei)];
+}
+
 function _doraVendorItems() {
     var vendors = (window.D && D.vendors) || [];
     return vendors.map(function(v) {
@@ -1879,7 +1899,9 @@ window.doraOpenArrangementModal = function(arrangementId: string, vendorIdHint: 
             if (prefill[k] !== undefined && prefill[k] !== null) a![k] = prefill[k];
         });
     }
-    var vendorLocked = !!lockVendor && !!a.vendor_id;
+    // The server keeps an arrangement's vendor (no vendor_id on update): an
+    // existing arrangement shows it read-only (BUG-113).
+    var vendorLocked = (!!lockVendor || !isNew) && !!a.vendor_id;
     var vendorObjLocked = vendorLocked
         ? ((window.D && D.vendors) || []).find(function(v) { return v.id === a!.vendor_id; })
         : null;
@@ -1907,7 +1929,7 @@ window.doraOpenArrangementModal = function(arrangementId: string, vendorIdHint: 
         + '<div><div class="ct-mb-1">' + _doraT("dora.modal.arr_ref", "Reference (B_02.01.0010)") + '</div><input id="arr-ref" value="' + esc(a.arrangement_reference || "") + '" required class="ct-w-full"></div>'
         + _fld(_doraT("dora.modal.arr_vendor", "Vendor / TPSP (B_02.02.0030)"),
             vendorLocked
-                ? '<input type="hidden" id="arr-vendor-locked" value="' + esc(a.vendor_id) + '"><div class="ct-py-1 ct-px-2 ct-bg-alt ct-bordered ct-r-sm ct-muted" title="' + esc(_doraT("dora.modal.vendor_locked", "Vendor cannot be changed from a vendor context")) + '">' + esc((vendorObjLocked && vendorObjLocked.name) || a.vendor_id) + '</div>'
+                ? '<input type="hidden" id="arr-vendor-locked" value="' + esc(a.vendor_id) + '"><div class="ct-py-1 ct-px-2 ct-bg-alt ct-bordered ct-r-sm ct-muted" title="' + esc(_doraT("dora.modal.vendor_locked", "The vendor of an arrangement does not change")) + '">' + esc((vendorObjLocked && vendorObjLocked.name) || a.vendor_id) + '</div>'
                 : _doraRefSelect("arr-vendor", a.vendor_id, _doraVendorItems()))
         + _fld(_doraT("dora.modal.arr_type", "Type of contractual arrangement (B_02.01.0020)"), _doraRefSelect("arr-type", a.arrangement_type, _doraCodeItems("arrangement_type")), true);
 
@@ -1932,7 +1954,7 @@ window.doraOpenArrangementModal = function(arrangementId: string, vendorIdHint: 
     // B_02.01.0030 parent arrangement picker — only meaningful when this
     // is a "subsequent" arrangement of an overarching one. Built as a
     // plain <select> with all other project arrangements as options.
-    var _otherArrs = ((window._doraTree && _doraTree!.arrangements) || []).filter(function(x: any) { return x.id !== a!.id; });
+    var _otherArrs = ((_doraTree && _doraTree.arrangements) || []).filter(function(x: any) { return x.id !== a!.id; });
     var _parentOpts = '<option value="">—</option>' + _otherArrs.map(function(p: any) {
         var sel = (a!.parent_arrangement_id === p.id) ? " selected" : "";
         var lab = (p.arrangement_reference || p.id);
@@ -1942,6 +1964,10 @@ window.doraOpenArrangementModal = function(arrangementId: string, vendorIdHint: 
         var sel = (a!.linked_arrangement_id === p.id) ? " selected" : "";
         return '<option value="' + esc(p.id) + '"' + sel + '>' + esc(p.arrangement_reference || p.id) + '</option>';
     }).join("");
+    // B_02.03 lists intra-group arrangements only: no link for another provider.
+    // A new arrangement whose vendor is not picked yet offers it; the save
+    // drops it if the vendor picked is not intra-group.
+    var _intraGroup = _doraIsIntraGroup(a.vendor_id) || (isNew && !a.vendor_id);
     var _stored = a.data_stored === true ? "yes" : a.data_stored === false ? "no" : "";
     var sectionLifecycle = ''
         + '<div><div class="ct-mb-1">' + _doraT("dora.modal.arr_start", "Start date (B_02.02.0070)") + '</div><input id="arr-start" type="date" value="' + esc(a.start_date || "") + '" class="ct-w-full"></div>'
@@ -1952,7 +1978,9 @@ window.doraOpenArrangementModal = function(arrangementId: string, vendorIdHint: 
         + '<div><div class="ct-mb-1">' + _doraT("dora.modal.arr_last_audit", "Last audit (B_07.01.0070)") + '</div><input id="arr-audit" type="date" value="' + esc(a.last_audit_date || "") + '" class="ct-w-full"></div>'
         + _fld(_doraT("dora.modal.arr_termination", "Termination reason (B_02.02.0090)"), _doraRefSelect("arr-term", a.termination_reason, _doraCodeItems("termination_reason")))
         + _fld(_doraT("dora.modal.arr_parent", "Overarching arrangement (B_02.01.0030)"), '<select id="arr-parent" class="ct-w-full">' + _parentOpts + '</select>', true)
-        + _fld(_doraT("dora.modal.arr_linked", "Linked arrangement with an ICT third-party provider — intra-group arrangement (B_02.03.0020)"), '<select id="arr-linked" class="ct-w-full">' + _linkedOpts + '</select>', true)
+        + (_intraGroup
+            ? _fld(_doraT("dora.modal.arr_linked", "Linked arrangement with an ICT third-party provider — intra-group arrangement (B_02.03.0020)"), '<select id="arr-linked" class="ct-w-full">' + _linkedOpts + '</select>', true)
+            : '')
         + _fld(_doraT("dora.modal.arr_gov", "Governing law country (B_02.02.0120)"), _doraRefSelect("arr-gov", a.governing_law_country, _doraCodeItems("country_iso3166_1")))
         + _fld(_doraT("dora.modal.arr_juris", "Country of provision of the ICT services (B_02.02.0130)"), _doraRefSelect("arr-juris", a.jurisdiction_country, _doraCodeItems("country_iso3166_1")));
 
@@ -2081,7 +2109,8 @@ window.doraOpenArrangementModal = function(arrangementId: string, vendorIdHint: 
             end_date: _v("arr-end"),
             open_ended: _b("arr-open-ended"),
             data_stored: _v("arr-stored") === "yes" ? true : _v("arr-stored") === "no" ? false : null,
-            linked_arrangement_id: _v("arr-linked") || null,
+            linked_arrangement_id: !_doraIsIntraGroup(vendorLocked ? a!.vendor_id : _doraRefValue("arr-vendor")) ? null
+                : document.getElementById("arr-linked") ? (_v("arr-linked") || null) : (a!.linked_arrangement_id || null),
             notice_period_days: _nFromV(_v("arr-notice")),
             notice_period_tpsp_days: _nFromV(_v("arr-notice-tpsp")),
             termination_reason: _doraRefValue("arr-term") || null,
@@ -2243,6 +2272,7 @@ window.doraOpenSubIdentityModal = function(subId: string | null) {
         + '  <label class="ct-col-span-2">' + _doraT("dora.modal.sub_name", "Name") + '<input id="sub-id-name" value="' + esc(s.name || "") + '" required></label>'
         + '  <label>' + _doraT("dora.modal.sub_lei", "LEI") + '<div class="ct-flex ct-items-center ct-gap-1"><input id="sub-id-lei" value="' + esc(s.lei || "") + '" class="ct-flex-1">' + _gleifTriggerHtml("sub-id-lei") + '</div></label>'
         + _fld(_doraT("dora.modal.sub_country", "Country"), _doraRefSelect("sub-id-country", s.country_iso2, _doraCodeItems("country_iso3166_1")))
+        + _fld(_doraT("dora.modal.sub_person_type", "Type of person (B_05.01.0070)"), _doraRefSelect("sub-id-person", s.person_type || "", _doraCodeItems("person_type", s.person_type ? [s.person_type] : [])))
         + '</div>'
         + '<hr style="margin:var(--ct-s3) 0;border:none;border-top:1px solid var(--ct-line)">'
         + '<div class="ct-strong ct-mb-1">' + _doraT("dora.subs.linked_arrangements", "Linked arrangements") + '</div>'
@@ -2253,7 +2283,8 @@ window.doraOpenSubIdentityModal = function(subId: string | null) {
         return {
             name: _v("sub-id-name"),
             lei: _v("sub-id-lei"),
-            country_iso2: _doraRefValue("sub-id-country")
+            country_iso2: _doraRefValue("sub-id-country"),
+            person_type: _doraRefValue("sub-id-person") || ""
         };
     }
 
@@ -2389,6 +2420,17 @@ window.doraOpenSubcontractorModal = function(arrangementId: string, subId: strin
             var parentRank = parentLink ? (Number(parentLink.tier) || 2) : 0;
             if (parentRank !== data.tier - 1) {
                 window.alert(_doraT("dora.modal.link_parent_rank", "The subcontractor at rank n-1 must be at rank {n}.").replace("{n}", String(data.tier - 1)));
+                return false;
+            }
+        }
+        // The subcontractors it serves stay at the next rank (BUG-113).
+        if (!isNew) {
+            var broken = allLinks.filter(function(x: any) {
+                return x.parent_subcontractor_id === l!.subcontractor_id && x.subcontractor_id !== l!.subcontractor_id && (Number(x.tier) || 2) !== data.tier + 1;
+            }).map(function(x: any) { return (subById[x.subcontractor_id] && subById[x.subcontractor_id].name) || x.subcontractor_id; });
+            if (broken.length) {
+                window.alert(_doraT("dora.modal.link_children_rank", "{subs} use this subcontractor as rank n-1: it stays at rank {n}.")
+                    .replace("{subs}", broken.join(", ")).replace("{n}", String(Number(l!.tier) || 2)));
                 return false;
             }
         }

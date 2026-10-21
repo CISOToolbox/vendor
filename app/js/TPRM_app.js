@@ -1113,15 +1113,26 @@ function _renderVendorDoraTab(v) {
     h += '<div class="ct-form-row"><label>' + esc(t("dora.vtab.person_type")) + '</label>';
     h += '<select data-change="patchVendorRoi" data-args=\'' + _da("person_type") + '\' data-pass-value>' + _opts("person_type", personType, v.person_type) + '</select></div>';
     // Ultimate parent (other vendors in same project).
+    // A parent stored as a LEI (before parents were picked among vendors) is
+    // the vendor carrying that LEI, else shown as such with what is missing.
+    var parentRaw = v.ultimate_parent_id || "";
+    var parentByLei = parentRaw ? D.vendors.find(function (o) { return o.id !== v.id && !!o.lei && o.lei.toUpperCase() === parentRaw.toUpperCase(); }) : undefined;
+    var parentIsVendor = !!parentRaw && D.vendors.some(function (o) { return o.id === parentRaw; });
     var parentOpts = '<option value="">— —</option>';
     D.vendors.forEach(function (otherV) {
         if (otherV.id === v.id)
             return;
-        var sel = (v.ultimate_parent_id === otherV.id) ? " selected" : "";
+        var sel = (parentRaw === otherV.id || (!parentIsVendor && parentByLei === otherV)) ? " selected" : "";
         parentOpts += '<option value="' + esc(otherV.id) + '"' + sel + '>' + esc(otherV.name || otherV.id) + (otherV.lei ? " (" + esc(otherV.lei) + ")" : "") + '</option>';
     });
+    var parentLeiOnly = !!parentRaw && !parentIsVendor && !parentByLei;
+    if (parentLeiOnly)
+        parentOpts += '<option value="' + esc(parentRaw) + '" selected>' + esc(t("dora.vtab.parent_lei_only").replace("{lei}", parentRaw)) + '</option>';
     h += '<div class="ct-form-row ct-col-span-2"><label>' + esc(t("dora.vtab.ultimate_parent_id")) + '</label>';
-    h += '<select data-change="patchVendorRoi" data-args=\'' + _da("ultimate_parent_id") + '\' data-pass-value>' + parentOpts + '</select></div>';
+    h += '<select data-change="patchVendorRoi" data-args=\'' + _da("ultimate_parent_id") + '\' data-pass-value>' + parentOpts + '</select>';
+    if (parentLeiOnly)
+        h += '<div class="ct-hint ct-mt-1" id="vtab-parent-lei-only">' + esc(t("dora.vtab.parent_lei_only_hint")) + '</div>';
+    h += '</div>';
     h += '</div>'; // end ct-form-grid (identity)
     // Rich per-vendor DORA card: arrangements (clickable), functions,
     // signers, sub-contractors (clickable), informal sub_contractors.

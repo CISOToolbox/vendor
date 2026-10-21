@@ -574,6 +574,7 @@ class DoraSubcontractor(Base):
     name = Column(String(255), nullable=False, default="")
     country_iso2 = Column(String(2), nullable=True, default="")
     sector = Column(String(100), nullable=True)
+    person_type = Column(String(50), nullable=True, default="")   # B_05.01.0070 (BUG-113)
 
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), server_default=text("NOW()"))
     updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), server_default=text("NOW()"))

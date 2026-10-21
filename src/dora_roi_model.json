@@ -1,6 +1,6 @@
 {
  "source": "EBA — Data Model for DORA RoI (column Nullable: No = required)",
- "note": "required is null where the model's cell could not be read; such a column is not shown as required.",
+ "note": "required_source gives the source of a flag the model's cell does not show.",
  "tables": {
   "B_01.01": [
    {
@@ -249,7 +249,8 @@
     "code": "0140",
     "label": "Storage of data",
     "type": "bit",
-    "required": null
+    "required": true,
+    "required_source": "ITS 2024/2956 Annex I: mandatory where the service supports a critical or important function; it decides B_02.02.0150, a key never left empty (FAQ Q61)"
    },
    {
     "code": "0150",
@@ -311,7 +312,8 @@
     "code": "0060",
     "label": "Reasons for criticality or importance",
     "type": "varchar",
-    "required": null
+    "required": false,
+    "required_source": "ITS 2024/2956 Annex I: optional"
    },
    {
     "code": "0070",
@@ -355,7 +357,8 @@
     "code": "0030",
     "label": "Type of code of the third-party service provider",
     "type": "varchar",
-    "required": null
+    "required": false,
+    "required_source": "nullable, as B_02.02.0040 and B_03.02.0030 (as reported in B_05.01.0020)"
    },
    {
     "code": "0040",
