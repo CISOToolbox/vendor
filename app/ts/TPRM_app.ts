@@ -4834,10 +4834,26 @@ function _renderVendorMaturityDetail(v: any) {
     return h;
 }
 
+// Marks the field being edited when a maturity number is out of range (and
+// clears the mark otherwise).
+function _maturityOutOfRange(v: number, unit: boolean): boolean {
+    var bad = !isFinite(v) || v < 0 || (unit && v > 1);
+    var el = document.activeElement as HTMLElement | null;
+    if (el && el.tagName === "INPUT") {
+        el.classList.toggle("ct-field-error", bad);
+        if (bad) el.setAttribute("aria-invalid", "true"); else el.removeAttribute("aria-invalid");
+    }
+    return bad;
+}
+
 function _updateMaturityConfig(path: string, value: string) {
     if (!D.maturity_config) D.maturity_config = {};
     var v = parseFloat(value);
     if (isNaN(v)) return;
+    // R11 (BUG-115): weights ≥ 0, decay and minimum weight in [0, 1] — a value
+    // out of range is marked and not kept (the server would refuse every save).
+    var unit = path === "decay_per_quarter" || path === "min_effective_weight";
+    if (_maturityOutOfRange(v, unit)) return;
     var parts = path.split(".");
     var obj = D.maturity_config;
     for (var i = 0; i < parts.length - 1; i++) {
@@ -4857,10 +4873,12 @@ function _updateAssessmentWeightOverride(assessId: string, value: string) {
     var a = (D.assessments || []).find(function(x) { return x.id === assessId; });
     if (!a) return;
     var v = parseFloat(value);
+    if (!isNaN(v) && _maturityOutOfRange(v, false)) return;   // R11: a weight is ≥ 0
     if (isNaN(v)) { delete a.weight_override; }
     else { a.weight_override = v; }
     _refreshVendorMaturity(a.vendor_id);
-    _persist("assessment", a.id, { weight_override: a.weight_override });
+    // Cleared: null, so the server clears it too (an absent key changes nothing) — BUG-115.
+    _persist("assessment", a.id, { weight_override: typeof a.weight_override === "number" ? a.weight_override : null });
     renderPanel();
 }
 window._updateAssessmentWeightOverride = _updateAssessmentWeightOverride;

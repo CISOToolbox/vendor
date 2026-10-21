@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.assessment_validation import validate_blob
+from src.assessment_validation import validate_blob, validate_maturity_config
 from src.auth import ADMIN_MODULE_ROLES, VIEWER_MODULE_ROLES, auth_enabled, get_current_user, perms_for_module_role
 from src.calculations import compute_project_stats, recalculate_all
 from src.database import get_db
@@ -194,6 +194,8 @@ def _assessment_to_dict(a: VendorAssessment) -> dict:
         "approved_by": a.approved_by,
         "rejected_reason": a.rejected_reason,
         "completion_rate": a.completion_rate,
+        "weight_override": a.weight_override,
+        "excluded": bool(a.excluded),
     }
 
 
@@ -330,6 +332,8 @@ async def _reconstruct_data(db: AsyncSession, project_id: uuid.UUID) -> dict:
         "risks": [_risk_to_dict(r) for r in risks],
         "assessments": [_assessment_to_dict(a) for a in assessments],
         "documents": [_document_to_dict(d) for d in documents],
+        # NULL: the app's defaults apply (they are not written back).
+        **({"maturity_config": meta.maturity_config} if meta and meta.maturity_config else {}),
         # DORA RoI snapshot — preserves the 11 dora_* tables so that
         # Pilot's centralized backup loop captures the full project
         # state (otherwise DORA data was silently absent from backups
@@ -410,6 +414,7 @@ async def _decompose_data(db: AsyncSession, project_id: uuid.UUID, data: dict):
         project_id=project_id,
         organization=meta.get("organization", ""),
         created_date=meta.get("created", ""),
+        maturity_config=validate_maturity_config(data.get("maturity_config")),
     ))
 
     # Vendors + nested measures
@@ -531,6 +536,8 @@ async def _decompose_data(db: AsyncSession, project_id: uuid.UUID, data: dict):
             approved_by=a.get("approved_by"),
             rejected_reason=a.get("rejected_reason"),
             completion_rate=a.get("completion_rate", 0),
+            weight_override=a.get("weight_override"),
+            excluded=a.get("excluded") is True,
         ))
 
     # DORA RoI snapshot — restored after vendors so the FK

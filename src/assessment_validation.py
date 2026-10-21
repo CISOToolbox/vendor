@@ -154,6 +154,12 @@ R10. **A validated assessment is locked.**
     display order (`sort_order`) stay writable: they weigh the approved
     result, they do not change it.
 
+R11. **Vendor-maturity settings are checked.** (BUG-115)
+    `weight_override` is a finite number ≥ 0 or null (null clears it),
+    `excluded` a boolean. The project's `maturity_config` is an object whose
+    weights (`weight_by_kind`, `weight_by_template`) are numbers ≥ 0, and
+    `decay_per_quarter` / `min_effective_weight` numbers in [0, 1].
+
 ─────────────────────────────────────────────────────────────────────────
 PUBLIC API
 ─────────────────────────────────────────────────────────────────────────
@@ -483,6 +489,43 @@ def _enforce_snapshot_immutability(
 # Public API
 # ═══════════════════════════════════════════════════════════════════════
 
+def _number(value: Any, field: str, *, upper: float | None = None) -> float:
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or value != value or value in (float("inf"), float("-inf")):
+        raise _err(422, f"{field} must be a number")
+    if value < 0 or (upper is not None and value > upper):
+        raise _err(422, f"{field} must be between 0 and {upper}" if upper is not None else f"{field} must be ≥ 0")
+    return float(value)
+
+
+def _validate_maturity_settings(incoming: dict) -> None:
+    """R11: an assessment's weight override and exclusion."""
+    if "weight_override" in incoming and incoming["weight_override"] is not None:
+        incoming["weight_override"] = _number(incoming["weight_override"], "weight_override")
+    if "excluded" in incoming:
+        if incoming["excluded"] is None:
+            incoming["excluded"] = False
+        elif not isinstance(incoming["excluded"], bool):
+            raise _err(422, "excluded must be a boolean")
+
+
+def validate_maturity_config(cfg: Any) -> dict | None:
+    """R11: the project's maturity configuration, or None (app defaults)."""
+    if cfg is None:
+        return None
+    if not isinstance(cfg, dict):
+        raise _err(422, "maturity_config must be an object")
+    out = dict(cfg)
+    for key in ("weight_by_kind", "weight_by_template"):
+        if key in out and out[key] is not None:
+            if not isinstance(out[key], dict):
+                raise _err(422, f"maturity_config.{key} must be an object")
+            out[key] = {str(k): _number(v, f"maturity_config.{key}.{k}") for k, v in out[key].items()}
+    for key in ("decay_per_quarter", "min_effective_weight"):
+        if key in out and out[key] is not None:
+            out[key] = _number(out[key], f"maturity_config.{key}", upper=1.0)
+    return out
+
+
 def validate_on_create(body: dict) -> dict:
     """Normalize the payload of POST /assessments. The caller is
     responsible for passing the dict extracted from VendorAssessmentCreate.
@@ -492,6 +535,7 @@ def validate_on_create(body: dict) -> dict:
     # Strip reviewer fields (R7)
     for f in SERVER_ASSIGNED_FIELDS:
         out.pop(f, None)
+    _validate_maturity_settings(out)   # R11
     # Legacy assessment: no template_snapshot → pass-through (R9)
     tpl = out.get("template_snapshot")
     if not _is_template_snapshot(tpl):
@@ -573,6 +617,7 @@ def validate_on_update(stored: Any, body: dict) -> dict:
     # Strip reviewer fields the client should not be able to set (R7)
     for f in SERVER_ASSIGNED_FIELDS:
         incoming.pop(f, None)
+    _validate_maturity_settings(incoming)   # R11
     if getattr(stored, "status", None) == "validated":
         return _locked_update(stored, incoming)
     # Access stored snapshot + responses. These are JSONB, so they
@@ -726,8 +771,9 @@ def validate_on_restore(assessments_in: Iterable[Any]) -> list[dict]:
       * R8 (server-side recomputation of ``score`` /
         ``completion_rate``) is re-applied as defence-in-depth so a
         backup with mangled scores is normalized on restore.
+      * R11 (vendor-maturity settings) is enforced on every row.
       * Legacy assessments with no ``template_snapshot`` (pre-phase-0b)
-        are passed through untouched (R9).
+        are otherwise passed through untouched (R9).
 
     Returns the sanitized list, ready for ``_decompose_data``.
     """
@@ -739,6 +785,7 @@ def validate_on_restore(assessments_in: Iterable[Any]) -> list[dict]:
         if not isinstance(raw, dict):
             raise _err(422, "assessments[*] must be an object")
         record = dict(raw)
+        _validate_maturity_settings(record)   # R11, legacy rows included
         tpl = record.get("template_snapshot")
         if not _is_template_snapshot(tpl):
             # Legacy row (R9): trust the backup verbatim.

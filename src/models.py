@@ -75,6 +75,7 @@ class ProjectMetadata(Base):
     project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), primary_key=True)
     organization = Column(String(255), nullable=True)
     created_date = Column(String(20), nullable=True)
+    maturity_config = Column(JSONB, nullable=True)   # D.maturity_config (BUG-115); NULL = the app defaults
 
     project = relationship("Project", back_populates="metadata_rel")
 
@@ -281,6 +282,9 @@ class VendorAssessment(Base):
     approved_by = Column(String(255), nullable=True)  # server-assigned
     rejected_reason = Column(Text, nullable=True)
     completion_rate = Column(Integer, nullable=True, default=0)
+    # Vendor-maturity settings (BUG-115): writable on an approved assessment (R10).
+    weight_override = Column(Float, nullable=True)
+    excluded = Column(Boolean, nullable=False, default=False, server_default=text("false"))
 
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), server_default=text("NOW()"))
     updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), server_default=text("NOW()"))

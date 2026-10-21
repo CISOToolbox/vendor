@@ -419,6 +419,8 @@ class VendorAssessmentCreate(BaseModel):
     self_validation: bool = False
     self_validated_at: str | None = None
     completion_rate: int | None = 0
+    weight_override: float | None = None     # vendor-maturity settings (BUG-115)
+    excluded: bool = False
 
 
 class VendorAssessmentUpdate(BaseModel):
@@ -439,6 +441,8 @@ class VendorAssessmentUpdate(BaseModel):
     self_validation: bool | None = None
     self_validated_at: str | None = None
     completion_rate: int | None = None
+    weight_override: float | None = None     # vendor-maturity settings (BUG-115); null clears it
+    excluded: bool | None = None
     # Reviewer fields accepted by the schema but STRIPPED server-side
     # before persistence (see assessment_validation.SERVER_ASSIGNED_FIELDS).
     # Kept here so naive clients that echo them back don't trigger 422.
@@ -472,6 +476,8 @@ class VendorAssessmentResponse(BaseModel):
     approved_by: str | None = None
     rejected_reason: str | None = None
     completion_rate: int | None = None
+    weight_override: float | None = None
+    excluded: bool = False
     created_at: datetime
     updated_at: datetime
 
