@@ -427,7 +427,7 @@ type TprmPersistType =
     | "vendor" | "measure" | "risk" | "document" | "assessment"
     | "vendor_roi" | "dora_entity" | "dora_function" | "dora_branch"
     | "dora_cs" | "dora_arrangement" | "dora_signer"
-    | "dora_subcontractor" | "dora_sub_link";
+    | "dora_subcontractor" | "dora_sub_link" | "maturity_config";
 
 /** Generic PATCH/POST payload (partial fields of an entity). */
 type VendorApiPayload = Record<string, unknown>;
@@ -518,6 +518,7 @@ interface VendorApiClient {
     doraTree(projectId: string): Promise<DoraTree>;
     doraValidate(projectId: string): Promise<{ ok: boolean; errors: Array<Record<string, string>> }>;
     doraExportUrl(projectId: string, currency?: string): string;
+    patchMaturityConfig(projectId: string, fields: VendorApiPayload): Promise<unknown>;
     patchVendorRoi(projectId: string, vendorId: string, fields: VendorApiPayload): Promise<unknown>;
     listDoraEntities(p: string): Promise<DoraRecord[]>;
     createDoraEntity(p: string, d: VendorApiPayload): Promise<unknown>;

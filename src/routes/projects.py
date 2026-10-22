@@ -38,6 +38,7 @@ from src.models import (
     VendorRisk,
 )
 from src.schemas import (
+    MaturityConfigPatch,
     ProjectCreate,
     ProjectListItem,
     ProjectResponse,
@@ -624,6 +625,34 @@ async def get_project(
 
     data = await _reconstruct_data(db, project.id)
     return _project_response(project, data)
+
+
+@router.patch("/{project_id}/maturity-config")
+async def patch_maturity_config(
+    project_id: uuid.UUID,
+    body: MaturityConfigPatch,
+    user: Optional[User] = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """The vendor-maturity configuration alone (R11 applies), so the page can
+    send it with its other pending edits when it is left (BUG-118)."""
+    project = await db.get(Project, project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    if not _can("edit", project, user):
+        raise HTTPException(status_code=403, detail="Access denied")
+    cfg = validate_maturity_config(body.maturity_config)
+    meta = await db.get(ProjectMetadata, project_id)
+    if meta is None:
+        meta = ProjectMetadata(project_id=project_id, organization="", created_date="")
+        db.add(meta)
+    meta.maturity_config = cfg
+    project.updated_at = datetime.now(timezone.utc)
+    from src.audit import log_write
+    await log_write(db, user, None, "project.maturity_config", entity_type="project",
+                    entity_id=str(project.id), target=project.name or "")
+    await db.commit()
+    return {"maturity_config": cfg}
 
 
 @router.put("/{project_id}", response_model=ProjectResponse)

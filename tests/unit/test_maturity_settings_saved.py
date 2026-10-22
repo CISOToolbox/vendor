@@ -110,3 +110,36 @@ async def test_a_restored_backup_goes_through_r11(bad):
     assert exc.value.status_code == 422
     with pytest.raises(HTTPException):   # a legacy row (no snapshot) too
         validate_on_restore([dict({"id": "EVAL-2", "vendor_id": "PP-001", "status": "completed"}, **bad)])
+
+
+# ── BUG-118: the maturity configuration has a write of its own ──
+
+
+async def test_the_maturity_configuration_is_saved_by_its_own_route():
+    from src.routes.projects import _reconstruct_data, patch_maturity_config
+    from src.schemas import MaturityConfigPatch
+    async with _Session() as db:
+        pid = uuid.uuid4()
+        await _seed(db, pid)
+        out = await patch_maturity_config(pid, MaturityConfigPatch(maturity_config=CFG), user=None, db=db)
+        assert out["maturity_config"] == CFG
+        assert (await _reconstruct_data(db, pid))["maturity_config"] == CFG
+
+
+async def test_the_maturity_configuration_route_applies_r11():
+    from src.routes.projects import patch_maturity_config
+    from src.schemas import MaturityConfigPatch
+    async with _Session() as db:
+        pid = uuid.uuid4()
+        await _seed(db, pid)
+        with pytest.raises(HTTPException) as exc:
+            await patch_maturity_config(pid, MaturityConfigPatch(maturity_config={"decay_per_quarter": 2}), user=None, db=db)
+        assert exc.value.status_code == 422
+
+
+async def test_the_maturity_configuration_field_is_required():
+    from pydantic import ValidationError
+    from src.schemas import MaturityConfigPatch
+    with pytest.raises(ValidationError):
+        MaturityConfigPatch()                       # omitted: refused, never a silent reset
+    assert MaturityConfigPatch(maturity_config=None).maturity_config is None   # explicit reset
