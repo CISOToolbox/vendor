@@ -76,6 +76,7 @@ class ProjectMetadata(Base):
     organization = Column(String(255), nullable=True)
     created_date = Column(String(20), nullable=True)
     maturity_config = Column(JSONB, nullable=True)   # D.maturity_config (BUG-115); NULL = the app defaults
+    questionnaire_templates = Column(JSONB, nullable=True)   # D.questionnaire_templates (BUG-120); NULL = the app defaults
 
     project = relationship("Project", back_populates="metadata_rel")
 

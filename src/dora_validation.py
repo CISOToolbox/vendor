@@ -549,3 +549,151 @@ def validate_vendor_roi(payload: dict[str, Any], vendor_ids: set[str] | None = N
                     422,
                     f"lei is required for legal persons established in the EEA (country '{country}')",
                 )
+
+
+def sanitize_templates(templates: Any) -> list[dict[str, Any]] | None:
+    """The project's questionnaire templates as stored (BUG-120): objects with
+    a text id, one per id, whose sections and questions are lists of objects;
+    anything else is dropped (a restore never fails on it). ``version`` and
+    the question weights are numbers, whatever was stored. None when the
+    project carries none (the app's defaults apply)."""
+    if templates is None:
+        return None
+    if not isinstance(templates, list):
+        return []
+    seen: set[str] = set()
+    out: list[dict[str, Any]] = []
+    for tp in templates:
+        tid = tp.get("id") if isinstance(tp, dict) else None
+        if not isinstance(tid, str) or not tid or tid in seen or not _template_shape_ok(tp):
+            continue
+        seen.add(tid)
+        out.append(_template_numbers(tp))
+    return out
+
+
+def _template_shape_ok(tp: dict[str, Any]) -> bool:
+    sections = tp.get("sections", [])
+    return isinstance(sections, list) and all(
+        isinstance(s, dict) and isinstance(s.get("questions", []), list)
+        and all(isinstance(q, dict) for q in s.get("questions", []))
+        for s in sections)
+
+
+def _number(v: Any, default: float) -> Any:
+    return v if isinstance(v, (int, float)) and not isinstance(v, bool) else default
+
+
+def _template_numbers(tp: dict[str, Any]) -> dict[str, Any]:
+    out = {**tp, "version": _number(tp.get("version"), 1)} if "version" in tp else dict(tp)
+    if "sections" in tp:
+        out["sections"] = [{**s, "questions": [{**q, "weight": _number(q.get("weight"), 0)} if "weight" in q else q
+                                               for q in s.get("questions", [])]} if "questions" in s else s
+                           for s in tp["sections"]]
+    return out
+
+
+# ── Restore / import (BUG-120): the input checks, as normalisation ──────────
+#
+# A backup or an imported file is restored through the same checks as what is
+# entered, field by field: a value one of them refuses is cleared, an orphan
+# reference too, and a row that cannot exist without its parent is dropped —
+# the restore still succeeds on an old backup. Identities (ids, codes,
+# references) are kept as they are: a restore stays faithful.
+
+_KEPT_FIELDS = {"id", "code", "branch_code", "arrangement_reference", "project_id", "sort_order",
+                "created_at", "updated_at", "name", "entity_name", "signer_name"}
+
+
+class _Stored:
+    """The row as stored: a type it already carries is kept (BUG-114)."""
+    def __init__(self, row: dict[str, Any]) -> None:
+        self.additional_id_type = row.get("additional_id_type")
+
+
+def _normalise_fields(row: dict[str, Any], check: Any) -> dict[str, Any]:
+    out = dict(row)
+    for field, value in row.items():
+        if field in _KEPT_FIELDS or value in (None, ""):
+            continue
+        try:
+            check({field: value}, out)
+        except (HTTPException, TypeError, ValueError, AttributeError):
+            out[field] = None   # refused, or not even of the right type
+    return out
+
+
+def sanitize_vendor_rows(vendors: list[Any]) -> list[Any]:
+    """Vendors of a restored or imported project, normalised as entered."""
+    ids = {v.get("id") for v in vendors if isinstance(v, dict)}
+    out: list[Any] = []
+    for v in vendors:
+        if not isinstance(v, dict):
+            out.append(v)
+            continue
+        roi = {k: v.get(k) for k in ("lei", "country_iso2", "person_type", "entity_nature", "additional_id_type",
+                                     "ultimate_parent_id") if k in v}
+        fixed = _normalise_fields(roi, lambda one, row: validate_vendor_roi(
+            one, vendor_ids=ids, self_id=v.get("id"), current=_Stored(v)))
+        out.append({**v, **fixed})
+    return out
+
+
+def sanitize_dora_rows(dora: dict[str, Any], vendor_ids: set[str]) -> dict[str, Any]:
+    """The DORA tables of a restored or imported project, normalised as
+    entered (see above). ``vendor_ids``: the project's vendors."""
+    if not isinstance(dora, dict):
+        return {}
+    d = {k: [dict(r) for r in (rows or []) if isinstance(r, dict)] for k, rows in dora.items()}
+    checks: dict[str, Any] = {
+        "entities": lambda one, row: validate_dora_entity(one),
+        "consolidation_scope": lambda one, row: validate_dora_consolidation(one),
+        "branches": lambda one, row: validate_dora_branch(one),
+        "functions": lambda one, row: validate_dora_function(one),
+        "subcontractors": lambda one, row: validate_dora_subcontractor(one, current=_Stored(row)),
+        "arrangements": lambda one, row: validate_dora_arrangement(one),
+        "signers": lambda one, row: validate_dora_signer(one),
+        "arrangement_subcontractors": lambda one, row: validate_dora_arrangement_subcontractor(one),
+    }
+    impact_codes = _codes("impact_level")
+    for f in d.get("functions", []):   # B_06.01.0100: case and spaces normalised, old free text → not_assessed (as migration 019)
+        val = f.get("impact_tolerance_description")
+        if isinstance(val, str) and val.strip():
+            low = val.strip().lower()
+            f["impact_tolerance_description"] = low if low in impact_codes else "not_assessed"
+    for key, check in checks.items():
+        if key in d:
+            d[key] = [_normalise_fields(r, check) for r in d[key]]
+
+    entity_ids = {e.get("id") for e in d.get("entities", [])}
+    for f in d.get("functions", []):
+        if f.get("rfe_id") and f["rfe_id"] not in entity_ids:
+            f["rfe_id"] = None
+    if "branches" in d:
+        d["branches"] = [b for b in d["branches"] if b.get("rfe_id") in entity_ids]
+    if "arrangements" in d:
+        d["arrangements"] = [a for a in d["arrangements"] if a.get("vendor_id") in vendor_ids]
+    arr_ids = {a.get("id") for a in d.get("arrangements", [])}
+    for a in d.get("arrangements", []):
+        for ref in ("linked_arrangement_id", "parent_arrangement_id"):
+            if a.get(ref) and (a[ref] not in arr_ids or a[ref] == a.get("id")):
+                a[ref] = None
+    fn_ids = {f.get("id") for f in d.get("functions", [])}
+    sub_ids = {s.get("id") for s in d.get("subcontractors", [])}
+    needs = {
+        "arrangement_services": {},
+        "arrangement_functions": {"function_id": fn_ids},
+        "arrangement_rfes": {"rfe_id": entity_ids},
+        "arrangement_subcontractors": {"subcontractor_id": sub_ids},
+        "signers": {},
+    }
+    for key, refs in needs.items():
+        if key in d:
+            d[key] = [r for r in d[key] if r.get("arrangement_id") in arr_ids
+                      and all(r.get(f) in allowed for f, allowed in refs.items())]
+    linked = {(r.get("arrangement_id"), r.get("subcontractor_id")) for r in d.get("arrangement_subcontractors", [])}
+    for r in d.get("arrangement_subcontractors", []):
+        p = r.get("parent_subcontractor_id")
+        if p and (r.get("arrangement_id"), p) not in linked:
+            r["parent_subcontractor_id"] = None
+    return d

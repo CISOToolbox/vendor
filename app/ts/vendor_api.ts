@@ -12,6 +12,10 @@
 var BASE = "api";
 var _activeId: string | null = null;
 var _saveTimer: ReturnType<typeof setTimeout> | null = null;
+// A file being opened into the project (BUG-120): no project save or focus
+// refresh meanwhile — D already holds the file, not yet saved.
+var _fileOpening = false;
+var _saveDeferred = false;
 // When true, the next _fetch call adds `keepalive: true` so the
 // request survives page navigation. Toggled by the beforeunload
 // handler around _doFlush so pending PATCHes are not dropped.
@@ -450,12 +454,17 @@ function _codeRefused(msg: string): boolean {
 
 window._autoSave = function() {
     if (!_dataReady) return;
+    if (_fileOpening) { _saveDeferred = true; return; }
     if (_saveTimer) clearTimeout(_saveTimer);
     _saveTimer = setTimeout(function() {
         _saveTimer = null;  // FEAT-33: a fired timer must not keep blocking the focus refresh
         if (!_activeId) return;
         var name = (D.metadata && D.metadata.organization) || "";
-        VendorAPI.update(_activeId, { name: name, data: JSON.parse(JSON.stringify(D)),
+        // DORA is saved through its own routes: the copy loaded with the page
+        // is out of date as soon as the register is edited, never send it back.
+        var data: TprmData = JSON.parse(JSON.stringify(D));
+        delete data.dora;
+        VendorAPI.update(_activeId, { name: name, data: data,
                               expected_server_rev: _serverRev } as any)
             .catch(function(err: any) {
                 var msg = String((err && err.message) || "");
@@ -480,30 +489,66 @@ window._autoSave = function() {
 
 var _origLoadBuffer = window._loadBuffer;
 if (_origLoadBuffer) {
-    // The source hook is synchronous (returns nothing) whereas the global
-    // decl of _loadBuffer is async (Promise<true | null>) — cast inherited
-    // from the risk port.
-    (window as any)._loadBuffer = function(buffer: ArrayBuffer, filename: string) {
-        _origLoadBuffer(buffer, filename);
-        setTimeout(function() {
-            if (_activeId) {
-                VendorAPI.saveFull(_activeId, D).catch(function(err: any) {
-                    if (err && err.stale) { _staleConflict(); return; }
-                    if (_codeRefused(String((err && err.message) || ""))) return;
-                    if (!_saveRefused(err)) console.error("Import save failed:", err);
-                });
-            } else {
-                VendorAPI.create({
-                    name: (D.metadata && D.metadata.organization) || "",
-                    data: JSON.parse(JSON.stringify(D))
-                }).then(function(project) {
-                    _activeId = project.id;
-            _serverRev = (project as any).server_rev || 0;
-                    localStorage.setItem("tprm_active_project", _activeId);
-                });
-            }
-        }, 200);
+    // Saved once the file is loaded (an encrypted one waits for its password;
+    // a cancelled or failed load sends nothing). The file's DORA register
+    // replaces the project's: an empty one when the file carries none. A save
+    // that fails puts the page back on the project as it was: nothing of the
+    // file is kept, nor saved later without its register.
+    window._loadBuffer = async function(buffer: ArrayBuffer, filename: string): Promise<true | null> {
+        // One file at a time: a second one would land between the first one's
+        // load and its save.
+        if (_fileOpening) return null;
+        // A save already due is held until the file is in (or not): it would
+        // send the file's data while its own save is under way.
+        _saveDeferred = !!_saveTimer;
+        if (_saveTimer) { clearTimeout(_saveTimer); _saveTimer = null; }
+        _fileOpening = true;
+        var ok: true | null = null;
+        try {
+            ok = await _openIntoProject(buffer, filename);
+        } finally {
+            _fileOpening = false;
+            // Not opened (cancelled, failed, thrown): what was due before is
+            // saved now; opened: loadJSON saves.
+            var due = _saveDeferred;
+            _saveDeferred = false;
+            if (!ok && due) window._autoSave();
+        }
+        return ok;
     };
+    async function _openIntoProject(buffer: ArrayBuffer, filename: string): Promise<true | null> {
+        var before = JSON.stringify(D);
+        var ok = await _origLoadBuffer(buffer, filename);
+        if (!ok) return ok;
+        var data: TprmData = JSON.parse(JSON.stringify(D));
+        data.dora = data.dora || ({} as DoraTree);
+        var saved = true;
+        var failed = function(err: any): void {
+            saved = false;
+            if (err && err.stale) { _staleConflict(); return; }
+            if (_codeRefused(String((err && err.message) || ""))) return;
+            if (_saveRefused(err)) return;
+            console.error("Import save failed:", err);
+            // A 403 is already shown with its reason (BUG-119).
+            if (!(err && err.status === 403)) showStatus(t("vendor.save_failed"), true);
+        };
+        if (_activeId) {
+            await VendorAPI.saveFull(_activeId, data).catch(failed);
+        } else {
+            await VendorAPI.create({
+                name: (D.metadata && D.metadata.organization) || "",
+                data: data
+            }).then(function(project) {
+                _activeId = project.id;
+                _serverRev = (project as any).server_rev || 0;
+                localStorage.setItem("tprm_active_project", _activeId);
+            }).catch(failed);
+        }
+        if (saved) return ok;
+        Object.keys(D).forEach(function(k) { delete D[k]; });
+        Object.assign(D, JSON.parse(before));
+        return null;
+    }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -684,7 +729,7 @@ else _initAuth();
 // FEAT-33 — refresh on tab focus when a server-initiated write happened
 // while the tab was hidden. Skipped while local edits are in flight.
 document.addEventListener("visibilitychange", function() {
-    if (document.visibilityState !== "visible" || !_activeId || _saveTimer) return;
+    if (document.visibilityState !== "visible" || !_activeId || _saveTimer || _fileOpening) return;
     if (typeof _dirty !== "undefined" && Object.keys(_dirty).length) return;
     VendorAPI.get(_activeId).then(function(project: any) {
         if (!project || (project.server_rev || 0) === _serverRev) return;
