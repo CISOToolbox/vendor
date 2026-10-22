@@ -42,9 +42,10 @@ async function _fetch(url: string, opts?: VFetchOpts): Promise<any> {
         var _rp = window.location.pathname.replace(/[^/]*$/, ""); window.location.href = "/login.html?redirect=" + encodeURIComponent(_rp);
         throw new Error("Not authenticated");
     }
+    // The body is read once: a second read throws and loses the server's reason (BUG-119).
+    var errBody = "";
+    if (!resp.ok) { try { errBody = await resp.text(); } catch(e) {} }
     if (resp.status === 403) {
-        var errBody = "";
-        try { errBody = await resp.text(); } catch(e) {}
         if (errBody.indexOf("pending") >= 0) {
             window.location.href = "/login.html?error=pending";
             throw new Error("Account pending");
@@ -52,26 +53,28 @@ async function _fetch(url: string, opts?: VFetchOpts): Promise<any> {
     }
     if (resp.status === 204) return null;
     if (!resp.ok) {
-        var errText = "";
-        try { errText = await resp.text(); } catch(e) {}
+        var errText = errBody;
         // Surface server-side assessment validation errors (403 / 409 /
         // 422) to the user via a toast. These come from
         // src/assessment_validation.py and carry a human-readable
         // `detail` string that we display as-is. For every other code
         // we fall back to the generic log-only behavior.
-        if (resp.status === 403 || resp.status === 409 || resp.status === 422) {
-            var msg = errText;
-            try {
-                var parsed: { detail?: unknown } = JSON.parse(errText);
-                if (parsed && parsed.detail) {
-                    msg = typeof parsed.detail === "string" ? parsed.detail : JSON.stringify(parsed.detail);
-                }
-            } catch (e) {}
-            if (typeof showStatus === "function") {
-                showStatus("⚠ " + msg.substring(0, 200));
+        var msg = errText;
+        try {
+            var parsed: { detail?: unknown } = JSON.parse(errText);
+            if (parsed && parsed.detail) {
+                msg = typeof parsed.detail === "string" ? parsed.detail : JSON.stringify(parsed.detail);
             }
+        } catch (e) {}
+        var stale = resp.status === 409 && resp.headers.get("X-CT-Conflict") === "stale";
+        if ((resp.status === 403 || resp.status === 409 || resp.status === 422) && !stale && typeof showStatus === "function") {
+            showStatus("⚠ " + msg.substring(0, 200), true);   // in red, long enough to be read (BUG-119)
         }
-        throw new Error("API " + resp.status + ": " + errText.substring(0, 200));
+        var err: any = new Error("API " + resp.status + ": " + errText.substring(0, 200));
+        err.status = resp.status;
+        err.detail = msg;
+        err.stale = stale;
+        throw err;
     }
     return resp.json();
 }
@@ -313,7 +316,13 @@ function _doFlush() {
         var fn = _PATCH_FNS[type];
         if (!fn) return;
         var fields = batch[key];
-        var fail = function(e: unknown) { console.error("PATCH " + type + " " + id + " failed:", e); };
+        var fail = function(e: any) {
+            console.error("PATCH " + type + " " + id + " failed:", e);
+            // A refusal (403 / 409 / 422) is already shown with its reason; any other
+            // failure (server error, network) is said too — the edit was not saved (BUG-119).
+            var st = e && e.status;
+            if (st !== 403 && st !== 409 && st !== 422 && typeof showStatus === "function") showStatus(t("vendor.save_failed"), true);
+        };
         var pending = _pendingCreates[key];
         if (pending) {
             pending.then(function() { return fn(id, fields); }).catch(fail);
@@ -418,6 +427,18 @@ function _staleConflict(): void {
     window.location.reload();
 }
 
+// BUG-119: the project save was refused (not a version conflict): say why,
+// then reload what the server keeps — every later save would fail the same way.
+// A 403 (no right to write here) is only said, in red, by _fetch: reloading
+// would not change it and a read-only user would get it on every visit.
+function _saveRefused(err: any): boolean {
+    var st = err && err.status;
+    if (st !== 409 && st !== 422) return false;
+    alert(t("vendor.save_refused").replace("{reason}", String((err && err.detail) || "")));
+    window.location.reload();
+    return true;
+}
+
 // BUG-114: the project save refused a code two records carry — say so, then
 // reload what the server keeps (every later save would fail the same way).
 function _codeRefused(msg: string): boolean {
@@ -445,8 +466,9 @@ window._autoSave = function() {
                     window.location.reload();
                     return;
                 }
-                if (msg.indexOf("API 409") === 0) { _staleConflict(); return; }
+                if (err && err.stale) { _staleConflict(); return; }   // FEAT-33: changed on the server meanwhile
                 if (_codeRefused(msg)) return;
+                if (_saveRefused(err)) return;
                 console.error("Autosave failed:", err);
             });
     }, 500);
@@ -466,7 +488,9 @@ if (_origLoadBuffer) {
         setTimeout(function() {
             if (_activeId) {
                 VendorAPI.saveFull(_activeId, D).catch(function(err: any) {
-                    if (!_codeRefused(String((err && err.message) || ""))) console.error("Import save failed:", err);
+                    if (err && err.stale) { _staleConflict(); return; }
+                    if (_codeRefused(String((err && err.message) || ""))) return;
+                    if (!_saveRefused(err)) console.error("Import save failed:", err);
                 });
             } else {
                 VendorAPI.create({

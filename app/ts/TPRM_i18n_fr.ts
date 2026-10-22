@@ -120,6 +120,8 @@ _registerTranslations("fr", {
     "dora.vtab.lei": "LEI ISO 17442 (B_05.01.0010)",
     "dora.vtab.code_taken": "Ce code identifie déjà {name} : un code par fournisseur ou sous-traitant.",
     "dora.save_code_refused": "Enregistrement refusé : deux fournisseurs ou deux sous-traitants porteraient le même LEI ou identifiant. La page recharge ce qui est enregistré.",
+    "vendor.save_refused": "Enregistrement refusé par le serveur : {reason}. La page recharge ce qui est enregistré.",
+    "vendor.save_failed": "La modification n'a pas pu être enregistrée (erreur du serveur ou du réseau). Rechargez la page pour voir ce qui est conservé.",
     "dora.vtab.legal_name_latin": "Raison sociale en alphabet latin (B_05.01.0060)",
     "dora.vtab.country_iso2": "Pays ISO-3166-1 alpha-2 (B_05.01.0080)",
     "dora.vtab.person_type": "Type de personne (B_05.01.0070)",

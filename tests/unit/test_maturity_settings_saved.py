@@ -143,3 +143,26 @@ async def test_the_maturity_configuration_field_is_required():
     with pytest.raises(ValidationError):
         MaturityConfigPatch()                       # omitted: refused, never a silent reset
     assert MaturityConfigPatch(maturity_config=None).maturity_config is None   # explicit reset
+
+
+# ── BUG-119: a version conflict is told apart from the other refusals ──
+
+
+async def test_a_stale_save_is_marked_as_such():
+    from src.routes.projects import _reconstruct_data, update_project
+    from src.schemas import ProjectUpdate
+    async with _Session() as db:
+        pid = uuid.uuid4()
+        await _seed(db, pid)
+        proj = await db.get(Project, pid)
+        proj.server_rev = 5
+        await db.commit()
+        data = await _reconstruct_data(db, pid)
+        with pytest.raises(HTTPException) as exc:
+            await update_project(pid, ProjectUpdate(data=data, expected_server_rev=4), user=None, db=db)
+        assert exc.value.status_code == 409 and (exc.value.headers or {}).get("X-CT-Conflict") == "stale"
+        # Any other refusal of the same save carries no such mark.
+        data["assessments"][0]["title"] = "Renamed"                      # a validated one: locked (409)
+        with pytest.raises(HTTPException) as exc2:
+            await update_project(pid, ProjectUpdate(data=data, expected_server_rev=5), user=None, db=db)
+        assert exc2.value.status_code == 409 and not (exc2.value.headers or {}).get("X-CT-Conflict")

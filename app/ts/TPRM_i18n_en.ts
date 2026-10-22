@@ -120,6 +120,8 @@ _registerTranslations("en", {
     "dora.vtab.lei": "LEI ISO 17442 (B_05.01.0010)",
     "dora.vtab.code_taken": "This code already identifies {name}: one code per vendor or subcontractor.",
     "dora.save_code_refused": "The save was refused: two vendors or two subcontractors would carry the same LEI or identifier. The page reloads what was saved.",
+    "vendor.save_refused": "Save refused by the server: {reason}. The page reloads what was saved.",
+    "vendor.save_failed": "The change could not be saved (server or network error). Reload the page to see what was kept.",
     "dora.vtab.legal_name_latin": "Legal name in Latin alphabet (B_05.01.0060)",
     "dora.vtab.country_iso2": "Country ISO-3166-1 alpha-2 (B_05.01.0080)",
     "dora.vtab.person_type": "Person type (B_05.01.0070)",
