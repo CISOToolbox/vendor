@@ -150,6 +150,10 @@
             var q = currency ? ("?target_currency=" + encodeURIComponent(currency)) : "";
             return BASE + "/projects/" + projectId + "/dora/export.xlsx" + q;
         },
+        // The vendor-maturity configuration alone (BUG-118).
+        patchMaturityConfig: function (projectId, fields) {
+            return _fetch("/projects/" + projectId + "/maturity-config", { method: "PATCH", body: fields });
+        },
         patchVendorRoi: function (projectId, vendorId, fields) {
             return _fetch("/projects/" + projectId + "/vendors/" + vendorId + "/roi", { method: "PATCH", body: fields });
         },
@@ -261,6 +265,8 @@
         assessment: function (id, f) { return VendorAPI.patchAssessment(_activeId, id, f); },
         // DORA RoI
         vendor_roi: function (id, f) { return VendorAPI.patchVendorRoi(_activeId, id, f); },
+        // The project's maturity configuration: the id is unused (one per project)
+        maturity_config: function (_id, f) { return VendorAPI.patchMaturityConfig(_activeId, f); },
         dora_entity: function (id, f) { return VendorAPI.patchDoraEntity(_activeId, id, f); },
         dora_function: function (id, f) { return VendorAPI.patchDoraFunction(_activeId, id, f); },
         dora_branch: function (id, f) { return VendorAPI.patchDoraBranch(_activeId, id, f); },

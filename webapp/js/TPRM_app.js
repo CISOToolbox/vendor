@@ -652,15 +652,40 @@ var _vendorFilter = "";
 var _vendorStatusFilter = "";
 var _vendorListTab = "vendors";
 var _subFilter = "";
-function filterVendors(val) { _vendorFilter = (val || "").toLowerCase(); renderPanel(); }
+// BUG-110: a list re-render replaces its filter field too, so typing lost the
+// focus on every keystroke. Re-render, then give the focus and the caret back
+// to the field that had them (found by id).
+function _renderKeepingFocus(render) {
+    var prev = document.activeElement;
+    var id = prev && prev.id ? prev.id : "";
+    var caret = null;
+    try {
+        caret = prev && typeof prev.selectionStart === "number" ? prev.selectionStart : null;
+    }
+    catch (e) {
+        caret = null;
+    }
+    render();
+    var next = id ? document.getElementById(id) : null;
+    if (!next)
+        return;
+    next.focus();
+    if (caret !== null) {
+        try {
+            next.setSelectionRange(caret, caret);
+        }
+        catch (e) { /* not a text field */ }
+    }
+}
+function filterVendors(val) { _vendorFilter = (val || "").toLowerCase(); _renderKeepingFocus(renderPanel); }
 window.filterVendors = filterVendors;
-function filterVendorStatus(val) { _vendorStatusFilter = val || ""; renderPanel(); }
+function filterVendorStatus(val) { _vendorStatusFilter = val || ""; _renderKeepingFocus(renderPanel); }
 window.filterVendorStatus = filterVendorStatus;
-window.filterSubs = function (val) { _subFilter = (val || "").toLowerCase(); renderPanel(); };
+window.filterSubs = function (val) { _subFilter = (val || "").toLowerCase(); _renderKeepingFocus(renderPanel); };
 window.selectVendorListTab = function (tab) {
     _vendorListTab = tab;
     if (tab === "subcontractors" && window.DoraData && !window.DoraData.getTree()) {
-        window.DoraData.ensureLoaded(function () { renderPanel(); });
+        window.DoraData.ensureLoaded(function () { _renderKeepingFocus(renderPanel); });
     }
     renderPanel();
 };
@@ -691,7 +716,7 @@ function renderSubcontractorList() {
     h += '<p class="ct-panel-desc" style="margin:0 0 var(--ct-s3) 0">' + esc(t("dora.subs.intro")) + '</p>';
     // Search bar (mirrors vendor list).
     h += '<div class="ct-flex ct-gap-2 ct-mb-3 ct-row-wrap">';
-    h += '<input type="text" placeholder="🔍 ' + esc(t("vendor.search")) + '" value="' + esc(_subFilter) + '" class="ct-flex-1 ct-minw-180 ct-py-1 ct-px-2 ct-bordered ct-r-md ct-text-meta" data-input="filterSubs" data-pass-value>';
+    h += '<input type="text" id="sub-search" placeholder="🔍 ' + esc(t("vendor.search")) + '" value="' + esc(_subFilter) + '" class="ct-flex-1 ct-minw-180 ct-py-1 ct-px-2 ct-bordered ct-r-md ct-text-meta" data-input="filterSubs" data-pass-value>';
     h += '</div>';
     if (!subs.length)
         return h + '<div class="ct-empty-state">' + esc(t("dora.subs.empty")) + '</div>';
@@ -755,7 +780,7 @@ function renderVendorList() {
     if (window.DoraData && !window.DoraData.getTree()) {
         window.DoraData.ensureLoaded(function (tree) {
             if (tree)
-                renderPanel(); // re-render once the tree is ready
+                _renderKeepingFocus(renderPanel); // re-render once the tree is ready, typing kept
         });
     }
     // Tab bar: Vendors | Subcontractors (global DORA subs).
@@ -788,8 +813,8 @@ function renderVendorList() {
     h += '</div></div>';
     // Search + filter bar
     h += '<div class="ct-flex ct-gap-2 ct-mb-3 ct-row-wrap">';
-    h += '<input type="text" placeholder="🔍 ' + esc(t("vendor.search")) + '" value="' + esc(_vendorFilter) + '" class="ct-flex-1 ct-minw-180 ct-py-1 ct-px-2 ct-bordered ct-r-md ct-text-meta" data-input="filterVendors" data-pass-value>';
-    h += '<select class="ct-filter" data-change="filterVendorStatus" data-pass-value>';
+    h += '<input type="text" id="vendor-search" placeholder="🔍 ' + esc(t("vendor.search")) + '" value="' + esc(_vendorFilter) + '" class="ct-flex-1 ct-minw-180 ct-py-1 ct-px-2 ct-bordered ct-r-md ct-text-meta" data-input="filterVendors" data-pass-value>';
+    h += '<select id="vendor-status-filter" class="ct-filter" data-change="filterVendorStatus" data-pass-value>';
     h += '<option value="">' + t("vendor.filter_all") + '</option>';
     h += '<option value="active"' + (_vendorStatusFilter === "active" ? ' selected' : '') + '>' + t("vendor.status_active") + '</option>';
     h += '<option value="prospect"' + (_vendorStatusFilter === "prospect" ? ' selected' : '') + '>' + t("vendor.status_prospect") + '</option>';
@@ -907,7 +932,7 @@ function renderVendorDetail() {
     var h = '<div class="ct-flex ct-items-center ct-gap-2 ct-mb-1 ct-row-wrap">';
     h += '<button class="ct-btn" data-variant="ghost" data-size="sm" data-click="backToVendors">&laquo; ' + t("nav.vendors") + '</button>';
     h += '<h2 class="ct-m-0">' + esc(v.name) + '</h2>';
-    h += '<span class="ct-badge" data-tone="' + _vendorTone(tier) + '">' + t("vendor.tier_" + tier) + '</span>';
+    h += '<span id="vendor-tier-badge" class="ct-badge" data-tone="' + _vendorTone(tier) + '">' + t("vendor.tier_" + tier) + '</span>';
     if (_isDoraICTCritical(v.classification))
         h += '<span class="ct-ref" data-size="sm">DORA</span>';
     if (v.classification && v.classification.gdpr_subprocessor)
@@ -970,7 +995,7 @@ function renderVendorDetail() {
 function _renderVendorDoraTab(v) {
     // Lazy-load the DORA tree on first visit (also pulls codelists).
     if (window.DoraData && !window.DoraData.getTree()) {
-        window.DoraData.ensureLoaded(function () { renderPanel(); });
+        window.DoraData.ensureLoaded(function () { _renderKeepingFocus(renderPanel); });
     }
     var cl = (window.DoraData && window.DoraData.codelists()) || {};
     var personType = cl.person_type || [];
@@ -1305,6 +1330,12 @@ function _refreshThreatDisplay() {
                 ' — ' + t("vendor.maturite") + ' : <strong>' + (ex.maturite || 1) + '/4</strong>' +
                 ' — ' + t("vendor.confiance") + ' : <strong>' + (ex.confiance || 1) + '/4</strong>';
         }
+    }
+    var tierEl = document.getElementById("vendor-tier-badge");
+    if (tierEl) {
+        var tier = _getTier(v);
+        tierEl.setAttribute("data-tone", _vendorTone(tier));
+        tierEl.textContent = t("vendor.tier_" + tier);
     }
     // Update the info bar at top of vendor detail
     var menaceSpan = document.getElementById("vendor-menace-display");
@@ -2269,9 +2300,12 @@ function _onRiskFilterChange() {
     _riskFilterVendor = (document.getElementById("risk-filter-vendor") || {}).value || "";
     _riskFilterCategory = (document.getElementById("risk-filter-category") || {}).value || "";
     _riskFilterStatus = (document.getElementById("risk-filter-status") || {}).value || "";
-    var c = document.getElementById("content");
-    if (c)
-        c.innerHTML = renderRiskList();
+    _renderKeepingFocus(function () {
+        var c = document.getElementById("content");
+        if (c)
+            c.innerHTML = renderRiskList();
+        _setupTable("risk-list-table"); // the hidden / resized columns the user set (BUG-118)
+    });
 }
 window._onRiskFilterChange = _onRiskFilterChange;
 function goToRisk(vendorId) {
@@ -4374,12 +4408,15 @@ function _renderVendorMaturityDetail(v) {
     if (!detail.rows.length)
         return "";
     var cfg = _maturityConfig();
-    var h = '<details class="maturity-detail">';
+    // A re-render keeps the panel as the user left it, for this vendor (BUG-118).
+    var shown = document.querySelector("details.maturity-detail");
+    var keepOpen = !!shown && shown.open && shown.getAttribute("data-vendor") === v.id;
+    var h = '<details class="maturity-detail" data-vendor="' + esc(v.id) + '"' + (keepOpen ? ' open' : '') + '>';
     h += '<summary style="padding:var(--ct-s2) var(--ct-s3);cursor:pointer;font-weight:600;font-size:var(--ct-text-data);list-style:none;display:flex;align-items:center;gap:var(--ct-s2)">';
     h += '<span>' + esc(t("maturity.detail_title")) + '</span>';
     h += '<span class="ct-flex-1"></span>';
     h += '<span class="ct-text-label ct-ink-1 ct-normal">' + detail.rows.length + ' ' + esc(t("maturity.validated_count")) + '</span>';
-    h += '<span class="score-val ' + _scoreColorClass(detail.score) + ' ct-text-page">' + detail.score + '%</span>';
+    h += '<span data-mat="score" class="score-val ' + _scoreColorClass(detail.score) + ' ct-text-page">' + detail.score + '%</span>';
     h += '</summary>';
     h += '<div style="padding:0 var(--ct-s3) var(--ct-s3)">';
     h += '<p style="font-size:var(--ct-text-label);color:var(--ct-ink-1);margin:0 0 var(--ct-s2)">' + esc(t("maturity.detail_intro")) + '</p>';
@@ -4388,11 +4425,11 @@ function _renderVendorMaturityDetail(v) {
     h += '<div class="ct-overline ct-mb-2">' + esc(t("maturity.global_config")) + '</div>';
     h += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:var(--ct-s2)">';
     h += '<div><label class="ct-block ct-text-label ct-strong ct-mb-1">' + esc(t("maturity.weight_questionnaire")) + '</label>';
-    h += '<input type="number" step="0.1" min="0" value="' + (cfg.weight_by_kind.questionnaire || 1) + '" class="ct-input" data-input="_updateMaturityConfig" data-args=\'["weight_by_kind.questionnaire"]\' data-pass-value></div>';
+    h += '<input type="number" step="0.1" min="0" value="' + (cfg.weight_by_kind.questionnaire || 1) + '" id="mat-weight-questionnaire" class="ct-input" data-input="_updateMaturityConfig" data-args=\'["weight_by_kind.questionnaire"]\' data-pass-value data-pass-el data-change="_maturityFieldLeft" data-mat="cfg-q"></div>';
     h += '<div><label class="ct-block ct-text-label ct-strong ct-mb-1">' + esc(t("maturity.weight_audit")) + '</label>';
-    h += '<input type="number" step="0.1" min="0" value="' + (cfg.weight_by_kind.audit || 1.5) + '" class="ct-input" data-input="_updateMaturityConfig" data-args=\'["weight_by_kind.audit"]\' data-pass-value></div>';
+    h += '<input type="number" step="0.1" min="0" value="' + (cfg.weight_by_kind.audit || 1.5) + '" id="mat-weight-audit" class="ct-input" data-input="_updateMaturityConfig" data-args=\'["weight_by_kind.audit"]\' data-pass-value data-pass-el data-change="_maturityFieldLeft" data-mat="cfg-a"></div>';
     h += '<div><label class="ct-block ct-text-label ct-strong ct-mb-1">' + esc(t("maturity.decay_per_quarter")) + '</label>';
-    h += '<input type="number" step="0.05" min="0" max="1" value="' + (cfg.decay_per_quarter || 0) + '" class="ct-input" data-input="_updateMaturityConfig" data-args=\'["decay_per_quarter"]\' data-pass-value></div>';
+    h += '<input type="number" step="0.05" min="0" max="1" value="' + (cfg.decay_per_quarter || 0) + '" id="mat-decay" class="ct-input" data-input="_updateMaturityConfig" data-args=\'["decay_per_quarter"]\' data-pass-value data-pass-el data-change="_maturityFieldLeft" data-mat="cfg-d"></div>';
     h += '</div>';
     h += '</div>';
     // Table of contributing assessments
@@ -4418,9 +4455,9 @@ function _renderVendorMaturityDetail(v) {
         h += '<td class="ct-ta-c ct-py-1 ct-px-2"><span class="ct-ref" data-size="sm">' + esc(kindLabel) + '</span></td>';
         h += '<td class="ct-ta-r ct-py-1 ct-px-2 ct-strong">' + row.score + '%</td>';
         h += '<td class="ct-ta-r ct-py-1 ct-px-2">';
-        h += '<input type="number" step="0.1" min="0" value="' + row.base.toFixed(2) + '" class="ct-w-70 ct-py-1 ct-px-1 ct-bordered-line-strong ct-r-sm ct-ta-r" data-input="_updateAssessmentWeightOverride" data-args=\'' + _da(a.id) + '\' data-pass-value>';
+        h += '<input type="number" step="0.1" min="0" value="' + row.base.toFixed(2) + '" class="ct-w-70 ct-py-1 ct-px-1 ct-bordered-line-strong ct-r-sm ct-ta-r" id="mat-weight-' + esc(a.id) + '" data-input="_updateAssessmentWeightOverride" data-args=\'' + _da(a.id) + '\' data-pass-value data-pass-el data-change="_maturityFieldLeft" data-mat="base-' + esc(a.id) + '">';
         h += '</td>';
-        h += '<td class="ct-ta-r ct-py-1 ct-px-2 ct-ink-1 ct-text-label">';
+        h += '<td data-mat="decay-' + esc(a.id) + '" class="ct-ta-r ct-py-1 ct-px-2 ct-ink-1 ct-text-label">';
         if (row.quarters > 0 && cfg.decay_per_quarter > 0) {
             h += '-' + Math.round((1 - row.decay_mult) * 100) + '% (' + row.quarters + 'q)';
         }
@@ -4428,7 +4465,7 @@ function _renderVendorMaturityDetail(v) {
             h += '–';
         }
         h += '</td>';
-        h += '<td class="ct-ta-r ct-py-1 ct-px-2 ct-strong">' + row.effective.toFixed(2) + '</td>';
+        h += '<td data-mat="eff-' + esc(a.id) + '" class="ct-ta-r ct-py-1 ct-px-2 ct-strong">' + row.effective.toFixed(2) + '</td>';
         h += '<td class="ct-ta-c ct-py-1 ct-px-2">';
         h += '<input type="checkbox"' + (row.excluded ? " checked" : "") + ' data-change="_toggleAssessmentExcluded" data-args=\'' + _da(a.id) + '\' data-pass-checked>';
         h += '</td>';
@@ -4436,19 +4473,79 @@ function _renderVendorMaturityDetail(v) {
     });
     h += '<tr style="border-top:2px solid var(--ct-line);background:var(--ct-canvas)">';
     h += '<td colspan="6" class="ct-p-2 ct-ta-r ct-bold">' + esc(t("maturity.weighted_score")) + '</td>';
-    h += '<td class="ct-p-2 ct-ta-r ct-bold">' + detail.sum_weights.toFixed(2) + '</td>';
-    h += '<td class="ct-p-2 ct-ta-c ct-bold ' + _scoreColorClass(detail.score) + '">' + detail.score + '%</td>';
+    h += '<td data-mat="sum" class="ct-p-2 ct-ta-r ct-bold">' + detail.sum_weights.toFixed(2) + '</td>';
+    h += '<td data-mat="total" class="ct-p-2 ct-ta-c ct-bold ' + _scoreColorClass(detail.score) + '">' + detail.score + '%</td>';
     h += '</tr>';
     h += '</tbody></table>';
     h += '</div>';
     h += '</details>';
     return h;
 }
-function _updateMaturityConfig(path, value) {
+// Marks the maturity field (el, else the one being edited) when its number is
+// out of range — weights ≥ 0, decay and minimum weight in [0, 1] — and clears
+// the mark otherwise.
+function _maturityOutOfRange(v, unit, el) {
+    var bad = !isFinite(v) || v < 0 || (unit && v > 1);
+    el = el || document.activeElement;
+    if (el && el.tagName === "INPUT") {
+        el.classList.toggle("ct-field-error", bad);
+        if (bad)
+            el.setAttribute("aria-invalid", "true");
+        else
+            el.removeAttribute("aria-invalid");
+    }
+    return bad;
+}
+// Typing in the maturity settings updates the computed cells in place — score,
+// decay, effective weights, totals, the other rows' weights — never the field
+// being typed in: no focus, keystroke or click is lost (BUG-118).
+function _refreshMaturityCells(vendorId) {
+    var live = document.querySelector('details.maturity-detail[data-vendor="' + CSS.escape(vendorId) + '"]');
+    var v = D.vendors.find(function (x) { return x.id === vendorId; });
+    if (!live || !v)
+        return;
+    var tmp = document.createElement("div");
+    tmp.innerHTML = _renderVendorMaturityDetail(v);
+    tmp.querySelectorAll("[data-mat]").forEach(function (fresh) {
+        var key = fresh.getAttribute("data-mat");
+        var cur = live.querySelector('[data-mat="' + CSS.escape(key) + '"]');
+        if (!cur)
+            return;
+        if (cur.tagName === "INPUT") {
+            if (cur !== document.activeElement) {
+                cur.value = fresh.value;
+                cur.classList.remove("ct-field-error");
+                cur.removeAttribute("aria-invalid");
+            }
+            return;
+        }
+        cur.className = fresh.className;
+        cur.innerHTML = fresh.innerHTML;
+    });
+    _refreshThreatDisplay();
+}
+// A maturity field left: an emptied weight shows the default it fell back to.
+function _maturityFieldLeft(_id, _value, el) {
+    if (!el || el.value !== "")
+        return;
+    var shown = document.querySelector("details.maturity-detail");
+    if (shown)
+        _refreshMaturityCells(shown.getAttribute("data-vendor") || "");
+}
+window._maturityFieldLeft = _maturityFieldLeft;
+function _updateMaturityConfig(path, value, el) {
     if (!D.maturity_config)
         D.maturity_config = {};
     var v = parseFloat(value);
-    if (isNaN(v))
+    if (isNaN(v)) {
+        if (el)
+            _maturityOutOfRange(0, false, el);
+        return;
+    } // empty or being typed: nothing to apply, no mark
+    // R11 (BUG-115): weights ≥ 0, decay and minimum weight in [0, 1] — a value
+    // out of range is marked and not kept (the server would refuse every save).
+    var unit = path === "decay_per_quarter" || path === "min_effective_weight";
+    if (_maturityOutOfRange(v, unit, el))
         return;
     var parts = path.split(".");
     var obj = D.maturity_config;
@@ -4458,27 +4555,37 @@ function _updateMaturityConfig(path, value) {
         obj = obj[parts[i]];
     }
     obj[parts[parts.length - 1]] = v;
-    // Recompute maturity for all vendors first (each persists itself), THEN
-    // save — otherwise the blob is written before the maturities are updated.
+    // Recompute maturity for all vendors (each persists itself), then the
+    // configuration through its own write: both are sent when the page is left
+    // (the whole-project save is too large for that) — BUG-118.
     (D.vendors || []).forEach(function (vd) { _refreshVendorMaturity(vd.id); });
-    _autoSave();
-    renderPanel();
+    _persist("maturity_config", "project", { maturity_config: D.maturity_config });
+    var shown = document.querySelector("details.maturity-detail");
+    if (shown)
+        _refreshMaturityCells(shown.getAttribute("data-vendor") || "");
 }
 window._updateMaturityConfig = _updateMaturityConfig;
-function _updateAssessmentWeightOverride(assessId, value) {
+function _updateAssessmentWeightOverride(assessId, value, el) {
     var a = (D.assessments || []).find(function (x) { return x.id === assessId; });
     if (!a)
         return;
+    // A number field reads "" while "-" or "." is being typed: not a clearing.
+    if (el && el.validity && el.validity.badInput)
+        return;
     var v = parseFloat(value);
+    if (!isNaN(v) && _maturityOutOfRange(v, false, el))
+        return; // R11: a weight is ≥ 0
     if (isNaN(v)) {
         delete a.weight_override;
     }
     else {
         a.weight_override = v;
     }
+    if (el)
+        _maturityOutOfRange(isNaN(v) ? 0 : v, false, el); // clears a previous mark
     _refreshVendorMaturity(a.vendor_id);
     _persist("assessment", a.id, { weight_override: a.weight_override });
-    renderPanel();
+    _refreshMaturityCells(a.vendor_id);
 }
 window._updateAssessmentWeightOverride = _updateAssessmentWeightOverride;
 function _toggleAssessmentExcluded(assessId, checked) {

@@ -36,6 +36,13 @@ class ProjectCreate(BaseModel):
     data: dict[str, Any] = Field(default_factory=dict)
 
 
+class MaturityConfigPatch(BaseModel):
+    """The project's vendor-maturity configuration (BUG-118), written on its own
+    so a page left right after an edit still sends it (the whole-project save
+    is too large for a request sent on unload)."""
+    maturity_config: dict[str, Any] | None   # required: null resets to the app defaults, an omitted field is refused
+
+
 class ProjectUpdate(BaseModel):
     name: str | None = None
     organization: str | None = None
