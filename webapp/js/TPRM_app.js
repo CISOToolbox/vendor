@@ -3021,7 +3021,7 @@ function renderTemplateList() {
         h += '<span><strong>' + sCount + '</strong> ' + t("template.col_sections").toLowerCase() + '</span>';
         h += '<span><strong>' + qCount + '</strong> ' + t("template.col_questions").toLowerCase() + '</span>';
         h += '<span>' + esc((tpl.language || "").toUpperCase()) + '</span>';
-        h += '<span>v' + (tpl.version || 1) + '</span>';
+        h += '<span>v' + esc(String(tpl.version || 1)) + '</span>';
         h += '</div>';
         h += '<div class="tpl-card-actions">';
         h += '<button class="ct-btn" data-size="xs" data-click="duplicateTemplate" data-args=\'' + _da(tpl.id) + '\' title="' + esc(t("common.duplicate")) + '" data-tooltip="' + esc(t("common.duplicate")) + '" aria-label="' + esc(t("common.duplicate")) + '" data-icon>' + _icon("copy") + '</button>';
@@ -3096,7 +3096,7 @@ function renderTemplateEditor(tplId) {
     h += '<button class="ct-btn" data-variant="ghost" data-click="closeTemplateEditor">&laquo; ' + t("template.back") + '</button>';
     h += '<h2>' + esc(tpl.name || "") + '</h2>';
     h += '<span class="ct-ref" data-size="sm">' + esc(t("template.kind_" + kind)) + '</span>';
-    h += '<span class="tpl-meta">' + esc(tpl.id) + ' &middot; v' + (tpl.version || 1) + '</span>';
+    h += '<span class="tpl-meta">' + esc(tpl.id) + ' &middot; v' + esc(String(tpl.version || 1)) + '</span>';
     h += '</div>';
     // Template metadata block — reuse .tprm-form design from vendor/measure forms
     h += '<div class="ct-tprm-form tpl-editor-meta">';
@@ -3181,7 +3181,7 @@ function _renderTemplateQuestion(tpl, section, q, qi, total) {
     });
     h += '</select>';
     h += '<label class="tpl-question-weight">' + t("template.weight");
-    h += '<input type="number" min="0" max="100" value="' + (q.weight || 0) + '" data-input="_onQuestionFieldChange" data-args=\'' + _da(tpl.id, section.id, q.id, "weight") + '\' data-pass-value>';
+    h += '<input type="number" min="0" max="100" value="' + esc(String(q.weight || 0)) + '" data-input="_onQuestionFieldChange" data-args=\'' + _da(tpl.id, section.id, q.id, "weight") + '\' data-pass-value>';
     h += '</label>';
     h += '<span class="ct-flex-1"></span>';
     h += '<button class="ct-btn" data-size="xs"' + (qi === 0 ? ' disabled' : '') + ' data-click="moveQuestion" data-args=\'' + _da(tpl.id, section.id, q.id, -1) + '\' title="' + esc(t("common.move_up")) + '" data-icon>&uarr;</button>';

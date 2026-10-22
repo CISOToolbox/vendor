@@ -8,14 +8,14 @@ from typing import Optional
 import re
 from fastapi import APIRouter, Depends, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
-from sqlalchemy import delete, select
+from sqlalchemy import String as sa_String, delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.assessment_validation import validate_blob, validate_maturity_config
 from src.auth import ADMIN_MODULE_ROLES, VIEWER_MODULE_ROLES, auth_enabled, get_current_user, perms_for_module_role
 from src.calculations import compute_project_stats, recalculate_all
 from src.database import get_db
-from src.dora_validation import new_duplicate_codes
+from src.dora_validation import new_duplicate_codes, sanitize_dora_rows, sanitize_templates, sanitize_vendor_rows
 from src.models import (
     DoraArrangement,
     DoraArrangementFunction,
@@ -278,11 +278,30 @@ async def _dora_from_dict(
         rows = dora.get(key) or []
         if not rows:
             continue
-        col_names = {c.name for c in model.__table__.columns}
+        cols = {c.name: c for c in model.__table__.columns}
         for row in rows:
-            payload = {k: v for k, v in row.items() if k in col_names}
+            payload = {}
+            for k, v in row.items():
+                if k not in cols:
+                    continue
+                col = cols[k]
+                if v is None and not col.nullable:
+                    # Cleared by the normalisation on a NOT NULL column: its
+                    # default, else an empty text (BUG-120).
+                    if col.default is not None or col.server_default is not None:
+                        continue
+                    if isinstance(col.type, sa_String):
+                        v = ""
+                    else:
+                        continue
+                payload[k] = v
             payload["project_id"] = project_id
             db.add(model(**payload))
+        # Written table by table, in the foreign-key order of
+        # _DORA_MODELS_IN_INSERT_ORDER: the models declare no relationship, so
+        # one flush at the end would insert in any order and Postgres refuses
+        # a branch before its entity (BUG-120).
+        await db.flush()
 
 
 async def _reconstruct_data(db: AsyncSession, project_id: uuid.UUID) -> dict:
@@ -335,6 +354,8 @@ async def _reconstruct_data(db: AsyncSession, project_id: uuid.UUID) -> dict:
         "documents": [_document_to_dict(d) for d in documents],
         # NULL: the app's defaults apply (they are not written back).
         **({"maturity_config": meta.maturity_config} if meta and meta.maturity_config else {}),
+        # NULL: none saved yet — the app adds its defaults.
+        **({"questionnaire_templates": meta.questionnaire_templates} if meta and meta.questionnaire_templates is not None else {}),
         # DORA RoI snapshot — preserves the 11 dora_* tables so that
         # Pilot's centralized backup loop captures the full project
         # state (otherwise DORA data was silently absent from backups
@@ -407,6 +428,16 @@ async def _renotify_project_measures(db: AsyncSession, project_id: uuid.UUID) ->
         asyncio.ensure_future(notify_pilot_measures_bulk(payloads))
 
 
+def _refuse_duplicate_codes(data: dict) -> None:
+    """A new project (created or imported) carries one code per vendor and per
+    subcontractor, as the save requires (BUG-114 / BUG-120)."""
+    dup = new_duplicate_codes(list(data.get("vendors") or []), [])
+    dora = data.get("dora") if isinstance(data.get("dora"), dict) else {}
+    dup += new_duplicate_codes(list(dora.get("subcontractors") or []), [])
+    if dup:
+        raise HTTPException(422, "a code identifies one vendor or subcontractor only: " + "; ".join(dup))
+
+
 async def _decompose_data(db: AsyncSession, project_id: uuid.UUID, data: dict):
     """Decompose a D object into relational child rows."""
     # Metadata
@@ -416,10 +447,11 @@ async def _decompose_data(db: AsyncSession, project_id: uuid.UUID, data: dict):
         organization=meta.get("organization", ""),
         created_date=meta.get("created", ""),
         maturity_config=validate_maturity_config(data.get("maturity_config")),
+        questionnaire_templates=sanitize_templates(data.get("questionnaire_templates")),
     ))
 
     # Vendors + nested measures
-    for i, v in enumerate(data.get("vendors") or []):
+    for i, v in enumerate(sanitize_vendor_rows(list(data.get("vendors") or []))):
         vendor_id = v.get("id", "")
         db.add(Vendor(
             project_id=project_id,
@@ -555,7 +587,8 @@ async def _decompose_data(db: AsyncSession, project_id: uuid.UUID, data: dict):
     # (_autoSave path: AI auto-fill, import, undo, bulk edits) 500s and
     # rolls back on any project that has DORA arrangements.
     await db.flush()
-    await _dora_from_dict(db, project_id, data.get("dora") or {})
+    await _dora_from_dict(db, project_id, sanitize_dora_rows(
+        data.get("dora") or {}, {v.get("id") for v in (data.get("vendors") or []) if isinstance(v, dict)}))
 
 
 # ── Routes ─────────────────────────────────────────────────────────
@@ -578,6 +611,7 @@ async def create_project(
         # First-time blob on a fresh project → validate with an empty
         # stored map (every assessment is treated as a creation).
         creation_data = copy.deepcopy(body.data)
+        _refuse_duplicate_codes(creation_data)
         creation_data["assessments"] = validate_blob(
             creation_data.get("assessments") or [],
             {},
@@ -729,6 +763,11 @@ async def update_project(
             dup += new_duplicate_codes(list(dora_blob["subcontractors"]), list(stored_subs))
         if dup:
             raise HTTPException(422, "a code identifies one vendor or subcontractor only: " + "; ".join(dup))
+        # DORA is written through its own routes: the page's save leaves it
+        # out (or null), and what is stored stays. A blob carrying it (a file
+        # loaded into the project) replaces it.
+        if recalculated.get("dora") is None:
+            recalculated["dora"] = await _dora_to_dict(db, project.id)
         await _delete_children(db, project.id)
         await _decompose_data(db, project.id, recalculated)
 
@@ -841,6 +880,7 @@ async def import_project(
     if isinstance(data, dict):
         # Imported files are user-supplied → validate as fresh creations
         # (empty stored map). See src/assessment_validation.py.
+        _refuse_duplicate_codes(data)
         data["assessments"] = validate_blob(
             data.get("assessments") or [],
             {},
