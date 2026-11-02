@@ -12,7 +12,7 @@ from sqlalchemy import String as sa_String, delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.assessment_validation import validate_blob, validate_maturity_config
-from src.auth import ADMIN_MODULE_ROLES, VIEWER_MODULE_ROLES, auth_enabled, get_current_user, perms_for_module_role
+from src.auth import ADMIN_MODULE_ROLES, VIEWER_MODULE_ROLES, auth_enabled, get_current_user, perms_for_module_role, require_edit_role
 from src.calculations import compute_project_stats, recalculate_all
 from src.database import get_db
 from src.dora_validation import new_duplicate_codes, sanitize_dora_rows, sanitize_templates, sanitize_vendor_rows
@@ -599,6 +599,7 @@ async def create_project(
     user: Optional[User] = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    require_edit_role(user)
     project = Project(
         name=body.name,
         organization=body.organization,
@@ -819,6 +820,7 @@ async def duplicate_project(
     user: Optional[User] = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    require_edit_role(user)
     original = await db.get(Project, project_id)
     if not original:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -850,6 +852,7 @@ async def import_project(
     user: Optional[User] = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    require_edit_role(user)
     import json
 
     content = await read_json_upload(file, 10 * 1024 * 1024)
