@@ -142,8 +142,12 @@ R8. **score and completion_rate are recomputed server-side.**
 
 R9. **Legacy assessments (no template_snapshot) are exempt.**
     Assessments without `template_snapshot` are the pre-phase-0b
-    format. They still pass through the routes unchanged — rules
-    R1-R8 apply only when `template_snapshot` is present.
+    format. They skip the response rules (R2-R4, R6), but a legacy
+    assessment still starts as `draft` / `in_progress` (or `completed`, the
+    V1 terminal status an old export carries), follows the
+    transitions (R5), keeps its reviewer fields server-assigned (R7) and
+    never takes a client `score` / `completion_rate` (R8: dropped, since
+    there is nothing to compute them from).
 
 R10. **A validated assessment is locked.**
     Once `validated`, nothing of its content changes — responses, action
@@ -536,9 +540,21 @@ def validate_on_create(body: dict) -> dict:
     for f in SERVER_ASSIGNED_FIELDS:
         out.pop(f, None)
     _validate_maturity_settings(out)   # R11
-    # Legacy assessment: no template_snapshot → pass-through (R9)
+    # Status must start as draft or in_progress on creation, legacy
+    # assessments included (R5). A legacy (V1) assessment may also arrive
+    # `completed`, the V1 terminal status, from an old export: it carries no
+    # score (below), and only `validated` counts in the posture.
     tpl = out.get("template_snapshot")
-    if not _is_template_snapshot(tpl):
+    legacy = not _is_template_snapshot(tpl)
+    status = out.get("status") or "draft"
+    if status not in (LEGACY_INITIAL_STATUSES if legacy else ("draft", "in_progress")):
+        raise _err(409, f"new assessment cannot be created with status '{status}'")
+    out["status"] = status
+    # Legacy assessment: no template_snapshot → no response checks (R9),
+    # and nothing to score against, so the client values are dropped (R8).
+    if legacy:
+        out["score"] = None
+        out["completion_rate"] = None
         return out
     # Validate responses against the template
     valid_qids = {q["id"] for q in _collect_questions(tpl)}
@@ -547,16 +563,15 @@ def validate_on_create(body: dict) -> dict:
         raise _err(422, "responses must be a list")
     responses = [_validate_response_entry(r, valid_qids) for r in responses_in]
     out["responses"] = responses
-    # Status must start as draft or in_progress on creation.
-    status = out.get("status") or "draft"
-    if status not in ("draft", "in_progress"):
-        raise _err(409, f"new assessment cannot be created with status '{status}'")
-    out["status"] = status
     # Recompute score + completion (R8)
     out["score"] = _compute_score(tpl, responses)
     stats = _assessment_stats(tpl, responses)
     out["completion_rate"] = _compute_completion(stats)
     return out
+
+
+# R9: the statuses a legacy (V1) assessment may be created with.
+LEGACY_INITIAL_STATUSES = ("draft", "in_progress", "completed")
 
 
 # R10: what a validated (locked) assessment still accepts, and what the
@@ -637,11 +652,14 @@ def validate_on_update(stored: Any, body: dict) -> dict:
     )
     if not _is_template_snapshot(effective_snapshot):
         # Legacy pass-through (R9). Still strip reviewer fields and
-        # honour status transitions, but no response-shape validation.
+        # honour status transitions, but no response-shape validation;
+        # nothing to score against, so the client values are dropped (R8).
         if "status" in incoming:
             incoming["status"] = _enforce_transition(
                 getattr(stored, "status", None), incoming["status"]
             )
+        incoming.pop("score", None)
+        incoming.pop("completion_rate", None)
         return incoming
 
     valid_qids = {q["id"] for q in _collect_questions(effective_snapshot)}
