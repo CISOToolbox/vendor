@@ -45,11 +45,6 @@ changes since the previous one and published as the GitHub release notes.
 - Record trivy cooldown exception, Vendor rule 9 covers legacy completed imports
 - State the rules legacy assessments still follow
 
-### Maintenance
-
-- Sync the AppSec recipients fix and the require_identity docstring to the copies and the standalone mirror (propagation)
-- Sync the API docs switch and posture tests to the standalone mirror (propagation)
-
 ## 1.5.0 — 2026-10-22
 
 ### Upgrade
@@ -60,7 +55,7 @@ changes since the previous one and published as the GitHub release notes.
 
 ### Added
 
-- PATCH /projects/{id}/maturity-config writes the maturity configuration alone (R11)
+- PATCH /projects/{id}/maturity-config writes the maturity configuration alone
 - The subcontractor identity offers an additional identifier
 - Subcontractor type of person, linked arrangement only for intra-group providers, rank checked against the subcontractors served, a LEI-only parent shown with what is missing
 - The RoI screens offer the new fields and no value without an EBA code
@@ -139,18 +134,9 @@ changes since the previous one and published as the GitHub release notes.
 - File opening saves its DORA once loaded; wrong types are cleared
 - Wrong types, template shapes, DORA kept by the project save
 - DORA rows are restored in foreign-key order (SQLite foreign keys on)
-- A stored type is kept on rename, a new one without an EBA code refused; BUG-114 confirmation review
-- One row per empty key, upper-case former parent, linked arrangements cleared, rank n-1 refused on screen; BUG-112 re-reviews
-- The red marking on a B_02.02 sheet; FEAT-60 review
-
-### Maintenance
-
-- BUG-120 one file at a time (propagation)
-- BUG-120 file opening holds the project save (propagation)
-- BUG-120 failed file save (propagation)
-- BUG-120 file opening (propagation)
-- BUG-120 review fixes (propagation)
-- Socle composition dedup (propagation)
+- A stored type is kept on rename, a new one without an EBA code refused
+- One row per empty key, upper-case former parent, linked arrangements cleared, rank n-1 refused on screen
+- The red marking on a B_02.02 sheet
 
 ## 1.4.0 — 2026-10-20
 
