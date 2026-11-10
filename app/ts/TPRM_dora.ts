@@ -1440,7 +1440,7 @@ window.doraOpenExportModal = function() {
                  + '</p>';
         body += '<div class="ct-form-row">'
               +   '<label>' + esc(_doraT("dora.export.reporting_period", "Période de reporting")) + '</label>'
-              +   '<input id="dora-export-rp" value="' + esc(rp) + '" placeholder="' + new Date().getFullYear() + '-12-31" maxlength="10" style="width:140px;font-family:monospace">'
+              +   '<input type="date" id="dora-export-rp" value="' + esc(rp) + '" class="ct-w-160">'
               + '</div>';
         body += '<div class="ct-form-row">'
               +   '<label>' + esc(_doraT("dora.export.target_currency", "Devise cible")) + '</label>'
@@ -1465,7 +1465,7 @@ window.doraOpenExportModal = function() {
                     var rpInput = document.getElementById("dora-export-rp");
                     var rpVal = rpInput ? ((rpInput as HTMLInputElement).value || "").trim() : "";
                     if (rpVal && !/^\d{4}-12-31$/.test(rpVal)) {
-                        showStatus(_doraT("dora.export.bad_period", "La période doit être au format YYYY-12-31."));
+                        showStatus(_doraT("dora.export.bad_period", "La période de reporting doit être un 31 décembre."));
                         return false; // keep modal open
                     }
                     var trigger = function() {
