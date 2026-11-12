@@ -297,11 +297,21 @@ async def internal_stats(request: Request, db: AsyncSession = Depends(get_db)):
 
     # ── Donut ──
     donut_segments = []
-    if tiers["critical"]: donut_segments.append({"label": "Critique", "value": tiers["critical"], "color": "redMax"})
-    if tiers["high"]:     donut_segments.append({"label": "Élevé",    "value": tiers["high"],     "color": "red"})
-    if tiers["medium"]:   donut_segments.append({"label": "Modéré",  "value": tiers["medium"],   "color": "orange"})
-    if tiers["low"]:      donut_segments.append({"label": "Faible",  "value": tiers["low"],      "color": "green"})
-    if tiers["unassessed"]: donut_segments.append({"label": "Non évalué", "value": tiers["unassessed"], "color": "gray"})
+    if tiers["critical"]:
+        donut_segments.append({"label": "Critical", "label_fr": "Critique",
+                               "value": tiers["critical"], "color": "redMax"})
+    if tiers["high"]:
+        donut_segments.append({"label": "High", "label_fr": "Élevé",
+                               "value": tiers["high"], "color": "red"})
+    if tiers["medium"]:
+        donut_segments.append({"label": "Moderate", "label_fr": "Modéré",
+                               "value": tiers["medium"], "color": "orange"})
+    if tiers["low"]:
+        donut_segments.append({"label": "Low", "label_fr": "Faible",
+                               "value": tiers["low"], "color": "green"})
+    if tiers["unassessed"]:
+        donut_segments.append({"label": "Not assessed", "label_fr": "Non évalué",
+                               "value": tiers["unassessed"], "color": "gray"})
 
     top_items = []
     for vid, vname, t in vendor_list:
@@ -317,13 +327,15 @@ async def internal_stats(request: Request, db: AsyncSession = Depends(get_db)):
     if overdue > 0:
         alerts.append({
             "level": "critical" if overdue >= 5 else "warning",
-            "text": f"{overdue} mesure(s) en retard",
+            "text": f"{overdue} overdue measure(s)",
+            "text_fr": f"{overdue} mesure(s) en retard",
             "url": "/vendor/",
         })
     if pending > 0:
         alerts.append({
             "level": "info",
-            "text": f"{pending} évaluation(s) en attente d'approbation",
+            "text": f"{pending} assessment(s) awaiting approval",
+            "text_fr": f"{pending} évaluation(s) en attente d'approbation",
             "url": "/vendor/",
         })
 
@@ -357,7 +369,8 @@ async def internal_stats(request: Request, db: AsyncSession = Depends(get_db)):
     return {
         "nonconformities": register,
         "entity_count": total_vendors,
-        "entity_label": "Fournisseurs",
+        "entity_label": "Vendors",
+        "entity_label_fr": "Fournisseurs",
         # Semantic critical count so Pilot doesn't parse localized breakdown
         # labels — vendors in the critical or high threat tier.
         "criticals": tiers["critical"] + tiers["high"],
@@ -378,7 +391,7 @@ async def internal_stats(request: Request, db: AsyncSession = Depends(get_db)):
             "data": {
                 "segments": donut_segments,
                 "center_label": str(total_vendors),
-                "center_sublabel": "fournisseurs",
+                "center_sublabel": "vendors",
             },
         },
         "top_items": top_items,
@@ -395,11 +408,11 @@ def _posture_label(score):
     if score is None:
         return ""
     if score < 40:
-        return "Faible"
+        return "Low"
     if score < 60:
-        return "Modéré"
+        return "Moderate"
     if score < 80:
-        return "Bon"
+        return "Good"
     return "Excellent"
 
 
@@ -420,7 +433,8 @@ async def internal_activity(request: Request, db: AsyncSession = Depends(get_db)
             "date": (a.updated_at or a.created_at).isoformat(),
             "module": "vendor",
             "type": label_type,
-            "label": f"Évaluation {a.id} — {a.status}",
+            "label": f"Assessment {a.id} — {a.status}",
+            "label_fr": f"Évaluation {a.id} — {a.status}",
             "url": "/vendor/",
         })
     return events[:10]

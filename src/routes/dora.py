@@ -1402,19 +1402,19 @@ async def validate_dora_register(
         DoraEntity.project_id == project_id))).scalars().all()
     if not entities:
         errors.append({"kind": "entity", "id": "", "label": "",
-                       "message": "Aucune entité déclarante (B_01.02) — le registre EBA doit en contenir au moins une."})
+                       "message": "No reporting entity (B_01.02): the EBA register must hold at least one."})
     for r in entities:
         label = getattr(r, "name", "") or r.id
         _roi_try(errors, "entity", str(r.id), label, validate_dora_entity, _roi_payload(r))
         if not (r.country_iso2 or ""):
             errors.append({"kind": "entity", "id": str(r.id), "label": label,
-                           "message": "country_iso2 requis (B_01.02)"})
+                           "message": "country_iso2 is required (B_01.02)"})
         if not (getattr(r, "entity_type", "") or ""):
             errors.append({"kind": "entity", "id": str(r.id), "label": label,
-                           "message": "entity_type requis (B_01.02)"})
+                           "message": "entity_type is required (B_01.02)"})
         if not (getattr(r, "reporting_period", "") or ""):
             errors.append({"kind": "entity", "id": str(r.id), "label": label,
-                           "message": "reporting_period requis (renseigné au moment de l'export)"})
+                           "message": "reporting_period is required (filled in at export time)"})
 
     for model, kind, validator in (
         (DoraFunction, "function", validate_dora_function),
@@ -1433,7 +1433,7 @@ async def validate_dora_register(
         _roi_try(errors, "arrangement", str(r.id), label, validate_dora_arrangement, _roi_payload(r))
         if not (getattr(r, "arrangement_reference", "") or ""):
             errors.append({"kind": "arrangement", "id": str(r.id), "label": label,
-                           "message": "arrangement_reference requis (B_02.01)"})
+                           "message": "arrangement_reference is required (B_02.01)"})
 
     subs = (await db.execute(select(DoraArrangementSubcontractor).where(
         DoraArrangementSubcontractor.project_id == project_id))).scalars().all()
