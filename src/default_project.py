@@ -26,4 +26,4 @@ import uuid
 # Fixed, shared across Pilot + Access + Asset + Vendor + Compliance.
 DEFAULT_PROJECT_ID = uuid.UUID("00000000-0000-0000-0000-000000000001")
 DEFAULT_PROJECT_ID_STR = str(DEFAULT_PROJECT_ID)
-DEFAULT_PROJECT_NAME = "Projet principal"
+DEFAULT_PROJECT_NAME = "Main project"

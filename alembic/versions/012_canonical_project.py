@@ -62,7 +62,7 @@ def upgrade() -> None:
 
     if len(ids) == 0:
         conn.execute(
-            sa.text("INSERT INTO projects (id, name) VALUES (:c, 'Projet principal')"),
+            sa.text("INSERT INTO projects (id, name) VALUES (:c, 'Main project')"),
             {"c": CANONICAL},
         )
         return
