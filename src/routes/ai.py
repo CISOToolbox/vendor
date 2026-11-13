@@ -34,7 +34,7 @@ router = make_ai_router(generic_complete=False)
 
 
 def _lang_name(language: str) -> str:
-    return "English" if (language or "fr").lower().startswith("en") else "French"
+    return "French" if (language or "").strip().lower().startswith("fr") else "English"
 
 
 # ── Feature: suggest measures for a vendor or a vendor risk ────────────
@@ -42,7 +42,7 @@ def _lang_name(language: str) -> str:
 class MeasureSuggestRequest(BaseModel):
     # one of the three modes, picked by `mode`
     mode: str = "vendor"          # "vendor" | "risk" | "custom"
-    language: str = "fr"
+    language: str = "en"
     vendor_name: str = ""
     vendor_sector: str = ""
     vendor_services: str = ""
@@ -177,7 +177,7 @@ async def vendor_suggest_measures(body: MeasureSuggestRequest,
 
 class RiskSuggestRequest(BaseModel):
     mode: str = "auto"            # "auto" | "custom"
-    language: str = "fr"
+    language: str = "en"
     vendor_name: str = ""
     vendor_sector: str = ""
     vendor_services: str = ""
@@ -308,7 +308,7 @@ class AssessmentQuestion(BaseModel):
 
 
 class AssessmentSuggestRequest(BaseModel):
-    language: str = "fr"
+    language: str = "en"
     vendor_name: str = ""
     vendor_sector: str = ""
     vendor_website: str = ""
@@ -353,7 +353,7 @@ async def vendor_suggest_assessment(body: AssessmentSuggestRequest,
 # ── Feature: collect a vendor profile from public knowledge ────────────
 
 class CollectInfoRequest(BaseModel):
-    language: str = "fr"
+    language: str = "en"
     vendor_name: str = ""
     vendor_website: str = ""
     vendor_sector: str = ""
@@ -361,23 +361,23 @@ class CollectInfoRequest(BaseModel):
 
 
 def _collect_info_system(language: str) -> str:
-    base = (
-        "Tu es un expert en securite et gestion des risques tiers (TPRM). "
-        "On te donne le nom et/ou le site web d'un fournisseur. "
-        "Recherche et rassemble un maximum d'informations sur ce fournisseur. "
-        "Pour chaque certification ou document de conformite, fournis l'URL publique si elle "
-        "existe (page trust/security du fournisseur, portail de conformite, registre de "
-        "certification). "
-        "Reponds UNIQUEMENT en JSON valide avec cette structure :\n"
+    return (
+        "You are a security and third-party risk management (TPRM) expert. "
+        "You are given the name and/or the website of a vendor. "
+        "Research and gather as much information as possible about this vendor. "
+        "For each certification or compliance document, give the public URL when one "
+        "exists (the vendor's trust/security page, compliance portal, certification "
+        "registry). "
+        "Respond ONLY with valid JSON using this structure:\n"
         '{\n'
-        '  "legal_entity": "nom legal complet",\n'
-        '  "country": "code pays (FR, US, DE...)",\n'
-        '  "sector": "secteur d\'activite",\n'
-        '  "website": "url du site",\n'
-        '  "services": "description des services principaux",\n'
+        '  "legal_entity": "full legal name",\n'
+        '  "country": "country code (FR, US, DE...)",\n'
+        '  "sector": "business sector",\n'
+        '  "website": "website url",\n'
+        '  "services": "description of the main services",\n'
         '  "certifications": ["ISO 27001", "SOC 2 Type II", ...],\n'
         '  "public_docs": [\n'
-        '    {"name": "Page Trust / Security", "url": "https://...", "type": "trust_center"},\n'
+        '    {"name": "Trust / Security page", "url": "https://...", "type": "trust_center"},\n'
         '    {"name": "SOC 2 Type II Report", "url": "https://...", "type": "audit_report"},\n'
         '    {"name": "ISO 27001 Certificate", "url": "https://...", "type": "certification"},\n'
         '    {"name": "Data Processing Agreement", "url": "https://...", "type": "dpa"},\n'
@@ -387,9 +387,9 @@ def _collect_info_system(language: str) -> str:
         '    {"name": "Bug Bounty / Responsible Disclosure", "url": "https://...", "type": "bug_bounty"}\n'
         '  ],\n'
         '  "dpa_available": true/false,\n'
-        '  "data_location": "UE/US/Global",\n'
-        '  "known_incidents": "incidents de securite connus ou null",\n'
-        '  "sub_contractors": ["principaux sous-traitants connus"],\n'
+        '  "data_location": "EU/US/Global",\n'
+        '  "known_incidents": "known security incidents or null",\n'
+        '  "sub_contractors": ["main known subcontractors"],\n'
         '  "security_assessment": {\n'
         '    "governance": "compliant/partial/non_compliant/unknown",\n'
         '    "access_management": "...",\n'
@@ -405,33 +405,18 @@ def _collect_info_system(language: str) -> str:
         '  "risks": [\n'
         '    {"title": "...", "category": "CYBER/OPS/FIN/COMP/STRAT/REP/GEO", "impact": 1-5, "likelihood": 1-5, "description": "..."}\n'
         '  ],\n'
-        '  "notes": "autres informations pertinentes"\n'
+        '  "notes": "other relevant information"\n'
         '}\n\n'
-        "IMPORTANT pour public_docs : ne fournis QUE des URLs que tu connais reellement "
-        "(pages trust center, portails de conformite, pages security du fournisseur). "
-        "Ne fabrique pas d'URLs. Si tu ne connais pas l'URL exacte, omets l'entree. "
-        "Les types possibles sont : trust_center, audit_report, certification, dpa, privacy, "
+        "IMPORTANT for public_docs: give ONLY URLs you actually know "
+        "(trust center pages, compliance portals, the vendor's security pages). "
+        "Do not make URLs up. If you do not know the exact URL, leave the entry out. "
+        "The possible types are: trust_center, audit_report, certification, dpa, privacy, "
         "whitepaper, status_page, bug_bounty.\n\n"
-        "Base-toi sur tes connaissances de cette entreprise. "
-        "Si tu ne connais pas une information, mets null ou unknown. "
-        "JSON uniquement, pas de markdown."
+        "Use your knowledge of this company. "
+        "If you do not know a piece of information, use null or unknown. "
+        f"Write the free-text values in {_lang_name(language)}. "
+        "JSON only, no markdown."
     )
-    if (language or "fr").lower().startswith("en"):
-        base = (base
-                .replace("Tu es un expert en securite et gestion des risques tiers (TPRM).",
-                         "You are a security and third-party risk management (TPRM) expert.")
-                .replace("On te donne le nom et/ou le site web d'un fournisseur.",
-                         "You are given the name and/or website of a vendor.")
-                .replace("Recherche et rassemble un maximum d'informations sur ce fournisseur.",
-                         "Research and gather as much information as possible about this vendor.")
-                .replace("Reponds UNIQUEMENT en JSON valide avec cette structure",
-                         "Respond ONLY with valid JSON using this structure")
-                .replace("Base-toi sur tes connaissances de cette entreprise.",
-                         "Use your knowledge of this company.")
-                .replace("Si tu ne connais pas une information, mets null ou unknown.",
-                         "If you don't know something, use null or unknown.")
-                .replace("JSON uniquement, pas de markdown.", "JSON only, no markdown."))
-    return base
 
 
 @router.post("/vendor/collect-info")
@@ -445,7 +430,6 @@ async def vendor_collect_info(body: CollectInfoRequest,
     _check_rate_limit(str(user.id) if user else "anonymous")
     provider, model = await _runtime_provider_model(db)
 
-    is_en = (body.language or "fr").lower().startswith("en")
     query = body.vendor_name or ""
     if body.vendor_website:
         query += " (" + body.vendor_website + ")"
@@ -453,7 +437,7 @@ async def vendor_collect_info(body: CollectInfoRequest,
         query += " — " + body.vendor_sector
     if body.vendor_services:
         query += " — Services: " + body.vendor_services
-    user_prompt = ("Vendor: " if is_en else "Fournisseur: ") + query
+    user_prompt = "Vendor: " + query
 
     system = _collect_info_system(body.language)
     raw = await _provider_complete(db, system + _REFUSAL_HINT, user_prompt, provider, model)
@@ -485,7 +469,7 @@ _DOC_TAXONOMY = [
 
 
 class CollectDocsRequest(BaseModel):
-    language: str = "fr"
+    language: str = "en"
     vendor_name: str = ""
     vendor_website: str = ""
     vendor_sector: str = ""
@@ -502,7 +486,6 @@ async def vendor_collect_docs(body: CollectDocsRequest,
     _check_rate_limit(str(user.id) if user else "anonymous")
     provider, model = await _runtime_provider_model(db)
 
-    is_en = (body.language or "fr").lower().startswith("en")
     system = (
         "You are a TPRM documentation research expert. "
         "Your job is to find REAL, VERIFIED public URLs for vendor security documentation. "
@@ -520,25 +503,17 @@ async def vendor_collect_docs(body: CollectDocsRequest,
     existing = body.existing_urls or []
 
     user_prompt = (
-        ("Vendor: " if is_en else "Fournisseur : ") + query + "\n\n" +
-        ("Find the public URLs for each of these document types:\n" if is_en
-         else "Trouve les URLs publiques pour chacun de ces types de documents :\n") +
+        "Vendor: " + query + "\n\n"
+        "Find the public URLs for each of these document types:\n" +
         doc_list + "\n\n" +
-        ((("Already found (do NOT repeat):\n" if is_en else "Deja trouves (NE PAS repeter) :\n")
-          + "\n".join(existing) + "\n\n") if existing else "") +
-        (("RULES:\n"
-          "1. Only return URLs you KNOW exist (from your training data)\n"
-          "2. Prefer official vendor domains over third-party sources\n"
-          "3. Common patterns: /trust, /security, /privacy, /compliance, /dpa, status.domain.com\n"
-          "4. For certifications, link to the vendor's compliance page, NOT the certifying body\n"
-          "5. If the vendor has no public page for a document type, omit it\n\n")
-         if is_en else
-         ("REGLES :\n"
-          "1. Ne retourne QUE des URLs que tu SAIS exister (depuis tes donnees d'entrainement)\n"
-          "2. Privilegier les domaines officiels du fournisseur aux sources tierces\n"
-          "3. Patterns courants : /trust, /security, /privacy, /compliance, /dpa, status.domaine.com\n"
-          "4. Pour les certifications, lier la page compliance du fournisseur, PAS l'organisme certificateur\n"
-          "5. Si le fournisseur n'a pas de page publique pour un type de document, ne l'inclus pas\n\n")) +
+        (("Already found (do NOT repeat):\n" + "\n".join(existing) + "\n\n") if existing else "") +
+        "RULES:\n"
+        "1. Only return URLs you KNOW exist (from your training data)\n"
+        "2. Prefer official vendor domains over third-party sources\n"
+        "3. Common patterns: /trust, /security, /privacy, /compliance, /dpa, status.domain.com\n"
+        "4. For certifications, link to the vendor's compliance page, NOT the certifying body\n"
+        "5. If the vendor has no public page for a document type, omit it\n\n"
+        f"Write each name in {_lang_name(body.language)}.\n"
         "JSON array only, no markdown:\n"
         '[{"name": "Trust Center", "type": "trust_center", "url": "https://..."}, ...]'
     )

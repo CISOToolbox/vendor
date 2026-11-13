@@ -622,12 +622,12 @@ function _renderResidualMatrix(atDate: any) {
             ["var(--ct-critical-fill)","var(--ct-critical-fill)","var(--ct-critical-fill)","var(--ct-critical-fill)","var(--tprm-extreme)"]
         ],
         legend: [
-            { label: t("matrix.low") || "Faible", color: "var(--ct-low-fill)" },
-            { label: t("matrix.moderate") || "Moyen", color: "var(--ct-medium-fill)" },
-            { label: t("matrix.significant") || "Significatif", color: "var(--ct-high-fill)" },
-            { label: t("matrix.high") || "Eleve", color: "var(--ct-critical-fill)" },
-            { label: t("matrix.critical") || "Critique", color: "var(--ct-critical-fill)" },
-            { label: t("matrix.extreme") || "Extreme", color: "var(--tprm-extreme)" }
+            { label: t("matrix.low"), color: "var(--ct-low-fill)" },
+            { label: t("matrix.moderate"), color: "var(--ct-medium-fill)" },
+            { label: t("matrix.significant"), color: "var(--ct-high-fill)" },
+            { label: t("matrix.high"), color: "var(--ct-critical-fill)" },
+            { label: t("matrix.critical"), color: "var(--ct-critical-fill)" },
+            { label: t("matrix.extreme"), color: "var(--tprm-extreme)" }
         ],
         // CtMatrixItem (shared decl) has no index signature — the items also
         // carry impact/likelihood/vendor_id: local any[] annotation.
@@ -1329,7 +1329,7 @@ window.vendorOpenInformalSubModal = function(vendorId: string) {
     }
     bodyHtml += '</div>';
 
-    var buttons: any[] = [{ id: "cancel", label: t("common.cancel") || "Cancel" }];
+    var buttons: any[] = [{ id: "cancel", label: t("common.cancel") }];
     if (available.length > 0) {
         buttons.push({ id: "save", label: t("dora.modal.informal_pick_add"), primary: true, result: function() {
             var pick = ((document.getElementById("informal-pick-existing") || {}) as HTMLSelectElement).value || "";
@@ -1888,14 +1888,14 @@ function _vendorMeasureModalOpts() {
         typeOptions: ["Contractuelle", "Technique", "Organisationnelle", "Surveillance"]
             .map(function(x) { return { value: x, label: x }; }),
         statusOptions: [
-            { value: "planifie", label: t("measure.planifie") || "Planifié" },
-            { value: "en_cours", label: t("measure.en_cours") || "En cours" },
-            { value: "termine",  label: t("measure.termine")  || "Terminé" },
+            { value: "planifie", label: t("measure.planifie") },
+            { value: "en_cours", label: t("measure.en_cours") },
+            { value: "termine",  label: t("measure.termine") },
             // Shared key « annule » (ct_measure_modal.DEFAULT_STATUS_KEYS),
             // labelled « Abandonné »: a measure we give up on carrying out,
             // without erasing it. That is what the open work of a vendor
             // leaving the scope becomes.
-            { value: "annule",   label: t("measure.annule")   || "Abandonné" }
+            { value: "annule",   label: t("measure.annule") }
         ]
     };
 }
@@ -1934,8 +1934,8 @@ function addMeasureForRisk(vendorIdx: any, riskIdx: any) {
         defaultStatus: "planifie",
         ownerPicker: { pickerId: "vendor-measure-owner", directoryUrl: "api/directory" },
         extraFields: [
-            { key: "ref_socle", label: t("measure.ref_socle") || "Ref socle", type: "text", value: "" },
-            { key: "effet",     label: t("measure.effet")     || "Effet",     type: "textarea", rows: 2, value: "" }
+            { key: "ref_socle", label: t("measure.ref_socle"), type: "text", value: "" },
+            { key: "effet",     label: t("measure.effet"),     type: "textarea", rows: 2, value: "" }
         ]
     }).then(function(result: any) {
         if (!result || result.__deleted || !(result.mesure || "").trim()) return;
@@ -1953,7 +1953,7 @@ function addMeasureForRisk(vendorIdx: any, riskIdx: any) {
         var newRef = mId + " - " + newM.mesure;
         r.linked_measures = (r.linked_measures ? r.linked_measures + ", " : "") + newRef;
         _persist("risk", r.id, { linked_measures: r.linked_measures });
-        showStatus(t("measure.saved") || "Mesure enregistrée");
+        showStatus(t("measure.saved"));
         renderPanel();
     });
 }
@@ -2096,7 +2096,7 @@ function suggestMeasuresForRisk(vendorIdx: any, riskIdx: any) {
 
     _aiPost("vendor/suggest-measures", {
         mode: "risk",
-        language: _locale === "en" ? "en" : "fr",
+        language: _locale === "fr" ? "fr" : "en",
         vendor_name: v.name || "",
         vendor_sector: v.sector || "",
         // FEAT-40 — the server reads the vendor measures FROM THE DB. We
@@ -2123,7 +2123,7 @@ function openAiRiskAssistant(vendorIdx: any) {
     var risks = D.risks.filter(function(r) { return r.vendor_id === v.id; });
 
     var p = _aiEnsurePanel();
-    p.title.textContent = "IA — " + v.name;
+    p.title.textContent = t("admin.ai") + " — " + v.name;
 
     var h = '<div class="ct-p-1">';
 
@@ -2203,7 +2203,7 @@ function _aiSuggestRisksCustom(vendorIdx: any, prompt: any) {
         vendor_id: v.id,
         include_existing_measures: inclureMesures,
         mode: "custom",
-        language: _locale === "en" ? "en" : "fr",
+        language: _locale === "fr" ? "fr" : "en",
         vendor_name: v.name || "",
         vendor_sector: v.sector || "",
         vendor_services: (v.contract || {}).services || "",
@@ -2230,7 +2230,7 @@ function _aiSuggestMeasuresCustom(vendorIdx: any, riskIdx: any, prompt: any) {
         vendor_id: v.id,
         include_existing_measures: inclureMesures,
         mode: "custom",
-        language: _locale === "en" ? "en" : "fr",
+        language: _locale === "fr" ? "fr" : "en",
         vendor_name: v.name || "",
         custom_request: prompt,
         risk: { title: r.title, impact: r.impact, likelihood: r.likelihood }
@@ -2257,7 +2257,7 @@ function aiSuggestRisksAndMeasures(vendorIdx: any) {
         vendor_id: v.id,
         include_existing_measures: inclureMesures,
         mode: "auto",
-        language: _locale === "en" ? "en" : "fr",
+        language: _locale === "fr" ? "fr" : "en",
         vendor_name: v.name || "",
         vendor_sector: v.sector || "",
         vendor_services: (v.contract || {}).services || "",
@@ -2557,11 +2557,11 @@ function _renderDocsTable(docs: any, tableId?: string) {
 
 function _docTypeLabel(type: any) {
     var map: Record<string, string> = {
-        trust_center: "Trust Center", audit_report: "Rapport d'audit", certification: "Certification",
-        dpa: "DPA", privacy: "Politique de confidentialite", whitepaper: "Whitepaper",
-        status_page: "Status Page", bug_bounty: "Bug Bounty", other: "Autre"
+        trust_center: "Trust Center", audit_report: t("doc.type.audit_report"), certification: "Certification",
+        dpa: "DPA", privacy: t("doc.type.privacy"), whitepaper: "Whitepaper",
+        status_page: "Status Page", bug_bounty: "Bug Bounty", other: t("doc.type.other")
     };
-    return map[type] || type || "Autre";
+    return map[type] || type || t("doc.type.other");
 }
 
 function updateDocField(docId: string, field: string, value: string) {
@@ -3128,7 +3128,7 @@ function _ensureDefaultTemplate() {
     }
     if (healed) _autoSave();
 
-    var lang = (typeof _locale === "string" && _locale === "en") ? "en" : "fr";
+    var lang = (typeof _locale === "string" && _locale === "fr") ? "fr" : "en";
     var added = false;
 
     // FEAT-62 — each default template exists in French and in English: two
@@ -3146,7 +3146,7 @@ function _ensureDefaultTemplate() {
         var family = D.questionnaire_templates.filter(function(tp) { return tp.id === d.id || tp.id.indexOf(d.id + "-") === 0; });
         if (!family.length) {
             // A new project: both languages, the session's under the historical id.
-            [lang, lang === "fr" ? "en" : "fr"].forEach(function(l, i) {
+            [lang, lang === "en" ? "fr" : "en"].forEach(function(l, i) {
                 var tpl = d.build(l);
                 if (i > 0) tpl.id = d.id + "-" + l.toUpperCase();
                 D.questionnaire_templates.push(tpl);
@@ -3191,10 +3191,9 @@ function _defaultTemplateLanguage(build: (l: string) => TprmTemplate, tp: TprmTe
 function _buildDefaultQuestionnaireTemplate(lang: string) {
     var tpl: TprmTemplate = {
         id: "TPL-001",
-        name: lang === "en" ? "Standard vendor questionnaire" : "Questionnaire fournisseur standard",
-        description: lang === "en"
-            ? "Default security questionnaire (25 essential questions across 13 domains: governance, access, cloud, continuity, etc.)."
-            : "Questionnaire de securite par defaut (25 questions essentielles sur 13 domaines : gouvernance, acces, cloud, continuite, etc.).",
+        name: lang === "fr" ? "Questionnaire fournisseur standard" : "Standard vendor questionnaire",
+        description: lang === "fr" ? "Questionnaire de securite par defaut (25 questions essentielles sur 13 domaines : gouvernance, acces, cloud, continuite, etc.)."
+            : "Default security questionnaire (25 essential questions across 13 domains: governance, access, cloud, continuity, etc.).",
         kind: "questionnaire",
         language: lang,
         version: 1,
@@ -3238,9 +3237,9 @@ function _buildDefaultQuestionnaireTemplate(lang: string) {
         section.questions.push({
             id: "Q-" + String(globalQIdx).padStart(3, "0"),
             type: "free_text",
-            text: lang === "en" ? (q.text_en || q.text_fr || "") : (q.text_fr || q.text_en || ""),
+            text: lang === "fr" ? (q.text_fr || q.text_en || "") : (q.text_en || q.text_fr || ""),
             description: "",
-            expected: lang === "en" ? (q.expected_en || "") : (q.expected_fr || ""),
+            expected: lang === "fr" ? (q.expected_fr || "") : (q.expected_en || ""),
             weight: q.weight || 5,
             criticality: "major",
             options: []
@@ -3323,10 +3322,9 @@ function _buildAnssi42AuditTemplate(lang: string) {
 
     var tpl: TprmTemplate = {
         id: "TPL-002",
-        name: lang === "en" ? "Audit - ANSSI 42 hygiene rules" : "Audit - 42 regles d'hygiene ANSSI",
-        description: lang === "en"
-            ? "Audit template based on the ANSSI 42 IT hygiene rules, organized into 10 thematic groups. Designed to be filled by an internal or external auditor against the vendor's environment."
-            : "Modele d'audit base sur les 42 regles d'hygiene informatique ANSSI, organisees en 10 groupes thematiques. Destine a etre rempli par un auditeur interne ou externe pour le perimetre du fournisseur.",
+        name: lang === "fr" ? "Audit - 42 regles d'hygiene ANSSI" : "Audit - ANSSI 42 hygiene rules",
+        description: lang === "fr" ? "Modele d'audit base sur les 42 regles d'hygiene informatique ANSSI, organisees en 10 groupes thematiques. Destine a etre rempli par un auditeur interne ou externe pour le perimetre du fournisseur."
+            : "Audit template based on the ANSSI 42 IT hygiene rules, organized into 10 thematic groups. Designed to be filled by an internal or external auditor against the vendor's environment.",
         kind: "audit",
         language: lang,
         version: 1,
@@ -3410,11 +3408,11 @@ function renderTemplateList() {
 }
 
 function createTemplate(kind: any) {
-    var lang = (typeof _locale === "string" && _locale === "en") ? "en" : "fr";
+    var lang = (typeof _locale === "string" && _locale === "fr") ? "fr" : "en";
     var k: TprmTemplateKind = (kind === "audit" ? "audit" : "questionnaire");
     var tpl: TprmTemplate = {
         id: _nextTemplateId(),
-        name: lang === "en" ? (k === "audit" ? "New audit template" : "New template") : (k === "audit" ? "Nouveau modele d'audit" : "Nouveau template"),
+        name: t(k === "audit" ? "template.default_audit_name" : "template.default_name"),
         description: "",
         kind: k,
         language: lang,
@@ -4046,7 +4044,7 @@ function aiSuggestSectionV2(assessId: string, sectionId: string) {
     var questions = section.questions || [];
     if (!questions.length) return;
 
-    var lang = typeof _locale !== "undefined" ? _locale : "fr";
+    var lang = typeof _locale !== "undefined" ? _locale : "en";
     // The suggest-assessment endpoint owns the assessor methodology prompt and
     // returns {question_id, answer: compliant|partial|non_compliant|na, comment}.
     // Map answer → V2 coverage so the V2 schema (coverage/justification) is fed.
@@ -4054,7 +4052,7 @@ function aiSuggestSectionV2(assessId: string, sectionId: string) {
 
     showStatus(t("measure.ai_loading"));
     _aiPost("vendor/suggest-assessment", {
-        language: lang === "en" ? "en" : "fr",
+        language: lang === "fr" ? "fr" : "en",
         vendor_name: (v || {}).name || "",
         vendor_sector: (v || {}).sector || "",
         vendor_website: (v || {}).website || "",
@@ -4113,7 +4111,7 @@ function _migrateAssessmentToV2(a: any): any {
         || (D.questionnaire_templates || [])[0];
     // A locked one is only displayed: the default template is built for the
     // copy, not added to the project.
-    if (!tpl && locked) tpl = _buildDefaultQuestionnaireTemplate((typeof _locale === "string" && _locale === "en") ? "en" : "fr");
+    if (!tpl && locked) tpl = _buildDefaultQuestionnaireTemplate((typeof _locale === "string" && _locale === "fr") ? "fr" : "en");
     if (!tpl) return a;
     if (locked) a = JSON.parse(JSON.stringify(a));
     var covMap: Record<string, string> = { compliant: "covered", partial: "partial", non_compliant: "not_covered", na: "not_applicable" };
@@ -4133,7 +4131,7 @@ function _migrateAssessmentToV2(a: any): any {
             var cov = covMap[old.answer];
             if (cov) resp.coverage = cov;
             resp.comment = old.comment || "";
-            if (cov === "partial" || cov === "not_covered") resp.justification = old.comment || "Migré depuis V1 — à confirmer.";
+            if (cov === "partial" || cov === "not_covered") resp.justification = old.comment || t("assessment.migrated_from_v1");
         }
         return resp;
     });
@@ -5823,14 +5821,14 @@ function downloadTemplateExcelExample() {
 
         // Example rows
         var examples = [
-            ["Gouvernance", "Avez-vous une politique de securite de l'information documentee et approuvee par la direction ?", "Politique SSI signee, derniere revue < 12 mois", "major", 5],
-            ["Gouvernance", "Un responsable de la securite (RSSI ou equivalent) est-il designe ?", "Nom, fonction, rattachement hierarchique", "major", 5],
-            ["Gestion des acces", "Appliquez-vous le principe du moindre privilege sur les comptes utilisateurs ?", "Procedure de revue d'acces, frequence, peripherique couvert", "blocker", 8],
-            ["Gestion des acces", "L'authentification multi-facteur (MFA) est-elle activee pour les acces a privileges ?", "Liste des systemes proteges, type de MFA", "blocker", 8],
-            ["Protection des donnees", "Les donnees sensibles sont-elles chiffrees au repos et en transit ?", "Algorithmes, gestion des cles", "major", 7],
-            ["Protection des donnees", "Des sauvegardes testees regulierement sont-elles en place ?", "Frequence, retention, test de restauration", "major", 6],
-            ["Incidents", "Disposez-vous d'un plan de reponse aux incidents de securite ?", "Plan documente, exercices annuels", "major", 5],
-            ["Sous-traitance", "Evaluez-vous la securite de vos propres sous-traitants critiques ?", "Process d'evaluation, frequence", "info", 3]
+            ["Governance", "Do you have an information security policy, documented and approved by management?", "Signed security policy, last reviewed less than 12 months ago", "major", 5],
+            ["Governance", "Is a person in charge of security (CISO or equivalent) appointed?", "Name, position, reporting line", "major", 5],
+            ["Access management", "Do you apply the principle of least privilege to user accounts?", "Access review procedure, frequency, scope covered", "blocker", 8],
+            ["Access management", "Is multi-factor authentication (MFA) enabled for privileged access?", "List of the systems protected, type of MFA", "blocker", 8],
+            ["Data protection", "Is sensitive data encrypted at rest and in transit?", "Algorithms, key management", "major", 7],
+            ["Data protection", "Are regularly tested backups in place?", "Frequency, retention, restore test", "major", 6],
+            ["Incidents", "Do you have a security incident response plan?", "Documented plan, yearly exercises", "major", 5],
+            ["Subcontracting", "Do you assess the security of your own critical subcontractors?", "Assessment process, frequency", "info", 3]
         ];
         examples.forEach(function(row) { ws2.addRow(row); });
 
@@ -5970,7 +5968,7 @@ function _handleImportedTemplateExcel(file: any) {
                     return;
                 }
 
-                var lang = (typeof _locale === "string" && _locale === "en") ? "en" : "fr";
+                var lang = (typeof _locale === "string" && _locale === "fr") ? "fr" : "en";
                 var baseName = (file.name || "").replace(/\.[^.]+$/, "") || t("template.imported_default_name");
                 var tpl: TprmTemplate = {
                     id: _nextTemplateId(),
@@ -6075,7 +6073,7 @@ function renderGlobalMeasures(): string {
     var h = '<div class="ct-flex ct-row-between ct-items-center ct-mb-2">';
     h += '<h2>' + t("nav.measures") + ' (' + allMeasures.length + ')</h2>';
     h += '<div class="ct-flex ct-gap-2">';
-    h += '<button class="ct-btn" data-variant="primary" data-click="_refreshMeasures" title="Rafraîchir">&#x21bb;</button>';
+    h += '<button class="ct-btn" data-variant="primary" data-click="_refreshMeasures" title="' + esc(t("measure.refresh")) + '">&#x21bb;</button>';
     if (unlinkedCount > 0) {
         h += '<button class="ct-btn" data-variant="danger" data-size="sm" data-click="deleteUnlinkedMeasures">' + t("measure.delete_unlinked") + ' (' + unlinkedCount + ')</button>';
     }
@@ -6108,13 +6106,13 @@ function renderGlobalMeasures(): string {
         if (!window.ct_bulkbar) return;
         ct_bulkbar.attach({
             scope: "vendor-measures",
-            label: t("measure.selected_n") || "{n} mesure(s) sélectionnée(s)",
+            label: t("measure.selected_n"),
             actions: [
-                { id: "done", icon: "check", label: t("measure.termine") || "Terminé", variant: "success",
+                { id: "done", icon: "check", label: t("measure.termine"), variant: "success",
                   onClick: "_bulkVendorMeasuresDone" },
-                { id: "delete", icon: "trash", label: t("btn_delete") || "Supprimer", danger: true,
+                { id: "delete", icon: "trash", label: t("btn_delete"), danger: true,
                   onClick: "_bulkVendorMeasuresDelete",
-                  confirm: { title: "Supprimer {n} mesure(s) ?", message: "Cette action est irréversible." } }
+                  confirm: { title: t("measure.bulk_delete_title"), message: t("measure.irreversible") } }
             ]
         });
         ct_bulkbar.update("vendor-measures");
@@ -6133,9 +6131,9 @@ window._refreshMeasures = function() {
                 // Preserve reactive references by replacing in place
                 Object.keys(proj.data).forEach(function(k) { D[k] = proj.data[k]; });
             }
-            showStatus("Données rafraîchies");
+            showStatus(t("measure.refreshed"));
             renderPanel();
-        }).catch(function(e: any) { showStatus("Erreur : " + (e.message || e), true); });
+        }).catch(function(e: any) { showStatus(t("misc.error") + ": " + (e.message || e), true); });
     } else {
         window.location.reload();
     }
@@ -6163,19 +6161,19 @@ window._editVendorMeasureRow = function(row: any) {
             if (typeof _persist === "function") _persist("measure", m.id, { progress_log: fullLog });
         },
         extraFields: [
-            { key: "ref_socle", label: t("measure.ref_socle") || "Ref socle", type: "text", value: m.ref_socle || "" },
-            { key: "effet",     label: t("measure.effet")     || "Effet",     type: "textarea", rows: 2, value: m.effet || "" }
+            { key: "ref_socle", label: t("measure.ref_socle"), type: "text", value: m.ref_socle || "" },
+            { key: "effet",     label: t("measure.effet"),     type: "textarea", rows: 2, value: m.effet || "" }
         ],
         onDelete: function() {
             ct_modal.confirm({
-                title: t("measure.confirm_delete") || "Supprimer cette mesure ?",
-                message: "Cette action est irréversible.",
+                title: t("measure.confirm_delete"),
+                message: t("measure.irreversible"),
                 danger: true
             }).then(function(ok: any) {
                 if (!ok) return;
                 v.measures!.splice(row.measureIdx, 1);
                 if (typeof _persistDelete === "function") _persistDelete("measure", m.id);
-                showStatus("Mesure supprimée");
+                showStatus(t("measure.deleted"));
                 renderPanel();
             });
         }
@@ -6186,7 +6184,7 @@ window._editVendorMeasureRow = function(row: any) {
             if (result[k] !== undefined && result[k] !== m[k]) { m[k] = result[k]; patch[k] = result[k]; }
         });
         if (Object.keys(patch).length) _persist("measure", m.id, patch);
-        showStatus(t("measure.saved") || "Mesure enregistrée");
+        showStatus(t("measure.saved"));
         renderPanel();
     });
 };
@@ -6205,7 +6203,7 @@ window._bulkVendorMeasuresDone = function(scope: string) {
         });
     });
     ct_bulkbar.clear(scope);
-    showStatus(count + " mesure(s) marquée(s) terminée(s)");
+    showStatus(t("measure.bulk_done", { n: count }));
     renderPanel();
 };
 
@@ -6223,7 +6221,7 @@ window._bulkVendorMeasuresDelete = function(scope: string) {
         ids.forEach(function(mid) { _persistDelete("measure", mid); });
     }
     ct_bulkbar.clear(scope);
-    showStatus(count + " mesure(s) supprimée(s)");
+    showStatus(t("measure.bulk_deleted", { n: count }));
     renderPanel();
 };
 
@@ -6470,7 +6468,7 @@ function _vendorSectorField(value: string | undefined) {
         }
         return _field("vendor.sector", "v-sector", value);
     }
-    var ph = t("vendor.sector_ph") || "";
+    var ph = t("vendor.sector_ph");
     var h = '<div class="ct-form-row"><label>' + t("vendor.sector") + '</label>';
     h += '<input type="text" id="v-sector" list="nace-list" value="' + esc(value || "") + '" data-input="_autoSaveVendorField" placeholder="' + esc(ph) + '">';
     h += _naceDatalistHtml();
@@ -6716,8 +6714,8 @@ function _importCustomQuestionnaire(csvText: string) {
 
 function downloadQuestionnaireTemplate() {
     var header = "id;domain;question;expected;red_flags;evidence;weight";
-    var ex1 = "CQ01;governance;Politique de securite (PSSI);PSSI formalisee et approuvee;Pas de PSSI;PSSI signee;15";
-    var ex2 = "CQ02;access;Gestion des acces et SSO;SSO SAML/OIDC deploye;Comptes partages;Configuration SSO;10";
+    var ex1 = "CQ01;governance;Security policy;Policy formalised and approved;No security policy;Signed policy;15";
+    var ex2 = "CQ02;access;Access management and SSO;SAML/OIDC SSO deployed;Shared accounts;SSO configuration;10";
     _downloadCSV("questionnaire_template.csv", header, [ex1, ex2]);
 }
 window.downloadQuestionnaireTemplate = downloadQuestionnaireTemplate;
@@ -6740,12 +6738,12 @@ function aiCollectInfo() {
     // Show loading state
     _showModal('<div class="ct-ta-c ct-p-8"><div class="ct-text-page ct-mb-2">&#10024;</div><div class="ct-strong">' + t("ai.collecting") + '...</div><div class="ct-text-meta ct-muted ct-mt-1">' + esc(v.name) + '</div></div>');
 
-    var lang = typeof _locale !== "undefined" ? _locale : "fr";
+    var lang = typeof _locale !== "undefined" ? _locale : "en";
 
     // Business endpoint: the TPRM collection methodology prompt is built
     // server-side (POST /api/ai/vendor/collect-info).
     _aiPost("vendor/collect-info", {
-        language: lang === "en" ? "en" : "fr",
+        language: lang === "fr" ? "fr" : "en",
         vendor_name: v.name || "",
         vendor_website: v.website || "",
         vendor_sector: v.sector || "",
@@ -6755,7 +6753,7 @@ function aiCollectInfo() {
         var data = jr.result;
         if (!data) {
             showStatus(t("ai.error"));
-            _showModal('<h3 class="ct-text-critical">' + t("ai.error") + '</h3><p class="ct-text-meta">La requete IA n\'a pas retourne de reponse.</p><div class="ct-mt-3"><button class="ct-btn" data-variant="primary" data-click="closeModal">' + t("common.close") + '</button></div>');
+            _showModal('<h3 class="ct-text-critical">' + t("ai.error") + '</h3><p class="ct-text-meta">' + esc(t("ai.no_response")) + '</p><div class="ct-mt-3"><button class="ct-btn" data-variant="primary" data-click="closeModal">' + t("common.close") + '</button></div>');
             return;
         }
         _applyAiData(v, data);
@@ -6820,9 +6818,9 @@ function aiCollectDocs() {
     // (POST /api/ai/vendor/collect-docs).
     probePromise.then(function() {
         if (statusEl()) statusEl()!.textContent = t("ai.docs_phase_ai");
-        var lang = typeof _locale !== "undefined" ? _locale : "fr";
+        var lang = typeof _locale !== "undefined" ? _locale : "en";
         return _aiPost("vendor/collect-docs", {
-            language: lang === "en" ? "en" : "fr",
+            language: lang === "fr" ? "fr" : "en",
             vendor_name: v.name || "",
             vendor_website: v.website || "",
             vendor_sector: v.sector || "",
@@ -6872,9 +6870,9 @@ function _applyAiData(v: any, data: any) {
     if (data.sub_contractors && data.sub_contractors.length) {
         v.sub_contractors = data.sub_contractors;
     }
-    if (data.notes) v.notes = (v.notes ? v.notes + "\n\n" : "") + "IA: " + data.notes;
-    if (data.known_incidents) v.notes = (v.notes ? v.notes + "\n\n" : "") + "Incidents connus: " + data.known_incidents;
-    if (data.data_location) v.notes = (v.notes ? v.notes + "\n\n" : "") + "Localisation des donnees: " + data.data_location;
+    if (data.notes) v.notes = (v.notes ? v.notes + "\n\n" : "") + t("vendor.ai_note") + " " + data.notes;
+    if (data.known_incidents) v.notes = (v.notes ? v.notes + "\n\n" : "") + t("vendor.ai_note_incidents") + " " + data.known_incidents;
+    if (data.data_location) v.notes = (v.notes ? v.notes + "\n\n" : "") + t("vendor.ai_note_location") + " " + data.data_location;
 
     // Persist the AI-applied vendor fields through the granular adapter
     // right away. Relying only on the blob _autoSave fallback loses the
@@ -6955,8 +6953,8 @@ function _applyAiData(v: any, data: any) {
                         if (!resp) { resp = { question_id: q.id, coverage: null, answer: null, comment: "", action_plans: [], justification: "" }; assessment.responses.push(resp); }
                         if (resp.coverage) return; // never overwrite an existing verdict
                         resp.coverage = cov;
-                        resp.comment = "IA: auto-evaluation";
-                        if (cov === "partial" || cov === "not_covered") resp.justification = "IA: ecart auto-detecte, a confirmer.";
+                        resp.comment = t("vendor.ai_resp_comment");
+                        if (cov === "partial" || cov === "not_covered") resp.justification = t("vendor.ai_resp_gap");
                     });
                     break; // one matching domain per section
                 }

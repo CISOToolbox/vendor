@@ -571,8 +571,7 @@ window._appInitCallback = function() {
     // project list is updated_at desc, so the new empty project sorts first).
     // On persistent failure we surface an error + reload instead — never create.
     function _bootFailed() {
-        var msg = "Impossible de charger le projet (serveur momentanément indisponible). "
-                + "Vos données sont intactes — rechargez la page.";
+        var msg = t("boot.failed");
         if (typeof showStatus === "function") showStatus(msg);
         if (document.getElementById("vendor-boot-error")) return;
         var b = document.createElement("div");
@@ -582,7 +581,7 @@ window._appInitCallback = function() {
             + "color:#fff;padding:12px 16px;text-align:center;font-size:0.9em";
         b.textContent = msg + " ";
         var btn = document.createElement("button");
-        btn.textContent = "Recharger";
+        btn.textContent = t("boot.reload");
         btn.style.cssText = "margin-left:8px;background:var(--ct-surface);color:#dc2626;border:none;border-radius:4px;"
             + "padding:4px 12px;cursor:pointer;font-weight:600";
         btn.addEventListener("click", function() { window.location.reload(); });
