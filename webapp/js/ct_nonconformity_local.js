@@ -78,13 +78,15 @@
             if (d.status === "approved") {
                 d.status = "revoked";
                 d.revoked_reason = reason;
-                d.decided_at = _now();
+                d.revoked_by = spec.actor();
+                d.revoked_at = _now();
                 if (spec.releaseSubject)
                     spec.releaseSubject(d, "revoked");
             }
             else if (d.status === "pending_approval") {
                 d.status = "rejected";
                 d.decision_note = reason;
+                d.decided_by = spec.actor();
                 d.decided_at = _now();
             }
         });
@@ -109,8 +111,17 @@
     // Past its end of validity, a derogation expires and the item it covered
     // comes back: the webapp does at load what the scheduler does in the suite.
     function expire(spec) {
-        var today = _today(), n = 0;
+        var today = _today(), n = 0, mended = 0;
         spec.derogations().forEach(function (d) {
+            // Revoked before the revocation had its own fields: what was
+            // written over the approval is the revocation's who and when.
+            // (every revocation now sets revoked_at; revoked_by may be blank)
+            if (d.status === "revoked" && !d.revoked_at && d.decided_by) {
+                d.revoked_by = d.decided_by;
+                d.revoked_at = d.decided_at;
+                mended++;
+                return;
+            }
             if (d.status !== "approved" || !d.valid_until || d.valid_until >= today)
                 return;
             d.status = "expired";
@@ -126,7 +137,7 @@
                 spec.releaseSubject(d, "expired");
             }
         });
-        if (n)
+        if (n || mended)
             spec.save("derogation");
         return n;
     }
@@ -374,8 +385,8 @@
                     _fail(t("nc.err_note"));
                 d.status = "revoked";
                 d.revoked_reason = reason;
-                d.decided_by = spec.actor();
-                d.decided_at = _now();
+                d.revoked_by = spec.actor();
+                d.revoked_at = _now();
                 if (d.subject_type === "nonconformity") {
                     var nc = spec.records().filter(function (r) { return r.id === d.subject_id; })[0];
                     if (nc && nc.status === "derogated") {
