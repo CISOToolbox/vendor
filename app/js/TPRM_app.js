@@ -7446,7 +7446,9 @@ window._requestDerogVendor = function (vendorId) {
 // itself (#nonconformities, the link the console builds).
 var _deepLinkHandled = false;
 function _handleRegisterDeepLink() {
-    if (_deepLinkHandled)
+    // Not before the project has landed: a render triggered earlier (the AI
+    // runtime probe redraws once it knows) would spend the link on an empty D.
+    if (_deepLinkHandled || (window._isDataReady && !window._isDataReady()))
         return;
     _deepLinkHandled = true;
     var id = "";

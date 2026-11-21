@@ -251,6 +251,7 @@
     // ═══════════════════════════════════════════════════════════════
     var _dataReady = false;
     window._setDataReady = function () { _dataReady = true; };
+    window._isDataReady = function () { return _dataReady; };
     var _dirty = {};
     var _flushTimer = null;
     // In-flight create POSTs keyed by "type:id". A debounced PATCH for a

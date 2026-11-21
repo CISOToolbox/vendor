@@ -270,6 +270,7 @@ window.getActiveProjectId = function() { return _activeId; };
 
 var _dataReady = false;
 window._setDataReady = function() { _dataReady = true; };
+window._isDataReady = function() { return _dataReady; };
 
 var _dirty: Record<string, VendorApiPayload> = {};
 var _flushTimer: ReturnType<typeof setTimeout> | null = null;
