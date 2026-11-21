@@ -611,6 +611,7 @@ interface Window {
     _persistDelete?: typeof _persistDelete;
     _obj?: typeof _obj;
     _setDataReady?: () => void;
+    _isDataReady?: () => boolean;
     getActiveProjectId?: () => string | null;
     /** Module role (auth/role) set by _initAuth of vendor_api.ts. */
     _moduleRole?: string;
