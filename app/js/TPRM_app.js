@@ -249,9 +249,8 @@ function _scopedRisks() {
 function renderDashboard() {
     // FEAT-45 — the gaps under derogation are read once and the board redraws
     // when they arrive; an expiry therefore shows without a page reload.
-    if (!_derogLoaded)
-        _loadDerogations(function () { if (_panel === "dashboard")
-            renderPanel(); });
+    if (!_derogLoaded && !_derogLoading)
+        _loadDerogations(_redrawDerogPages);
     // The total vendor count stays global — it is an inventory.
     // Everything else is computed on the managed scope.
     var v = _scopedVendors(), r = _scopedRisks();
@@ -958,9 +957,8 @@ function renderVendorDetail() {
         return renderVendorList();
     // FEAT-45 — an acceptance granted on this third party is read once; the
     // page redraws when it arrives, so an expiry shows without a reload.
-    if (!_derogLoaded)
-        _loadDerogations(function () { if (_panel === "vendors" && _selectedVendor !== null)
-            renderPanel(); });
+    if (!_derogLoaded && !_derogLoading)
+        _loadDerogations(_redrawDerogPages);
     var tier = _getTier(v);
     // Compute risk scores for header
     var _hdrRisks = D.risks.filter(function (r) { return r.vendor_id === v.id; });
@@ -7198,15 +7196,35 @@ if (typeof _installUndoHook === "function")
 // from the approved derogations, as Compliance does for a requirement.
 var _derogByVendor = {};
 var _derogLoaded = false;
+var _derogLoading = false;
+// Only the answer to the latest load is kept: an older one landing after it
+// would bring back the register as it was before a decision.
+var _derogAsked = 0;
 function _loadDerogations(then) {
-    VendorAPI.listDerogations({ status: "approved", subject_type: "vendor" }).then(function (r) {
-        _derogByVendor = {};
-        ((r && r.items) || []).forEach(function (d) { _derogByVendor[d.subject_id] = d; });
+    const asked = ++_derogAsked;
+    _derogLoading = true;
+    function landed(items) {
+        if (asked !== _derogAsked)
+            return; // superseded: the latest load redraws
+        if (items) {
+            _derogByVendor = {};
+            items.forEach(function (d) { _derogByVendor[d.subject_id] = d; });
+        }
         _derogLoaded = true;
+        _derogLoading = false;
         if (then)
             then();
-    }).catch(function () { _derogLoaded = true; if (then)
-        then(); });
+    }
+    VendorAPI.listDerogations({ status: "approved", subject_type: "vendor" })
+        .then(function (r) { landed((r && r.items) || []); })
+        .catch(function () { landed(null); });
+}
+// The page shown when a load lands, which may not be the one that asked: the
+// dashboard's load also serves a third party opened meanwhile (the `?vendor=`
+// deep link opens it in the same turn), and the other way round.
+function _redrawDerogPages() {
+    if (_panel === "dashboard" || (_panel === "vendors" && _selectedVendor !== null))
+        renderPanel();
 }
 /** The key the register uses for an object of this module, always inside the
  *  project: a third party ("<project>:<vendor>") or one of its corrective
